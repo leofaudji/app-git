@@ -1,0 +1,63 @@
+{
+  "name": "GitDeploy",
+  "short_name": "GitDeploy",
+  "description": "Git Webhook Auto-Deploy Dashboard",
+  "start_url": "/app-git/",
+  "scope": "/app-git/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/app-git/assets/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/app-git/assets/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/app-git/assets/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/app-git/assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-git/assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/app-git/assets/icons/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "GitDeploy Dashboard"
+    }
+  ],
+  "categories": ["developer", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/app-git/#dashboard",
+      "description": "View deployment dashboard"
+    },
+    {
+      "name": "Git Pull",
+      "url": "/app-git/#git-pull",
+      "description": "Trigger manual git pull"
+    }
+  ]
+}

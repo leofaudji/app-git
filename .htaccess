@@ -1,0 +1,47 @@
+Options -Indexes
+
+# Front Controller - redirect all non-file requests to index.php
+RewriteEngine On
+RewriteBase /app-git/
+
+# Don't rewrite actual files/directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# API clean URLs: /api/csrf → /api/csrf.php
+RewriteRule ^api/([a-z_]+)$ api/$1.php [L,QSA]
+
+# Allow API, assets, manifest, sw directly
+RewriteRule ^(api|assets|manifest\.json|sw\.js)($|/) - [L]
+
+# Everything else to index.php
+RewriteRule ^(?!api/|assets/|manifest\.json|sw\.js).*$ index.php [L,QSA]
+
+# Security headers
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Cache static assets
+<FilesMatch "\.(css|js|png|jpg|svg|ico|woff2?)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=86400"
+  </IfModule>
+</FilesMatch>
+
+# No cache for PHP files
+<FilesMatch "\.php$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </IfModule>
+</FilesMatch>
+
+# Protect schema.sql, seed_admin.php, deploy.log from direct web access
+<FilesMatch "^(schema\.sql|seed_admin\.php|deploy\.log)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+</FilesMatch>
