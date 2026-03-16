@@ -149,10 +149,26 @@ const PageRoles = (() => {
   }
 
   async function deleteRole(id) {
-    if (!confirm('Hapus role ini?')) return;
+    const result = await Swal.fire({
+      title: 'Hapus Role?',
+      text: 'Role ini akan dihapus permanen!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
+
     const res = await Api.post('roles', { action: 'delete', id });
-    if (res?.success) { Toast.success('Role dihapus'); fetchRoles(); }
-    else Toast.error(res?.message || 'Gagal menghapus');
+    if (res?.success) {
+      Toast.success('Role dihapus');
+      fetchRoles();
+    } else {
+      Toast.error(res?.message || 'Gagal menghapus');
+    }
   }
 
   return { render, openModal, closeModal, saveRole, deleteRole };

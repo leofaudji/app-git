@@ -16,92 +16,94 @@ const PageSettings = (() => {
     const settings = {};
     res.data.forEach(s => { settings[s.key] = s; });
 
-    const webhookUrl = `${window.location.origin}/app-git/api/webhook.php`;
+    const webhookUrl = `${window.location.origin}/app-git/api/webhook`;
 
     view.innerHTML = `
-      <div class="grid-2">
+      <div class="grid-2 gap-6">
 
-        <!-- Git Configuration -->
+        <!-- Global Configuration -->
         <div class="card">
-          <div class="card-title">⎇ Git Configuration</div>
-          <div id="settings-alert" class="alert alert-success" style="display:none"></div>
+          <div class="p-4 border-b bg-gray-50"><h3 class="font-bold">⚙ Global Configuration</h3></div>
+          <div class="p-4">
+            <div id="settings-alert" class="alert alert-success mb-4" style="display:none"></div>
 
-          <div class="form-group">
-            <label class="form-label">Nama Aplikasi</label>
-            <input type="text" id="set-app_name" class="form-input" value="${settings.app_name?.value || ''}"
-              placeholder="GitDeploy" ${canEdit ? '' : 'disabled'}>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Git Repository Directory</label>
-            <input type="text" id="set-git_dir" class="form-input" value="${settings.git_dir?.value || ''}"
-              placeholder="/var/www/html/myapp" ${canEdit ? '' : 'disabled'}>
-            <div class="form-hint">Path absolut ke folder repository (yang berisi .git/)</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Default Branch</label>
-            <input type="text" id="set-git_branch" class="form-input" value="${settings.git_branch?.value || 'main'}"
-              placeholder="main" ${canEdit ? '' : 'disabled'}>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Notification Email</label>
-            <input type="email" id="set-notify_email" class="form-input" value="${settings.notify_email?.value || ''}"
-              placeholder="ops@company.com" ${canEdit ? '' : 'disabled'}>
-          </div>
-          <div class="form-group">
-            <div class="toggle-wrap">
-              <label class="toggle">
-                <input type="checkbox" id="set-auto_deploy" ${settings.auto_deploy?.value === '1' ? 'checked' : ''} ${canEdit ? '' : 'disabled'}>
-                <span class="toggle-slider"></span>
-              </label>
-              <span class="form-label" style="margin:0">Auto Deploy on Webhook</span>
+            <div class="form-group">
+              <label class="form-label text-xs uppercase font-bold tracking-tight">Nama Aplikasi</label>
+              <input type="text" id="set-app_name" class="form-input" value="${settings.app_name?.value || ''}"
+                placeholder="GitDeploy" ${canEdit ? '' : 'disabled'}>
             </div>
-            <div class="form-hint">Jika dinonaktifkan, webhook tidak akan menjalankan git pull</div>
-          </div>
+            
+            <div class="form-group">
+              <label class="form-label text-xs uppercase font-bold tracking-tight">Global Projects Base Directory</label>
+              <input type="text" id="set-git_base_dir" class="form-input font-mono" value="${settings.git_base_dir?.value || ''}"
+                placeholder="D:\\projects" ${canEdit ? '' : 'disabled'}>
+              <div class="form-hint">Folder utama yang berisi banyak subfolder project Git.</div>
+            </div>
 
-          ${canEdit ? '<button class="btn btn-primary" onclick="PageSettings.save()">💾 Simpan Settings</button>' : ''}
+            <div class="form-group">
+              <label class="form-label text-xs uppercase font-bold tracking-tight">Default Webhook Secret</label>
+              <div class="flex gap-2">
+                <input type="password" id="set-webhook_secret_default" class="form-input font-mono" placeholder="Kosongkan untuk mempertahankan"
+                  ${canEdit ? '' : 'disabled'}>
+                <button class="btn btn-ghost" type="button" onclick="PageSettings.toggleSecret('set-webhook_secret_default')" title="Show/Hide">👁</button>
+              </div>
+              <div class="form-hint">Digunakan jika project tidak menentukan secret sendiri.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label text-xs uppercase font-bold tracking-tight">Notification Email</label>
+              <input type="email" id="set-notify_email" class="form-input" value="${settings.notify_email?.value || ''}"
+                placeholder="ops@company.com" ${canEdit ? '' : 'disabled'}>
+            </div>
+
+            <div class="form-group">
+              <div class="toggle-wrap">
+                <label class="toggle">
+                  <input type="checkbox" id="set-auto_deploy" ${settings.auto_deploy?.value === '1' ? 'checked' : ''} ${canEdit ? '' : 'disabled'}>
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="text-sm font-medium">Enable Auto Deploy (Global)</span>
+              </div>
+              <div class="form-hint">Jika mati, semua webhook akan diabaikan.</div>
+            </div>
+
+            ${canEdit ? '<button class="btn btn-primary w-full justify-center" onclick="PageSettings.save()">💾 Simpan Konfigurasi</button>' : ''}
+          </div>
         </div>
 
-        <!-- Webhook Info -->
+        <!-- Webhook Info & Help -->
         <div>
-          <div class="card mb-4">
-            <div class="card-title">🔗 Webhook URL</div>
-            <p class="text-sm text-muted mb-3">Gunakan URL ini di GitHub / GitLab / Bitbucket:</p>
-            <div style="display:flex;gap:8px">
-              <input type="text" class="form-input font-mono" value="${webhookUrl}" id="webhook-url-inp" readonly style="font-size:12px">
-              <button class="btn btn-ghost btn-sm" onclick="PageSettings.copyWebhookUrl()" title="Copy">📋</button>
-            </div>
-            <div class="form-group" style="margin-top:16px">
-              <label class="form-label">Webhook Secret Key</label>
-              <div style="display:flex;gap:8px">
-                <input type="password" id="set-webhook_secret" class="form-input font-mono" placeholder="Masukkan secret baru untuk mengubah"
-                  ${canEdit ? '' : 'disabled'}>
-                <button class="btn btn-ghost btn-sm" onclick="PageSettings.toggleSecret()" title="Show/Hide">👁</button>
+          <div class="card mb-6">
+            <div class="p-4 border-b bg-gray-50"><h3 class="font-bold">🔗 Webhook Endpoint</h3></div>
+            <div class="p-4">
+              <p class="text-sm text-muted mb-3">Gunakan satu URL ini untuk SEMUA project Anda di GitHub / GitLab:</p>
+              <div class="flex gap-2">
+                <input type="text" class="form-input font-mono bg-gray-50 text-xs" value="${webhookUrl}" id="webhook-url-inp" readonly>
+                <button class="btn btn-ghost btn-sm" onclick="PageSettings.copyWebhookUrl()" title="Copy">📋</button>
               </div>
-              <div class="form-hint">Secret harus sama di platform Git. Biarkan kosong untuk mempertahankan nilai sekarang.</div>
+              <p class="text-xs text-muted mt-3 italic">Aplikasi akan otomatis mencocokkan payload repository ke project yang terdaftar.</p>
             </div>
           </div>
 
-          <!-- Setup Guide -->
           <div class="card">
-            <div class="card-title">📖 Cara Setup Webhook</div>
-            <div style="display:flex;flex-direction:column;gap:14px;font-size:13.5px">
+            <div class="p-4 border-b bg-gray-50"><h3 class="font-bold">📖 Setup Guide</h3></div>
+            <div class="p-4 space-y-4 text-sm">
               <div>
-                <div style="font-weight:600;margin-bottom:6px;color:#818cf8">🐙 GitHub</div>
-                <ol style="padding-left:18px;color:var(--text-muted);line-height:1.8">
-                  <li>Buka Settings → Webhooks → Add webhook</li>
-                  <li>Payload URL: copy URL di atas</li>
+                <div class="font-bold text-indigo-600 mb-2">🐙 GitHub Setup</div>
+                <ol class="list-decimal pl-4 space-y-1 text-muted">
+                  <li>Repository Settings → Webhooks → Add</li>
+                  <li>Payload URL: (Copy di atas)</li>
                   <li>Content type: <code>application/json</code></li>
-                  <li>Secret: sama dengan Webhook Secret di atas</li>
-                  <li>Event: <strong>Just the push event</strong></li>
+                  <li>Secret: (Default Webhook Secret Anda)</li>
                 </ol>
               </div>
-              <div>
-                <div style="font-weight:600;margin-bottom:6px;color:#f97316">🦊 GitLab</div>
-                <ol style="padding-left:18px;color:var(--text-muted);line-height:1.8">
-                  <li>Buka Settings → Webhooks</li>
-                  <li>URL: copy URL di atas</li>
-                  <li>Secret token: sama dengan Webhook Secret</li>
-                  <li>Trigger: <strong>Push events</strong></li>
+              <div class="pt-4 border-t">
+                <div class="font-bold text-orange-600 mb-2">🦊 GitLab Setup</div>
+                <ol class="list-decimal pl-4 space-y-1 text-muted">
+                  <li>Repository Settings → Webhooks</li>
+                  <li>URL: (Copy di atas)</li>
+                  <li>Secret token: (Default Webhook Secret Anda)</li>
+                  <li>Trigger: Push events</li>
                 </ol>
               </div>
             </div>
@@ -114,12 +116,11 @@ const PageSettings = (() => {
     const alertEl = document.getElementById('settings-alert');
     const data = {
       settings: {
-        app_name:       document.getElementById('set-app_name')?.value || '',
-        git_dir:        document.getElementById('set-git_dir')?.value || '',
-        git_branch:     document.getElementById('set-git_branch')?.value || 'main',
-        notify_email:   document.getElementById('set-notify_email')?.value || '',
-        auto_deploy:    document.getElementById('set-auto_deploy')?.checked ? '1' : '0',
-        webhook_secret: document.getElementById('set-webhook_secret')?.value || '',
+        app_name:               document.getElementById('set-app_name')?.value || '',
+        git_base_dir:           document.getElementById('set-git_base_dir')?.value || '',
+        notify_email:           document.getElementById('set-notify_email')?.value || '',
+        auto_deploy:            document.getElementById('set-auto_deploy')?.checked ? '1' : '0',
+        webhook_secret_default: document.getElementById('set-webhook_secret_default')?.value || '',
       }
     };
 
@@ -128,9 +129,8 @@ const PageSettings = (() => {
       Toast.error(res?.message || 'Gagal menyimpan');
       return;
     }
-    alertEl.textContent = '✓ Settings berhasil disimpan';
-    alertEl.className = 'alert alert-success';
-    alertEl.style.display = 'flex';
+    alertEl.textContent = '✓ Konfigurasi berhasil disimpan';
+    alertEl.style.display = 'block';
     Toast.success('Settings disimpan');
     setTimeout(() => alertEl.style.display = 'none', 3000);
   }
@@ -142,8 +142,8 @@ const PageSettings = (() => {
     Toast.success('URL disalin!');
   }
 
-  function toggleSecret() {
-    const inp = document.getElementById('set-webhook_secret');
+  function toggleSecret(id) {
+    const inp = document.getElementById(id);
     inp.type = inp.type === 'password' ? 'text' : 'password';
   }
 

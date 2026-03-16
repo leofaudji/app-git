@@ -4,7 +4,7 @@
 // ============================================================
 
 define('APP_NAME',    'GitDeploy');
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '1.0.2');
 define('APP_URL',     'http://localhost/app-git');
 
 // Database
@@ -39,5 +39,5 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Error reporting (disable in production)
 error_reporting(E_ALL);
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 ini_set('log_errors', 1);

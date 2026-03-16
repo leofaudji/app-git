@@ -54,27 +54,43 @@ CREATE TABLE IF NOT EXISTS `user_roles` (
   FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Deployment logs
-CREATE TABLE IF NOT EXISTS `deploy_logs` (
-  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  `triggered_by` ENUM('webhook','manual') NOT NULL DEFAULT 'manual',
-  `user_id` INT UNSIGNED NULL,
-  `branch` VARCHAR(100) DEFAULT 'main',
-  `commit_hash` VARCHAR(64) DEFAULT '',
-  `status` ENUM('success','failed','running') NOT NULL DEFAULT 'running',
-  `output` TEXT,
-  `ip_address` VARCHAR(45) DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
 -- App settings
 CREATE TABLE IF NOT EXISTS `settings` (
   `key` VARCHAR(100) PRIMARY KEY,
   `value` TEXT,
   `label` VARCHAR(100) NOT NULL,
-  `type` ENUM('text','password','boolean','textarea') DEFAULT 'text',
+  `type` ENUM('text', 'password', 'boolean', 'textarea') DEFAULT 'text',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Projects
+CREATE TABLE IF NOT EXISTS `projects` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `repo_name` VARCHAR(100) NOT NULL, -- For webhook matching (e.g. "username/repo")
+  `folder_name` VARCHAR(100) NOT NULL, -- Relative to global base dir or absolute
+  `branch` VARCHAR(100) DEFAULT 'main',
+  `webhook_secret` VARCHAR(255) DEFAULT '',
+  `description` TEXT,
+  `is_active` TINYINT(1) DEFAULT 1,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Deployment logs
+CREATE TABLE IF NOT EXISTS `deploy_logs` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `project_id` INT UNSIGNED DEFAULT NULL,
+  `triggered_by` ENUM('webhook', 'manual') NOT NULL DEFAULT 'manual',
+  `user_id` INT UNSIGNED NULL,
+  `branch` VARCHAR(100) DEFAULT 'main',
+  `commit_hash` VARCHAR(64) DEFAULT '',
+  `status` ENUM('success', 'failed', 'running') NOT NULL DEFAULT 'running',
+  `output` TEXT,
+  `ip_address` VARCHAR(45) DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ============================================================
@@ -102,6 +118,8 @@ INSERT IGNORE INTO `permissions` (`module`, `action`, `label`) VALUES
   ('roles', 'manage', 'Manage Roles'),
   ('settings', 'view', 'View Settings'),
   ('settings', 'edit', 'Edit Settings'),
+  ('projects', 'view', 'View Projects'),
+  ('projects', 'manage', 'Manage Projects'),
   ('webhook', 'receive', 'Receive Webhook');
 
 -- Assign all permissions to admin
@@ -127,8 +145,7 @@ INSERT IGNORE INTO `role_permissions` (`role_id`, `permission_id`)
 -- Default settings
 INSERT IGNORE INTO `settings` (`key`, `value`, `label`, `type`) VALUES
   ('app_name', 'GitDeploy', 'Application Name', 'text'),
-  ('git_dir', '', 'Git Repository Directory (absolute path)', 'text'),
-  ('webhook_secret', 'change_me_secret_key', 'Webhook Secret Key', 'password'),
-  ('git_branch', 'main', 'Default Branch to Pull', 'text'),
+  ('git_base_dir', '', 'Global Projects Base Directory (absolute path)', 'text'),
+  ('webhook_secret_default', 'change_me_secret_key', 'Default Webhook Secret', 'password'),
   ('notify_email', '', 'Notification Email', 'text'),
   ('auto_deploy', '1', 'Enable Auto Deploy on Webhook', 'boolean');

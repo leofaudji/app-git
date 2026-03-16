@@ -15,7 +15,9 @@ const Router = (() => {
   }
 
   function resolve() {
-    const hash = window.location.hash.replace('#', '') || 'dashboard';
+    const fullHash = window.location.hash.replace('#', '') || 'dashboard';
+    const [hash, queryString] = fullHash.split('?');
+    const params = new URLSearchParams(queryString || '');
     const view = document.getElementById('page-view');
     const loading = document.getElementById('page-loading');
 
@@ -58,7 +60,7 @@ const Router = (() => {
     });
 
     // Run handler (may be async)
-    Promise.resolve(handler(hash)).then(() => {
+    Promise.resolve(handler(hash, params)).then(() => {
       loading.style.display = 'none';
       view.style.display = '';
     }).catch(err => {

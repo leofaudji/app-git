@@ -18,6 +18,13 @@ $allMenus = [
         'perm'  => ['module' => 'dashboard', 'action' => 'view'],
     ],
     [
+        'id'    => 'projects',
+        'label' => 'Manage Projects',
+        'icon'  => 'git',
+        'route' => '#projects',
+        'perm'  => ['module' => 'projects', 'action' => 'view'],
+    ],
+    [
         'id'    => 'git',
         'label' => 'Git Operations',
         'icon'  => 'git',
@@ -42,6 +49,13 @@ $allMenus = [
         'icon'  => 'logs',
         'route' => '#logs',
         'perm'  => ['module' => 'logs', 'action' => 'view'],
+    ],
+    [
+        'id'    => 'webhook-logs',
+        'label' => 'Webhook Logs',
+        'icon'  => '📬',
+        'route' => '#webhook-logs',
+        'perm'  => ['module' => 'webhook_logs', 'action' => 'view'],
     ],
     [
         'id'    => 'users',
@@ -77,7 +91,7 @@ function filterMenu(array $items, array $userPerms): array {
     $result = [];
     foreach ($items as $item) {
         // Check permission
-        if ($item['perm'] !== null) {
+        if (array_key_exists('perm', $item) && $item['perm'] !== null) {
             $mod = $item['perm']['module'];
             $act = $item['perm']['action'];
             if (!isset($userPerms[$mod]) || !in_array($act, $userPerms[$mod])) {

@@ -105,34 +105,39 @@ const App = (() => {
 
   // ─── Register routes ───
   function registerRoutes() {
-    Router.on('dashboard', async () => {
+    Router.on('dashboard', async (hash, params) => {
       setPageTitle('Dashboard');
-      await PageDashboard.render();
+      await PageDashboard.render(params);
     });
-    Router.on('git', async (hash) => {
+    Router.on('projects', async (hash, params) => {
+      setPageTitle('Manage Projects');
+      await PageProjects.render(params);
+    });
+    Router.on('git', async (hash, params) => {
       setPageTitle('Git Operations');
-      if (hash === 'git-pull') await PageGit.render('pull');
-      else await PageGit.render('status');
+      const action = hash === 'git-pull' ? 'pull' : 'status';
+      await PageGit.render(action, params);
     });
-    Router.on('logs', async () => {
+    Router.on('logs', async (hash, params) => {
       setPageTitle('Deploy Logs');
-      await PageLogs.render();
+      await PageLogs.render(params);
     });
-    Router.on('users', async () => {
+    Router.on('webhook-logs', (hash, params) => PageWebhookLogs.render(hash, params));
+    Router.on('users', async (hash, params) => {
       setPageTitle('User Management');
-      await PageUsers.render();
+      await PageUsers.render(params);
     });
-    Router.on('roles', async () => {
+    Router.on('roles', async (hash, params) => {
       setPageTitle('Roles & Permissions');
-      await PageRoles.render();
+      await PageRoles.render(params);
     });
-    Router.on('settings', async () => {
+    Router.on('settings', async (hash, params) => {
       setPageTitle('Settings');
-      await PageSettings.render();
+      await PageSettings.render(params);
     });
-    Router.on('profile', async () => {
+    Router.on('profile', async (hash, params) => {
       setPageTitle('Profil Saya');
-      await PageProfile.render();
+      await PageProfile.render(params);
     });
   }
 

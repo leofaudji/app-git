@@ -72,17 +72,21 @@ const Api = (() => {
 // Toast notifications
 // ============================================================
 const Toast = {
-  show(msg, type = 'info', duration = 3500) {
-    const el = document.createElement('div');
-    const icons = { success: '✓', error: '✕', info: 'ℹ' };
-    el.className = `toast toast-${type}`;
-    el.innerHTML = `<span style="font-size:16px;font-weight:bold">${icons[type] || '●'}</span><span>${msg}</span>`;
-    const container = document.getElementById('toast-container');
-    container.appendChild(el);
-    setTimeout(() => {
-      el.classList.add('removing');
-      el.addEventListener('animationend', () => el.remove());
-    }, duration);
+  show(msg, type = 'info', duration = 3000) {
+    Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: duration,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      }
+    }).fire({
+      icon: type,
+      title: msg
+    });
   },
   success: (m) => Toast.show(m, 'success'),
   error:   (m) => Toast.show(m, 'error'),

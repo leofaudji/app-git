@@ -44,6 +44,9 @@ try {
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/app-git/assets/css/app.css">
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
@@ -156,16 +159,18 @@ try {
 </div>
 
 <!-- ── JavaScript Modules ── -->
-<script src="/app-git/assets/js/api.js"></script>
-<script src="/app-git/assets/js/pages/dashboard.js"></script>
-<script src="/app-git/assets/js/pages/git.js"></script>
-<script src="/app-git/assets/js/pages/logs.js"></script>
-<script src="/app-git/assets/js/pages/users.js"></script>
-<script src="/app-git/assets/js/pages/roles.js"></script>
-<script src="/app-git/assets/js/pages/settings.js"></script>
-<script src="/app-git/assets/js/pages/profile.js"></script>
-<script src="/app-git/assets/js/router.js"></script>
-<script src="/app-git/assets/js/app.js"></script>
+<script src="/app-git/assets/js/api.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/projects.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/dashboard.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/git.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/logs.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/webhook_logs.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/users.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/roles.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/settings.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/pages/profile.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/router.js?v=<?= APP_VERSION ?>"></script>
+<script src="/app-git/assets/js/app.js?v=<?= APP_VERSION ?>"></script>
 
 </body>
 </html>

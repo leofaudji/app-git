@@ -1,51 +1,42 @@
 <?php
+// ============================================================
+// Dashboard API - Multi-Project Summary
+// ============================================================
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/csrf.php';
 
 header('Content-Type: application/json');
 
-requirePermission('dashboard', 'view');
+$user = requireLogin();
 
-// Get git info for dashboard
-$gitDir = DB::getSetting('git_dir', GIT_DIR_DEFAULT);
-$branch = 'N/A';
-$lastCommit = 'N/A';
-$lastCommitMsg = '';
+// Overall stats
+$totalDeploy   = (int) DB::fetchOne("SELECT COUNT(*) as c FROM deploy_logs")['c'];
+$successDeploy = (int) DB::fetchOne("SELECT COUNT(*) as c FROM deploy_logs WHERE status = 'success'")['c'];
+$failedDeploy  = (int) DB::fetchOne("SELECT COUNT(*) as c FROM deploy_logs WHERE status = 'failed'")['c'];
 
-if (is_dir($gitDir . '/.git')) {
-    $branch = trim(@shell_exec("cd \"$gitDir\" && " . GIT_BINARY . " rev-parse --abbrev-ref HEAD 2>&1"));
-    $lastCommit = trim(@shell_exec("cd \"$gitDir\" && " . GIT_BINARY . " log -1 --format='%h - %s (%ci)' 2>&1"));
-}
-
-// Stats
-$totalDeploys    = (int) (DB::fetchOne("SELECT COUNT(*) AS c FROM deploy_logs")['c'] ?? 0);
-$successDeploys  = (int) (DB::fetchOne("SELECT COUNT(*) AS c FROM deploy_logs WHERE status = 'success'")['c'] ?? 0);
-$failedDeploys   = (int) (DB::fetchOne("SELECT COUNT(*) AS c FROM deploy_logs WHERE status = 'failed'")['c'] ?? 0);
-$lastDeploy      = DB::fetchOne(
-    "SELECT dl.*, u.full_name FROM deploy_logs dl
-     LEFT JOIN users u ON u.id = dl.user_id
-     ORDER BY dl.created_at DESC LIMIT 1"
+// Recent activity (all projects)
+$recentLogs = DB::fetchAll(
+    "SELECT dl.id, dl.triggered_by, dl.status, dl.created_at, p.name as project_name
+     FROM deploy_logs dl
+     LEFT JOIN projects p ON p.id = dl.project_id
+     ORDER BY dl.created_at DESC LIMIT 5"
 );
 
-// Recent logs (5)
-$recentLogs = DB::fetchAll(
-    "SELECT dl.id, dl.triggered_by, dl.branch, dl.status, dl.created_at, u.full_name
-     FROM deploy_logs dl
-     LEFT JOIN users u ON u.id = dl.user_id
-     ORDER BY dl.created_at DESC LIMIT 5"
+// Project List Summary
+$projects = DB::fetchAll(
+    "SELECT p.id, p.name, p.branch, p.is_active,
+     (SELECT dl.status FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_status,
+     (SELECT dl.created_at FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_deploy
+     FROM projects p ORDER BY p.name ASC"
 );
 
 jsonSuccess([
     'stats' => [
-        'total_deploys'   => $totalDeploys,
-        'success_deploys' => $successDeploys,
-        'failed_deploys'  => $failedDeploys,
-        'current_branch'  => $branch,
-        'last_commit'     => $lastCommit,
+        'total'   => $totalDeploy,
+        'success' => $successDeploy,
+        'failed'  => $failedDeploy,
     ],
-    'last_deploy'  => $lastDeploy ?: null,
-    'recent_logs'  => $recentLogs,
-    'app_name'     => DB::getSetting('app_name', APP_NAME),
+    'recent'   => $recentLogs,
+    'projects' => $projects,
 ]);

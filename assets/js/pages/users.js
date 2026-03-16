@@ -178,10 +178,26 @@ const PageUsers = (() => {
   }
 
   async function deleteUser(id) {
-    if (!confirm('Hapus user ini?')) return;
+    const result = await Swal.fire({
+      title: 'Hapus User?',
+      text: 'User ini akan dihapus permanen!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
+
     const res = await Api.post('users', { action: 'delete', id });
-    if (res?.success) { Toast.success('User dihapus'); fetchUsers(); }
-    else Toast.error(res?.message || 'Gagal menghapus');
+    if (res?.success) {
+      Toast.success('User dihapus');
+      fetchUsers();
+    } else {
+      Toast.error(res?.message || 'Gagal menghapus');
+    }
   }
 
   return { render, openModal, closeModal, saveUser, deleteUser };

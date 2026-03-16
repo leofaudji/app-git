@@ -15,7 +15,7 @@ switch ($action) {
         $settings = DB::fetchAll("SELECT `key`, `value`, `label`, `type` FROM settings ORDER BY `key`");
         // Mask password fields
         foreach ($settings as &$s) {
-            if ($s['type'] === 'password') $s['value'] = ''; // Don't leak
+            if ($s['type'] === 'password' || $s['key'] === 'webhook_secret_default') $s['value'] = ''; // Don't leak
         }
         jsonSuccess($settings);
 
@@ -28,12 +28,12 @@ switch ($action) {
         if (!is_array($data)) jsonError('Format data tidak valid');
 
         // Allowed keys
-        $allowed = ['app_name','git_dir','webhook_secret','git_branch','notify_email','auto_deploy'];
+        $allowed = ['app_name','git_base_dir','webhook_secret_default','notify_email','auto_deploy'];
 
         foreach ($data as $key => $value) {
             if (!in_array($key, $allowed)) continue;
             // For password fields, only update if a value is provided
-            if ($key === 'webhook_secret' && empty($value)) continue;
+            if ($key === 'webhook_secret_default' && empty($value)) continue;
             DB::execute(
                 "UPDATE settings SET `value` = ? WHERE `key` = ?",
                 [trim($value), $key]
