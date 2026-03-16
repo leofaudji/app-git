@@ -1,7 +1,7 @@
 // ============================================================
 // Service Worker for GitDeploy PWA
 // ============================================================
-const CACHE_NAME   = 'gitdeploy-v2';
+const CACHE_NAME = 'gitdeploy-v2';
 const STATIC_CACHE = 'gitdeploy-static-v2';
 
 const STATIC_ASSETS = [
