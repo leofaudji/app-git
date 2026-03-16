@@ -44,7 +44,7 @@ try {
   </script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/app-git/assets/css/app.css">
+  <link rel="stylesheet" href="<?= APP_PATH ?>/assets/css/app.css?v=<?= APP_VERSION ?>">
   
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
