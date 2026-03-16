@@ -1,7 +1,9 @@
 // ============================================================
 // pages/settings.js - App Settings Page
 // ============================================================
-const PageSettings = (() => {
+import { Api, Toast } from "../api.js";
+
+export const PageSettings = (() => {
 
   async function render() {
     const view = document.getElementById('page-view');
@@ -16,7 +18,7 @@ const PageSettings = (() => {
     const settings = {};
     res.data.forEach(s => { settings[s.key] = s; });
 
-    const webhookUrl = `${window.location.origin}/app-git/api/webhook`;
+    const webhookUrl = `${window.location.origin}${window.APP_PATH}/api/webhook`;
 
     view.innerHTML = `
       <div class="grid-2 gap-6">
@@ -71,9 +73,34 @@ const PageSettings = (() => {
           </div>
         </div>
 
+        <!-- Database Maintenance -->
+        <div class="card">
+          <div class="p-4 border-b bg-gray-50"><h3 class="font-bold">📦 Database Maintenance</h3></div>
+          <div class="p-4">
+            <div class="mb-4">
+              <p class="text-sm text-muted mb-3 italic">Simpan cadangan data Anda atau pulihkan dari file backup sebelumnya.</p>
+              <button class="btn btn-ghost w-full justify-center mb-3" onclick="PageSettings.downloadBackup()">
+                📥 Download Backup (.sql)
+              </button>
+            </div>
+
+            ${canEdit ? `
+            <div class="pt-4 border-t">
+              <p class="text-xs font-bold uppercase text-danger mb-2">⚠ Restore Database</p>
+              <p class="text-xs text-muted mb-3">Pilih file .sql hasil backup untuk menimpa data saat ini.</p>
+              <input type="file" id="restore-file" class="form-input text-xs mb-3" accept=".sql">
+              <button class="btn btn-danger w-full justify-center" onclick="PageSettings.restoreBackup()">
+                📤 Restore Data
+              </button>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+
         <!-- Webhook Info & Help -->
         <div>
           <div class="card mb-6">
+
             <div class="p-4 border-b bg-gray-50"><h3 class="font-bold">🔗 Webhook Endpoint</h3></div>
             <div class="p-4">
               <p class="text-sm text-muted mb-3">Gunakan satu URL ini untuk SEMUA project Anda di GitHub / GitLab:</p>
@@ -147,5 +174,43 @@ const PageSettings = (() => {
     inp.type = inp.type === 'password' ? 'text' : 'password';
   }
 
-  return { render, save, copyWebhookUrl, toggleSecret };
+  async function downloadBackup() {
+    window.location.href = `${window.APP_PATH}/api/backup?action=export`;
+  }
+
+  async function restoreBackup() {
+    const fileInp = document.getElementById('restore-file');
+    if (!fileInp.files.length) {
+      Toast.error('Pilih file backup (.sql) terlebih dahulu');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Konfirmasi Restore?',
+      text: 'PERHATIAN: Data saat ini akan DIHAPUS dan digantikan oleh data dari file backup!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Lakukan Restore!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const formData = new FormData();
+    formData.append('backup_file', fileInp.files[0]);
+
+    // CSRF is handled by Api.post automatically if we pass FormData
+    const res = await Api.post('backup?action=import', formData);
+    if (res?.success) {
+      await Swal.fire('Berhasil', 'Database berhasil direstore. Aplikasi akan direfresh.', 'success');
+      window.location.reload();
+    } else {
+      Toast.error(res?.message || 'Gagal restore');
+    }
+  }
+
+  return { render, save, copyWebhookUrl, toggleSecret, downloadBackup, restoreBackup };
 })();
+

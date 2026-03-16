@@ -1,7 +1,9 @@
 // ============================================================
 // pages/users.js - User Management Page
 // ============================================================
-const PageUsers = (() => {
+import { Api, Toast } from "../api.js";
+
+export const PageUsers = (() => {
   let allRoles = [];
 
   async function render() {

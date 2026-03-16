@@ -1,4 +1,6 @@
-const PageWebhookLogs = {
+import { Api, Toast } from "../api.js";
+
+export const PageWebhookLogs = {
   async render() {
     const view = document.getElementById('page-view');
     const canDelete = window.CurrentUser?.permissions?.webhook_logs?.includes('delete');

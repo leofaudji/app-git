@@ -1,7 +1,7 @@
 // ============================================================
 // router.js - Hash-based SPA Router
 // ============================================================
-const Router = (() => {
+export const Router = (() => {
   const routes = {};
   let currentRoute = null;
 

@@ -4,23 +4,25 @@
 const CACHE_NAME = 'gitdeploy-v3';
 const STATIC_CACHE = 'gitdeploy-static-v3';
 
+// Using relative paths so it works regardless of the app's subdirectory
 const STATIC_ASSETS = [
-  '/app-git/',
-  '/app-git/index.php',
-  '/app-git/assets/css/app.css',
-  '/app-git/assets/js/api.js',
-  '/app-git/assets/js/router.js',
-  '/app-git/assets/js/app.js',
-  '/app-git/assets/js/pages/projects.js',
-  '/app-git/assets/js/pages/dashboard.js',
-  '/app-git/assets/js/pages/git.js',
-  '/app-git/assets/js/pages/logs.js',
-  '/app-git/assets/js/pages/users.js',
-  '/app-git/assets/js/pages/roles.js',
-  '/app-git/assets/js/pages/settings.js',
-  '/app-git/assets/js/pages/profile.js',
-  '/app-git/assets/icons/icon-192.png',
-  '/app-git/assets/icons/icon-512.png',
+  './',
+  './index.php',
+  './assets/css/app.css',
+  './assets/js/api.js',
+  './assets/js/router.js',
+  './assets/js/main.js',
+  './assets/js/app.js',
+  './assets/js/pages/projects.js',
+  './assets/js/pages/dashboard.js',
+  './assets/js/pages/git.js',
+  './assets/js/pages/logs.js',
+  './assets/js/pages/users.js',
+  './assets/js/pages/roles.js',
+  './assets/js/pages/settings.js',
+  './assets/js/pages/profile.js',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
 ];
 
 // Install: cache static assets
@@ -50,7 +52,8 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   // API calls — always network, never cache
-  if (url.pathname.startsWith('/app-git/api/')) {
+  // We check if "/api/" is in the path
+  if (url.pathname.includes('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() =>
         new Response(JSON.stringify({ success: false, message: 'Offline' }), {

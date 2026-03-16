@@ -1,7 +1,9 @@
 // ============================================================
 // pages/profile.js - User Profile Page
 // ============================================================
-const PageProfile = (() => {
+import { Api, Toast } from "../api.js";
+
+export const PageProfile = (() => {
 
   async function render() {
     const view = document.getElementById('page-view');

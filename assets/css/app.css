@@ -846,3 +846,105 @@ tbody tr:last-child td { border-bottom: none; }
   .login-card { padding: 28px 20px; border-radius: 14px; }
   #page-content { padding: 12px; }
 }
+
+/* ================================================================
+   DASHBOARD ENHANCEMENTS (Professional UI)
+   ================================================================ */
+
+/* Premium Stats Cards */
+.stat-card-premium {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.stat-card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px rgba(0,0,0,0.1);
+}
+.stat-card-premium .icon-bg {
+  position: absolute;
+  top: -10px; right: -10px;
+  font-size: 5rem;
+  opacity: 0.04;
+  transform: rotate(-10deg);
+  pointer-events: none;
+}
+
+/* Timeline UI */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+  margin-top: 10px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 11px; top: 5px; bottom: 5px;
+  width: 2px;
+  background: #f3f4f6;
+}
+.timeline-item {
+  position: relative;
+  padding-bottom: 24px;
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-dot {
+  position: absolute;
+  left: -26.5px; top: 4px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #d1d5db;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px #f3f4f6;
+  z-index: 2;
+}
+.timeline-dot.success { background: var(--color-success); box-shadow: 0 0 0 2px #dcfce7; }
+.timeline-dot.failed  { background: var(--color-danger); box-shadow: 0 0 0 2px #fee2e2; }
+.timeline-dot.running { background: var(--color-info); box-shadow: 0 0 0 2px #dbeafe; animation: pulse 2s infinite; }
+
+.timeline-content {
+  background: #f9fafb;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  border: 1px solid #f3f4f6;
+}
+.timeline-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  display: block;
+  font-weight: 600;
+}
+
+/* Donut Chart placeholder */
+.donut-container {
+  width: 100px; height: 100px;
+  position: relative;
+}
+.donut-text {
+  position: absolute;
+  inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* Animations */
+.fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+

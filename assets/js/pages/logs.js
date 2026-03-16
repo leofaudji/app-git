@@ -1,7 +1,9 @@
 // ============================================================
 // pages/logs.js - Deployment Logs Page
 // ============================================================
-const PageLogs = (() => {
+import { Api, Toast } from "../api.js";
+
+export const PageLogs = (() => {
   let currentPage = 1;
   let currentFilter = { status: '', trigger: '', project_id: '' };
 

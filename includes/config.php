@@ -3,9 +3,10 @@
 // Application Configuration
 // ============================================================
 
+define('APP_PATH',    '/app-git');
 define('APP_NAME',    'GitDeploy');
-define('APP_VERSION', '1.0.2');
-define('APP_URL',     'http://localhost/app-git');
+define('APP_VERSION', '1.0.3');
+define('APP_URL',     'http://localhost' . APP_PATH);
 
 // Database
 define('DB_HOST', '127.0.0.1');

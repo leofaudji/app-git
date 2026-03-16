@@ -25,9 +25,10 @@ try {
   <title><?= htmlspecialchars($appName) ?></title>
 
   <!-- PWA -->
-  <link rel="manifest" href="/app-git/manifest.json">
-  <link rel="apple-touch-icon" href="/app-git/assets/icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/app-git/assets/icons/icon-96.png">
+  <link rel="manifest" href="<?= APP_PATH ?>/manifest.json">
+  <link rel="apple-touch-icon" href="<?= APP_PATH ?>/assets/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_PATH ?>/assets/icons/icon-96.png">
+  <script>window.APP_PATH = "<?= APP_PATH ?>";</script>
 
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -158,19 +159,8 @@ try {
   <button class="btn btn-ghost btn-sm" id="pwa-dismiss-btn">Nanti</button>
 </div>
 
-<!-- ── JavaScript Modules ── -->
-<script src="/app-git/assets/js/api.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/projects.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/dashboard.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/git.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/logs.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/webhook_logs.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/users.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/roles.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/settings.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/pages/profile.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/router.js?v=<?= APP_VERSION ?>"></script>
-<script src="/app-git/assets/js/app.js?v=<?= APP_VERSION ?>"></script>
+<!-- ── JavaScript Entry Point (Module) ── -->
+<script type="module" src="<?= APP_PATH ?>/assets/js/main.js?v=<?= APP_VERSION ?>"></script>
 
 </body>
 </html>

@@ -1,2 +1,4 @@
 schema.sql
 includes/config.php
+.htaccess
+includes/config.php

@@ -1,4 +1,6 @@
-const PageProjects = {
+import { Api, Toast } from "../api.js";
+
+export const PageProjects = {
   async render() {
     const view = document.getElementById('page-view');
     const canManage = window.CurrentUser?.permissions?.projects?.includes('manage');

@@ -1,7 +1,9 @@
 // ============================================================
 // pages/roles.js - Roles & Permissions Management
 // ============================================================
-const PageRoles = (() => {
+import { Api, Toast } from "../api.js";
+
+export const PageRoles = (() => {
   let allPerms = [];
 
   async function render() {

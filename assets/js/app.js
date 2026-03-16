@@ -1,7 +1,19 @@
 // ============================================================
 // app.js - Main Application Controller
 // ============================================================
-const App = (() => {
+import { Api, Toast } from "./api.js";
+import { Router } from "./router.js";
+import { PageDashboard } from "./pages/dashboard.js";
+import { PageProjects } from "./pages/projects.js";
+import { PageGit } from "./pages/git.js";
+import { PageLogs } from "./pages/logs.js";
+import { PageWebhookLogs } from "./pages/webhook_logs.js";
+import { PageUsers } from "./pages/users.js";
+import { PageRoles } from "./pages/roles.js";
+import { PageSettings } from "./pages/settings.js";
+import { PageProfile } from "./pages/profile.js";
+
+export const App = (() => {
   let currentUser = null;
 
   // ─── Icons for menu ───
@@ -41,7 +53,7 @@ const App = (() => {
           </div>
           <div class="nav-submenu" id="sub-${item.id}">
             ${item.children.map(child => `
-              <div class="nav-sub-item" data-route="${child.route}" onclick="Router.navigate('${child.route.replace('#','')}');closeMobileSidebar()">
+              <div class="nav-sub-item" data-route="${child.route}" onclick="window.RouterInstance.navigate('${child.route.replace('#','')}');closeMobileSidebar()">
                 ${child.label}
               </div>`).join('')}
           </div>`;
@@ -122,7 +134,10 @@ const App = (() => {
       setPageTitle('Deploy Logs');
       await PageLogs.render(params);
     });
-    Router.on('webhook-logs', (hash, params) => PageWebhookLogs.render(hash, params));
+    Router.on('webhook-logs', (hash, params) => {
+      setPageTitle('Webhook Logs');
+      PageWebhookLogs.render(hash, params);
+    });
     Router.on('users', async (hash, params) => {
       setPageTitle('User Management');
       await PageUsers.render(params);
@@ -285,11 +300,10 @@ function initPWA() {
 
   // Register service worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/app-git/sw.js')
+    navigator.serviceWorker.register((window.APP_PATH || '/app-git') + '/sw.js')
       .then(reg => console.log('[SW] Registered:', reg.scope))
       .catch(err => console.warn('[SW] Registration failed:', err));
   }
 }
 
-// ─── Start app ───
-document.addEventListener('DOMContentLoaded', () => App.init());
+// (End of App module)

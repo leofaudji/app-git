@@ -1,12 +1,25 @@
 // ============================================================
 // api.js - Global AJAX/Fetch Utility with CSRF
 // ============================================================
-const Api = (() => {
+export const Api = (() => {
   let csrfToken = '';
-  const BASE = '/app-git/api';
+  const BASE = (window.APP_PATH || '/app-git') + '/api';
 
   const setCsrf = (token) => { csrfToken = token; };
   const getCsrf = () => csrfToken;
+
+  function flatten(data, form, prefix = '') {
+    for (const [k, v] of Object.entries(data)) {
+      const key = prefix ? `${prefix}[${k}]` : k;
+      if (Array.isArray(v)) {
+        v.forEach(i => form.append(`${key}[]`, i));
+      } else if (v !== null && typeof v === 'object' && !(v instanceof File)) {
+        flatten(v, form, key);
+      } else {
+        form.append(key, v ?? '');
+      }
+    }
+  }
 
   async function request(endpoint, options = {}) {
     const url = endpoint.startsWith('http') ? endpoint : `${BASE}/${endpoint}`;
@@ -14,64 +27,51 @@ const Api = (() => {
       'X-Requested-With': 'XMLHttpRequest',
       ...(options.headers || {}),
     };
-    // Attach CSRF on mutating requests
+
     if (csrfToken && options.method && options.method !== 'GET') {
       headers['X-CSRF-Token'] = csrfToken;
     }
 
     try {
-      const resp = await fetch(url, { ...options, headers });
-
-      if (resp.status === 401) {
-        // Session expired
-        App.logout(true);
+      const res = await fetch(url, { ...options, headers });
+      if (res.status === 401) {
+        window.location.reload();
         return;
       }
-
-      const json = await resp.json();
-      return json;
+      return await res.json();
     } catch (err) {
-      console.error('[Api] request error:', err);
-      return { success: false, message: 'Network error atau server tidak merespons' };
+      console.error('[Api Error]', err);
+      return { success: false, message: 'Network error or server down' };
     }
   }
 
-  async function get(endpoint, params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    const url = qs ? `${endpoint}?${qs}` : endpoint;
-    return request(url, { method: 'GET' });
-  }
-
-  async function post(endpoint, data = {}) {
+  const postLike = (method, end, data) => {
+    if (data instanceof FormData) {
+      return request(end, { method, body: data });
+    }
     const form = new URLSearchParams();
-    // Flatten nested objects (like settings[key]=val)
-    const flatten = (obj, prefix = '') => {
-      for (const [k, v] of Object.entries(obj)) {
-        const key = prefix ? `${prefix}[${k}]` : k;
-        if (Array.isArray(v)) {
-          v.forEach(i => form.append(`${key}[]`, i));
-        } else if (v !== null && typeof v === 'object') {
-          flatten(v, key);
-        } else {
-          form.append(key, v ?? '');
-        }
-      }
-    };
-    flatten(data);
-    return request(endpoint, {
-      method: 'POST',
+    flatten(data || {}, form);
+    return request(end, {
+      method,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: form.toString(),
+      body: form.toString()
     });
-  }
+  };
 
-  return { get, post, setCsrf, getCsrf };
+  return {
+    setCsrf,
+    getCsrf,
+    get:  (end, params) => {
+      const qs = params ? `?${new URLSearchParams(params)}` : '';
+      return request(`${end}${qs}`);
+    },
+    post:   (end, data) => postLike('POST', end, data),
+    put:    (end, data) => postLike('PUT', end, data),
+    delete: (end, data) => postLike('DELETE', end, data),
+  };
 })();
 
-// ============================================================
-// Toast notifications
-// ============================================================
-const Toast = {
+export const Toast = {
   show(msg, type = 'info', duration = 3000) {
     Swal.mixin({
       toast: true,
