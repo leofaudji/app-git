@@ -3,10 +3,17 @@
 // Application Configuration
 // ============================================================
 
-define('APP_PATH',    '/app-git');
+// Auto-detect Base Path
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+if ($scriptDir === '/') $scriptDir = '';
+define('APP_PATH', $scriptDir);
+
 define('APP_NAME',    'GitDeploy');
 define('APP_VERSION', '1.0.3');
-define('APP_URL',     'http://localhost' . APP_PATH);
+// Dynamic APP_URL
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+define('APP_URL', $protocol . '://' . $host . APP_PATH);
 
 // Database
 define('DB_HOST', '127.0.0.1');

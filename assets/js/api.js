@@ -38,10 +38,16 @@ export const Api = (() => {
         window.location.reload();
         return;
       }
-      return await res.json();
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await res.json();
+      }
+      const text = await res.text();
+      console.error('[Api Error] Non-JSON response:', text.substring(0, 200));
+      return { success: false, message: `Server error (${res.status}): Response was not JSON.` };
     } catch (err) {
       console.error('[Api Error]', err);
-      return { success: false, message: 'Network error or server down' };
+      return { success: false, message: 'Network error or connection refused.' };
     }
   }
 
