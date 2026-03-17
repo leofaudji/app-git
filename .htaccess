@@ -2,19 +2,24 @@ Options -Indexes
 
 # Front Controller - redirect all non-file requests to index.php
 RewriteEngine On 
-RewriteBase /app-git/ 
 
-# Don't rewrite actual files/directories
+# 1. Force HTTPS in Production (Not localhost/test)
+RewriteCond %{HTTP_HOST} !^localhost [NC]
+RewriteCond %{HTTP_HOST} !\.test$ [NC]
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 2. Don't rewrite actual files/directories
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-# API clean URLs: /api/csrf → /api/csrf.php
+# 3. API Clean URLs (Relative target)
 RewriteRule ^api/([a-z_]+)$ api/$1.php [L,QSA]
 
-# Allow API, assets, manifest, sw directly
+# 4. Allow API, assets, manifest, sw directly
 RewriteRule ^(api|assets|manifest\.json|sw\.js)($|/) - [L]
 
-# Everything else to index.php
+# 5. Everything else to index.php (Relative target)
 RewriteRule ^(?!api/|assets/|manifest\.json|sw\.js).*$ index.php [L,QSA]
 
 # Security headers
