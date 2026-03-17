@@ -2,7 +2,7 @@ Options -Indexes
 
 # Front Controller - redirect all non-file requests to index.php
 RewriteEngine On 
-RewriteBase /
+RewriteBase /app-git/ 
 
 # Don't rewrite actual files/directories
 RewriteCond %{REQUEST_FILENAME} !-f

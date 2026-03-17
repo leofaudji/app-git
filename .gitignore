@@ -1,3 +1,4 @@
 schema.sql
-includes/config.php
 .htaccess
+.env
+.DS_Store
