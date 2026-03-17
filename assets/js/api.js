@@ -3,7 +3,7 @@
 // ============================================================
 export const Api = (() => {
   let csrfToken = '';
-  const BASE = (window.APP_PATH || '/app-git') + '/api';
+  const BASE = (typeof window.APP_PATH !== 'undefined' ? window.APP_PATH : '/app-git') + '/api';
 
   const setCsrf = (token) => { csrfToken = token; };
   const getCsrf = () => csrfToken;

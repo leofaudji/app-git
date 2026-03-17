@@ -300,7 +300,7 @@ function initPWA() {
 
   // Register service worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register((window.APP_PATH || '/app-git') + '/sw.js')
+    navigator.serviceWorker.register((typeof window.APP_PATH !== 'undefined' ? window.APP_PATH : '/app-git') + '/sw.js')
       .then(reg => console.log('[SW] Registered:', reg.scope))
       .catch(err => console.warn('[SW] Registration failed:', err));
   }
