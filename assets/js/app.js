@@ -12,6 +12,7 @@ import { PageUsers } from "./pages/users.js";
 import { PageRoles } from "./pages/roles.js";
 import { PageSettings } from "./pages/settings.js";
 import { PageProfile } from "./pages/profile.js";
+import { PageChangelog } from "./pages/changelog.js";
 
 export const App = (() => {
   let currentUser = null;
@@ -154,6 +155,10 @@ export const App = (() => {
       setPageTitle('Profil Saya');
       await PageProfile.render(params);
     });
+    Router.on('changelog', async (hash, params) => {
+      setPageTitle('Changelog');
+      await PageChangelog.render(params);
+    });
   }
 
   // ─── Login ───
@@ -203,8 +208,24 @@ export const App = (() => {
     registerRoutes();
     Router.init();
 
+    // Fetch and display latest version
+    updateAppVersion();
+
     // Expose user globally for pages
     window.CurrentUser = currentUser;
+  }
+
+  async function updateAppVersion() {
+    const res = await Api.get('changelog?action=latest_version');
+    const version = res?.success ? res.data.version : '1.0.0';
+    
+    // Update Sidebar
+    const sideVer = document.getElementById('sidebar-version');
+    if (sideVer) sideVer.textContent = 'v' + version;
+
+    // Update Login
+    const loginVer = document.getElementById('login-version');
+    if (loginVer) loginVer.textContent = 'Version ' + version;
   }
 
   // ─── Show login ───
@@ -252,6 +273,9 @@ export const App = (() => {
     // PWA install
     initPWA();
 
+    // Initial version load
+    App.updateAppVersion();
+
     // Check if already logged in
     const statusRes = await Api.get('auth?action=status');
     if (statusRes?.data?.authenticated) {
@@ -260,7 +284,7 @@ export const App = (() => {
     // (login page is already visible by default)
   }
 
-  return { init, logout, setPageTitle };
+  return { init, logout, setPageTitle, updateAppVersion };
 })();
 
 // ─── Mobile sidebar close helper ───

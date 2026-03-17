@@ -60,6 +60,7 @@ try {
       <div class="logo-ring">🚀</div>
       <h1><?= htmlspecialchars($appName) ?></h1>
       <p>Git Webhook Auto-Deploy</p>
+      <div id="login-version" style="font-size:10px;color:var(--text-muted);margin-top:2px;">Memuat versi...</div>
     </div>
 
     <div id="login-alert" class="alert alert-error" style="display:none"></div>
@@ -102,7 +103,7 @@ try {
       <div class="logo-icon">🚀</div>
       <div>
         <div class="logo-text" id="sidebar-app-name"><?= htmlspecialchars($appName) ?></div>
-        <div class="logo-version">v<?= APP_VERSION ?></div>
+        <div class="logo-version" id="sidebar-version">v<?= APP_VERSION ?></div>
       </div>
     </div>
 

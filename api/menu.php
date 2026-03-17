@@ -18,6 +18,13 @@ $allMenus = [
         'perm'  => ['module' => 'dashboard', 'action' => 'view'],
     ],
     [
+        'id'    => 'changelog',
+        'label' => 'Changelog',
+        'icon'  => 'logs',
+        'route' => '#changelog',
+        'perm'  => null, // accessible to everyone logged in
+    ],
+    [
         'id'    => 'projects',
         'label' => 'Manage Projects',
         'icon'  => 'git',
