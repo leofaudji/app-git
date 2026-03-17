@@ -625,6 +625,7 @@ tbody tr:last-child td { border-bottom: none; }
   transform: translateY(12px) scale(0.97);
   transition: transform 0.18s;
 }
+.modal-box.modal-lg { max-width: 800px; }
 .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
 
 .modal-header {

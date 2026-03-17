@@ -32,6 +32,7 @@ export const PageProjects = {
                 <th>Repo Name</th>
                 <th>Folder</th>
                 <th>Branch</th>
+                <th>Version</th>
                 <th>Last Status</th>
                 <th>Last Deploy</th>
                 ${canManage ? '<th class="text-right">Aksi</th>' : ''}
@@ -76,6 +77,10 @@ export const PageProjects = {
                 <div class="form-group">
                   <label class="form-label">Branch</label>
                   <input type="text" name="branch" id="proj-branch" class="form-input" placeholder="main">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Current Version</label>
+                  <input type="text" name="current_version" id="proj-version" class="form-input" placeholder="1.0.0">
                 </div>
               </div>
 
@@ -122,6 +127,37 @@ export const PageProjects = {
           </div>
         </div>
       </div>
+      <!-- Changelog Modal -->
+      <div id="changelog-modal" class="modal-overlay">
+        <div class="modal-box modal-lg">
+          <div class="modal-header">
+            <h3 class="modal-title">Project Changelog: <span id="changelog-project-name"></span></h3>
+            <button class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            ${canManage ? `
+              <form id="changelog-form" class="mb-4 bg-gray-50 p-4 rounded-lg border">
+                <h4 class="font-bold mb-2">Tambah Entry Changelog</h4>
+                <input type="hidden" name="project_id" id="changelog-proj-id">
+                <div class="grid-2 gap-2 mb-2">
+                  <div class="form-group mb-0">
+                    <input type="text" name="version" id="changelog-version" class="form-input" placeholder="Versi baru" required>
+                  </div>
+                  <div class="form-group mb-0">
+                    <button type="submit" class="btn btn-primary w-full">Simpan & Update Versi</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <textarea name="changelog" id="changelog-text" class="form-textarea" placeholder="Detail perubahan..." required></textarea>
+                </div>
+              </form>
+            ` : ''}
+            <div id="changelog-list" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+              <!-- Logs loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
     `;
 
     this.init();
@@ -130,19 +166,23 @@ export const PageProjects = {
   async init() {
     this.fetchProjects();
 
-    const canManage = window.CurrentUser?.permissions?.projects?.includes('manage');
-    if (!canManage) return;
-
-    document.getElementById('btn-add-project').onclick = () => this.showModal();
-    document.getElementById('btn-scan').onclick = () => this.showScan();
-    
+    // Close modal handlers (Global for all modals)
     document.querySelectorAll('.modal-close, .modal-close-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
       };
     });
 
+    const canManage = window.CurrentUser?.permissions?.projects?.includes('manage');
+    if (!canManage) return;
+
+    document.getElementById('btn-add-project').onclick = () => this.showModal();
+    document.getElementById('btn-scan').onclick = () => this.showScan();
+    
     document.getElementById('project-form').onsubmit = (e) => this.handleSave(e);
+    if (document.getElementById('changelog-form')) {
+      document.getElementById('changelog-form').onsubmit = (e) => this.handleChangelogSave(e);
+    }
   },
 
   async fetchProjects() {
@@ -164,6 +204,12 @@ export const PageProjects = {
         <td><code class="text-xs">${p.repo_name}</code></td>
         <td><code class="text-xs">${p.folder_name}</code></td>
         <td><span class="badge badge-indigo">${p.branch || 'main'}</span></td>
+        <td>
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-mono">${p.current_version || '1.0.0'}</span>
+            <button class="btn-icon text-xs" title="Changelog" onclick="PageProjects.showChangelog(${p.id}, '${p.name}')">📋</button>
+          </div>
+        </td>
         <td>
           ${p.last_status === 'success' ? `<span class="badge badge-success">Berhasil</span>` : 
             p.last_status === 'failed' ? `<span class="badge badge-danger">Gagal</span>` : 
@@ -202,6 +248,7 @@ export const PageProjects = {
         document.getElementById('proj-repo').value = p.repo_name;
         document.getElementById('proj-folder').value = p.folder_name;
         document.getElementById('proj-branch').value = p.branch;
+        document.getElementById('proj-version').value = p.current_version;
         document.getElementById('proj-secret').value = p.webhook_secret;
         document.getElementById('proj-desc').value = p.description;
         document.getElementById('proj-active').checked = parseInt(p.is_active) === 1;
@@ -225,6 +272,7 @@ export const PageProjects = {
       repo_name:      document.getElementById('proj-repo').value.trim(),
       folder_name:    document.getElementById('proj-folder').value.trim(),
       branch:         document.getElementById('proj-branch').value.trim() || 'main',
+      current_version: document.getElementById('proj-version').value.trim() || '1.0.0',
       webhook_secret: document.getElementById('proj-secret').value.trim(),
       description:    document.getElementById('proj-desc').value.trim(),
       is_active:      document.getElementById('proj-active').checked ? 1 : 0
@@ -298,5 +346,64 @@ export const PageProjects = {
     document.getElementById('proj-name').value = name;
     document.getElementById('proj-folder').value = name;
     document.getElementById('proj-repo').value = 'github-user/' + name; // Placeholder
+  },
+
+  async showChangelog(id, name) {
+    const modal = document.getElementById('changelog-modal');
+    document.getElementById('changelog-project-name').textContent = name;
+    
+    if (document.getElementById('changelog-form')) {
+      document.getElementById('changelog-form').reset();
+      document.getElementById('changelog-proj-id').value = id;
+    }
+
+    modal.classList.add('open');
+    this.fetchChangelogs(id);
+  },
+
+  async fetchChangelogs(id) {
+    const list = document.getElementById('changelog-list');
+    list.innerHTML = `<p class="text-center py-4"><span class="spinner"></span> Memuat history...</p>`;
+
+    const res = await Api.get('projects', { action: 'changelog_list', project_id: id });
+    if (!res?.success) {
+      list.innerHTML = `<div class="alert alert-error">${res?.message || 'Gagal memuat history'}</div>`;
+      return;
+    }
+
+    if (res.data.length === 0) {
+      list.innerHTML = `<p class="empty-state">Belum ada catatan perubahan untuk project ini.</p>`;
+      return;
+    }
+
+    list.innerHTML = res.data.map(l => `
+      <div class="border-l-4 border-primary pl-4 py-1">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="badge badge-indigo">v${l.version}</span>
+          <span class="text-xs text-muted">${l.created_at} oleh ${l.author || 'System'}</span>
+        </div>
+        <div class="text-sm whitespace-pre-wrap">${l.changelog}</div>
+      </div>
+    `).join('');
+  },
+
+  async handleChangelogSave(e) {
+    e.preventDefault();
+    const id = document.getElementById('changelog-proj-id').value;
+    const data = {
+      action:     'changelog_save',
+      project_id: id,
+      version:    document.getElementById('changelog-version').value.trim(),
+      changelog:  document.getElementById('changelog-text').value.trim(),
+    };
+
+    const res = await Api.post('projects', data);
+    if (res?.success) {
+      Toast.success(res.message);
+      this.fetchChangelogs(id);
+      this.fetchProjects(); // Update version in table
+    } else {
+      Toast.error(res?.message || 'Gagal menyimpan');
+    }
   }
 };

@@ -70,11 +70,24 @@ CREATE TABLE IF NOT EXISTS `projects` (
   `repo_name` VARCHAR(100) NOT NULL, -- For webhook matching (e.g. "username/repo")
   `folder_name` VARCHAR(100) NOT NULL, -- Relative to global base dir or absolute
   `branch` VARCHAR(100) DEFAULT 'main',
+  `current_version` VARCHAR(50) DEFAULT '1.0.0',
   `webhook_secret` VARCHAR(255) DEFAULT '',
   `description` TEXT,
   `is_active` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Project Changelogs
+CREATE TABLE IF NOT EXISTS `project_changelogs` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `project_id` INT UNSIGNED NOT NULL,
+  `version` VARCHAR(50) NOT NULL,
+  `changelog` TEXT NOT NULL,
+  `user_id` INT UNSIGNED NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- Deployment logs

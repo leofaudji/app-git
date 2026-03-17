@@ -174,6 +174,44 @@ DB::execute(
     [$status, $outputStr, $hash, $logId]
 );
 
+// ─── Automated Changelog Sync (New) ───
+if ($status === 'success') {
+    require_once __DIR__ . '/../includes/changelog_parser.php';
+    
+    // Look for changelog.md (case-insensitive)
+    $changelogFile = null;
+    $possibleNames = ['changelog.md', 'CHANGELOG.md', 'Changelog.md'];
+    foreach ($possibleNames as $name) {
+        if (file_exists($fullPath . DIRECTORY_SEPARATOR . $name)) {
+            $changelogFile = $fullPath . DIRECTORY_SEPARATOR . $name;
+            break;
+        }
+    }
+
+    if ($changelogFile) {
+        $parsed = ChangelogParser::parse($changelogFile);
+        if ($parsed && !empty($parsed['version'])) {
+            $newVersion = $parsed['version'];
+            
+            // Only update and insert if version is different from current
+            if ($newVersion !== $project['current_version']) {
+                // Update Project Version
+                DB::execute("UPDATE projects SET current_version = ? WHERE id = ?", [$newVersion, $project['id']]);
+                
+                // Add to Changelog History
+                // Check if this version already exists in history to avoid duplicates
+                $exists = DB::fetchOne("SELECT id FROM project_changelogs WHERE project_id = ? AND version = ?", [$project['id'], $newVersion]);
+                if (!$exists) {
+                    DB::execute(
+                        "INSERT INTO project_changelogs (project_id, version, changelog, author) VALUES (?, ?, ?, ?)",
+                        [$project['id'], $newVersion, $parsed['content'], 'Git (Auto)']
+                    );
+                }
+            }
+        }
+    }
+}
+
 logWebhook('success', 'Deployment triggered', $project['id'], $data);
 
 http_response_code(200);

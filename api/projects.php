@@ -37,6 +37,7 @@ switch ($action) {
         $repo_name      = trim($_POST['repo_name'] ?? '');
         $folder_name    = trim($_POST['folder_name'] ?? '');
         $branch         = trim($_POST['branch'] ?? 'main');
+        $current_version = trim($_POST['current_version'] ?? '1.0.0');
         $webhook_secret = trim($_POST['webhook_secret'] ?? '');
         $description    = trim($_POST['description'] ?? '');
         $is_active      = (int) ($_POST['is_active'] ?? 1);
@@ -46,14 +47,14 @@ switch ($action) {
         try {
             if ($id > 0) {
                 DB::execute(
-                    "UPDATE projects SET name=?, repo_name=?, folder_name=?, branch=?, webhook_secret=?, description=?, is_active=? WHERE id=?",
-                    [$name, $repo_name, $folder_name, $branch, $webhook_secret, $description, $is_active, $id]
+                    "UPDATE projects SET name=?, repo_name=?, folder_name=?, branch=?, current_version=?, webhook_secret=?, description=?, is_active=? WHERE id=?",
+                    [$name, $repo_name, $folder_name, $branch, $current_version, $webhook_secret, $description, $is_active, $id]
                 );
                 jsonSuccess(['id' => $id], 'Project diperbarui');
             } else {
                 DB::execute(
-                    "INSERT INTO projects (name, repo_name, folder_name, branch, webhook_secret, description, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    [$name, $repo_name, $folder_name, $branch, $webhook_secret, $description, $is_active]
+                    "INSERT INTO projects (name, repo_name, folder_name, branch, current_version, webhook_secret, description, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    [$name, $repo_name, $folder_name, $branch, $current_version, $webhook_secret, $description, $is_active]
                 );
                 jsonSuccess(['id' => DB::lastInsertId()], 'Project ditambahkan');
             }
@@ -92,6 +93,37 @@ switch ($action) {
             }
         }
         jsonSuccess($folders);
+
+    case 'changelog_list':
+        requirePermission('projects', 'view');
+        $id = (int) ($_GET['project_id'] ?? 0);
+        $logs = DB::fetchAll("SELECT cl.*, u.full_name as author 
+            FROM project_changelogs cl 
+            LEFT JOIN users u ON u.id = cl.user_id 
+            WHERE cl.project_id = ? ORDER BY cl.created_at DESC", [$id]);
+        jsonSuccess($logs);
+
+    case 'changelog_save':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
+        requirePermission('projects', 'manage');
+        requireCsrf();
+
+        $project_id = (int) ($_POST['project_id'] ?? 0);
+        $version    = trim($_POST['version'] ?? '');
+        $changelog  = trim($_POST['changelog'] ?? '');
+        $user_id    = $_SESSION['user_id'] ?? null;
+
+        if (!$project_id || !$version || !$changelog) jsonError('Data tidak lengkap');
+
+        DB::execute(
+            "INSERT INTO project_changelogs (project_id, version, changelog, user_id) VALUES (?, ?, ?, ?)",
+            [$project_id, $version, $changelog, $user_id]
+        );
+        
+        // Also update project current_version
+        DB::execute("UPDATE projects SET current_version = ? WHERE id = ?", [$version, $project_id]);
+
+        jsonSuccess(null, 'Changelog ditambahkan');
 
     default:
         jsonError('Action tidak ditemukan', 404);
