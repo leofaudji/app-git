@@ -3,23 +3,30 @@ Options -Indexes
 # Front Controller - redirect all non-file requests to index.php
 RewriteEngine On 
 
-# 1. Force HTTPS in Production (Not localhost/test)
+# 1. Disable MultiViews to prevent path confusion
+Options -MultiViews
+
+# 2. Force HTTPS in Production (Not localhost/test)
 RewriteCond %{HTTP_HOST} !^localhost [NC]
 RewriteCond %{HTTP_HOST} !\.test$ [NC]
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# 2. Don't rewrite actual files/directories
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+# 3. DON'T REWRITE EXISTNG FILES OR DIRECTORIES
+# This is the most reliable way to prevent MIME type errors for assets
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
-# 3. API Clean URLs (Relative target)
+# 4. API Clean URLs
+# We use a leading slash/APP_PATH logic or just relative if base is correct
+# But to be safe in prod, we check if the file exists before rewriting
+RewriteCond %{DOCUMENT_ROOT}/api/$1.php -f [OR]
+RewriteCond %{REQUEST_FILENAME} api/([a-z_]+)$
 RewriteRule ^api/([a-z_]+)$ api/$1.php [L,QSA]
 
-# 4. Allow API, assets, manifest, sw directly
-RewriteRule ^(api|assets|manifest\.json|sw\.js)($|/) - [L]
-
-# 5. Everything else to index.php (Relative target)
+# 5. Front Controller
+# Everything else to index.php if it's not one of the exceptions
 RewriteRule ^(?!api/|assets/|manifest\.json|sw\.js).*$ index.php [L,QSA]
 
 # Security headers
