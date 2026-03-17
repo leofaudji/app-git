@@ -35,9 +35,17 @@ define('APP_VERSION', '1.0.3');
 define('APP_DEBUG',   env('APP_DEBUG', true));
 
 // Auto-detect Base Path (Portable)
-$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
-if ($scriptDir === '/') $scriptDir = '';
-define('APP_PATH',    $scriptDir);
+$envPath = env('APP_PATH', null);
+if ($envPath !== null) {
+    // Ensure trailing slash is avoided unless it's just /
+    $envPath = rtrim($envPath, '/');
+    define('APP_PATH', $envPath);
+} else {
+    // Robust auto-detection
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    $scriptDir = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+    define('APP_PATH', $scriptDir);
+}
 
 // Dynamic APP_URL
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
