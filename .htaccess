@@ -3,8 +3,8 @@ Options -Indexes
 # Front Controller - redirect all non-file requests to index.php
 RewriteEngine On 
 
-# 1. Disable MultiViews to prevent path confusion
-Options -MultiViews
+# 1. Disable MultiViews & directory listing
+Options -MultiViews -Indexes
 
 # 2. Force HTTPS in Production (Not localhost/test)
 RewriteCond %{HTTP_HOST} !^localhost [NC]
@@ -12,22 +12,23 @@ RewriteCond %{HTTP_HOST} !\.test$ [NC]
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# 3. DON'T REWRITE EXISTNG FILES OR DIRECTORIES
-# This is the most reliable way to prevent MIME type errors for assets
+# 3. PRIORITY 1: Serve existing files/directories directly
+# This prevents MIME type issues by ensuring sw.js, assets, etc. are served as-is
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# 4. API Clean URLs
-# We use a leading slash/APP_PATH logic or just relative if base is correct
-# But to be safe in prod, we check if the file exists before rewriting
-RewriteCond %{DOCUMENT_ROOT}/api/$1.php -f [OR]
-RewriteCond %{REQUEST_FILENAME} api/([a-z_]+)$
-RewriteRule ^api/([a-z_]+)$ api/$1.php [L,QSA]
+# 4. PRIORITY 2: API Clean URLs
+# Rewrite /api/auth to /api/auth.php
+RewriteRule ^api/([a-z0-9_]+)/?$ api/$1.php [L,QSA]
 
-# 5. Front Controller
-# Everything else to index.php if it's not one of the exceptions
-RewriteRule ^(?!api/|assets/|manifest\.json|sw\.js).*$ index.php [L,QSA]
+# 5. PRIORITY 3: Front Controller (SPA)
+# Everything else to index.php, EXCEPT if it's in a path that should never be HTML (api/assets)
+# This prevents "Unexpected token <" JSON errors by letting Apache return a real 404 for missing assets/api
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !/(api|assets|manifest\.json|sw\.js) [NC]
+RewriteRule ^ index.php [L,QSA]
 
 # Security headers
 <IfModule mod_headers.c>
