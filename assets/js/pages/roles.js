@@ -15,48 +15,50 @@ export const PageRoles = (() => {
     allPerms = permsRes?.data || [];
 
     view.innerHTML = `
-      <div class="card mb-4">
-        <div class="flex items-center justify-between mb-4">
-          <h2 style="font-size:15px;font-weight:600;margin:0">Daftar Role</h2>
-          ${canManage ? '<button class="btn btn-primary btn-sm" onclick="PageRoles.openModal()">+ Tambah Role</button>' : ''}
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>#</th><th>Name</th><th>Label</th><th>Users</th><th>Permissions</th><th></th></tr></thead>
-            <tbody id="roles-tbody"><tr><td colspan="6"><div style="padding:30px;text-align:center"><div class="spinner"></div></div></td></tr></tbody>
-          </table>
+      <div class="fade-in-up">
+        <div class="card mb-4">
+          <div class="flex items-center justify-between mb-4">
+            <h2 style="font-size:15px;font-weight:600;margin:0">Daftar Role</h2>
+            ${canManage ? '<button class="btn btn-primary btn-sm" onclick="PageRoles.openModal()">+ Tambah Role</button>' : ''}
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Name</th><th>Label</th><th>Users</th><th>Permissions</th><th></th></tr></thead>
+              <tbody id="roles-tbody"><tr><td colspan="6"><div style="padding:30px;text-align:center"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- Modal -->
-      <div class="modal-overlay" id="role-modal">
-        <div class="modal-box" style="max-width:600px">
-          <div class="modal-header">
-            <span class="modal-title" id="role-modal-title">Tambah Role</span>
-            <button class="modal-close" onclick="PageRoles.closeModal()">×</button>
-          </div>
-          <div class="modal-body">
-            <div id="role-modal-alert" class="alert alert-error" style="display:none"></div>
-            <input type="hidden" id="role-id">
-            <div class="form-group" id="role-name-group">
-              <label class="form-label">Name <span class="text-muted text-sm">(huruf kecil, underscore)</span></label>
-              <input type="text" id="role-name" class="form-input" placeholder="custom_role">
+        <div class="modal-overlay" id="role-modal">
+          <div class="modal-box" style="max-width:600px">
+            <div class="modal-header">
+              <span class="modal-title" id="role-modal-title">Tambah Role</span>
+              <button class="modal-close" onclick="PageRoles.closeModal()">×</button>
             </div>
-            <div class="form-group">
-              <label class="form-label">Label</label>
-              <input type="text" id="role-label" class="form-input" placeholder="Custom Role">
+            <div class="modal-body">
+              <div id="role-modal-alert" class="alert alert-error" style="display:none"></div>
+              <input type="hidden" id="role-id">
+              <div class="form-group" id="role-name-group">
+                <label class="form-label">Name <span class="text-muted text-sm">(huruf kecil, underscore)</span></label>
+                <input type="text" id="role-name" class="form-input" placeholder="custom_role">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Label</label>
+                <input type="text" id="role-label" class="form-input" placeholder="Custom Role">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Permissions</label>
+                <div id="perm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:280px;overflow-y:auto;padding:4px"></div>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Permissions</label>
-              <div id="perm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:280px;overflow-y:auto;padding:4px"></div>
+            <div class="modal-footer">
+              <button class="btn btn-ghost" onclick="PageRoles.closeModal()">Batal</button>
+              <button class="btn btn-primary" onclick="PageRoles.saveRole()">Simpan</button>
             </div>
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="PageRoles.closeModal()">Batal</button>
-            <button class="btn btn-primary" onclick="PageRoles.saveRole()">Simpan</button>
-          </div>
-        </div>
-      </div>`;
+        </div>`;
 
     await fetchRoles();
   }

@@ -18,9 +18,9 @@ echo "Exit code: $code\n";
 echo "Output: " . implode("\n", $output) . "\n";
 
 // Check Git Directory
-$gitDir = DB::getSetting('git_dir', GIT_DIR_DEFAULT);
+$gitDir = DB::getSetting('git_dir', '');
 echo "\nChecking Git Directory: $gitDir\n";
-if (is_dir($gitDir)) {
+if (!empty($gitDir) && is_dir($gitDir)) {
     echo "Directory exists: YES\n";
     echo "Is writable: " . (is_writable($gitDir) ? "YES" : "NO") . "\n";
     if (is_dir($gitDir . '/.git')) {
@@ -39,6 +39,15 @@ try {
     echo "Connection: SUCCESS\n";
     $res = $db->query("SELECT COUNT(*) FROM settings")->fetchColumn();
     echo "Settings count: $res\n";
+    
+    $checkTable = $db->query("SHOW TABLES LIKE 'audit_logs'")->fetch();
+    if ($checkTable) {
+        echo "audit_logs table: EXISTS\n";
+        $count = $db->query("SELECT COUNT(*) FROM audit_logs")->fetchColumn();
+        echo "audit_logs count: $count\n";
+    } else {
+        echo "audit_logs table: MISSING\n";
+    }
 } catch (Exception $e) {
     echo "Exception: " . $e->getMessage() . "\n";
 }

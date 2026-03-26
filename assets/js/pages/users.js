@@ -15,68 +15,70 @@ export const PageUsers = (() => {
     allRoles = rolesRes?.data || [];
 
     view.innerHTML = `
-      <div class="card mb-4">
-        <div class="flex items-center justify-between mb-4">
-          <h2 style="font-size:15px;font-weight:600;margin:0">Daftar User</h2>
-          ${canCreate ? '<button class="btn btn-primary btn-sm" onclick="PageUsers.openModal()">+ Tambah User</button>' : ''}
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>#</th><th>Username</th><th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th></th></tr></thead>
-            <tbody id="users-tbody"><tr><td colspan="8"><div style="padding:30px;text-align:center"><div class="spinner"></div></div></td></tr></tbody>
-          </table>
+      <div class="fade-in-up">
+        <div class="card mb-4">
+          <div class="flex items-center justify-between mb-4">
+            <h2 style="font-size:15px;font-weight:600;margin:0">Daftar User</h2>
+            ${canCreate ? '<button class="btn btn-primary btn-sm" onclick="PageUsers.openModal()">+ Tambah User</button>' : ''}
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Username</th><th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th></th></tr></thead>
+              <tbody id="users-tbody"><tr><td colspan="8"><div style="padding:30px;text-align:center"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- Create/Edit Modal -->
-      <div class="modal-overlay" id="user-modal">
-        <div class="modal-box">
-          <div class="modal-header">
-            <span class="modal-title" id="user-modal-title">Tambah User</span>
-            <button class="modal-close" onclick="PageUsers.closeModal()">×</button>
-          </div>
-          <div class="modal-body">
-            <div id="user-modal-alert" class="alert alert-error" style="display:none"></div>
-            <form id="user-form">
-              <input type="hidden" id="user-id">
-              <div class="form-group" id="username-group">
-                <label class="form-label">Username</label>
-                <input type="text" id="user-username" class="form-input" placeholder="john_doe">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Nama Lengkap</label>
-                <input type="text" id="user-fullname" class="form-input" placeholder="John Doe">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Email</label>
-                <input type="email" id="user-email" class="form-input" placeholder="john@example.com">
-              </div>
-              <div class="form-group">
-                <label class="form-label" id="pass-label">Password</label>
-                <input type="password" id="user-password" class="form-input" placeholder="••••••">
-                <div class="form-hint" id="pass-hint">Kosongkan jika tidak ingin mengubah password</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Role</label>
-                <div id="role-checkboxes" style="display:flex;flex-wrap:wrap;gap:10px"></div>
-              </div>
-              <div class="form-group">
-                <label class="toggle-wrap">
-                  <label class="toggle">
-                    <input type="checkbox" id="user-active" checked>
-                    <span class="toggle-slider"></span>
+        <div class="modal-overlay" id="user-modal">
+          <div class="modal-box">
+            <div class="modal-header">
+              <span class="modal-title" id="user-modal-title">Tambah User</span>
+              <button class="modal-close" onclick="PageUsers.closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+              <div id="user-modal-alert" class="alert alert-error" style="display:none"></div>
+              <form id="user-form">
+                <input type="hidden" id="user-id">
+                <div class="form-group" id="username-group">
+                  <label class="form-label">Username</label>
+                  <input type="text" id="user-username" class="form-input" placeholder="john_doe">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nama Lengkap</label>
+                  <input type="text" id="user-fullname" class="form-input" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input type="email" id="user-email" class="form-input" placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" id="pass-label">Password</label>
+                  <input type="password" id="user-password" class="form-input" placeholder="••••••">
+                  <div class="form-hint" id="pass-hint">Kosongkan jika tidak ingin mengubah password</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Role</label>
+                  <div id="role-checkboxes" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+                </div>
+                <div class="form-group">
+                  <label class="toggle-wrap">
+                    <label class="toggle">
+                      <input type="checkbox" id="user-active" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                    <span class="form-label" style="margin:0">Aktif</span>
                   </label>
-                  <span class="form-label" style="margin:0">Aktif</span>
-                </label>
-              </div>
-            </form>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-ghost" onclick="PageUsers.closeModal()">Batal</button>
+              <button class="btn btn-primary" id="user-save-btn" onclick="PageUsers.saveUser()">Simpan</button>
+            </div>
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="PageUsers.closeModal()">Batal</button>
-            <button class="btn btn-primary" id="user-save-btn" onclick="PageUsers.saveUser()">Simpan</button>
-          </div>
-        </div>
-      </div>`;
+        </div>`;
 
     await fetchUsers();
   }

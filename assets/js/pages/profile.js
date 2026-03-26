@@ -18,60 +18,62 @@ export const PageProfile = (() => {
     const initials = u.full_name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
 
     view.innerHTML = `
-      <div class="grid-2">
-        <!-- Profile Card -->
-        <div class="card">
-          <div style="text-align:center;margin-bottom:24px">
-            <div style="width:80px;height:80px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 16px">${initials}</div>
-            <h2 style="font-size:18px;font-weight:700;margin:0">${u.full_name}</h2>
-            <div class="text-muted text-sm">@${u.username}</div>
-            <div class="text-muted text-sm" style="margin-top:4px">${u.email}</div>
-            <div style="margin-top:10px">
-              <span class="badge badge-indigo">Member sejak ${u.created_at?.split(' ')[0]}</span>
+      <div class="fade-in-up">
+        <div class="grid-2">
+          <!-- Profile Card -->
+          <div class="card">
+            <div style="text-align:center;margin-bottom:24px">
+              <div style="width:80px;height:80px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 16px">${initials}</div>
+              <h2 style="font-size:18px;font-weight:700;margin:0">${u.full_name}</h2>
+              <div class="text-muted text-sm">@${u.username}</div>
+              <div class="text-muted text-sm" style="margin-top:4px">${u.email}</div>
+              <div style="margin-top:10px">
+                <span class="badge badge-indigo">Member sejak ${u.created_at?.split(' ')[0]}</span>
+              </div>
             </div>
+
+            <div id="profile-alert" class="alert alert-success" style="display:none"></div>
+
+            <div class="form-group">
+              <label class="form-label">Nama Lengkap</label>
+              <input type="text" id="prof-fullname" class="form-input" value="${u.full_name}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="prof-email" class="form-input" value="${u.email}">
+            </div>
+
+            <button class="btn btn-primary" onclick="PageProfile.saveProfile()">💾 Update Profil</button>
           </div>
 
-          <div id="profile-alert" class="alert alert-success" style="display:none"></div>
+          <!-- Change Password -->
+          <div class="card">
+            <div class="card-title">🔒 Ubah Password</div>
 
-          <div class="form-group">
-            <label class="form-label">Nama Lengkap</label>
-            <input type="text" id="prof-fullname" class="form-input" value="${u.full_name}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" id="prof-email" class="form-input" value="${u.email}">
-          </div>
+            <div id="pass-alert" class="alert" style="display:none"></div>
 
-          <button class="btn btn-primary" onclick="PageProfile.saveProfile()">💾 Update Profil</button>
-        </div>
+            <div class="form-group">
+              <label class="form-label">Password Lama</label>
+              <input type="password" id="prof-old-pass" class="form-input" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password Baru</label>
+              <input type="password" id="prof-new-pass" class="form-input" placeholder="Min. 6 karakter">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Konfirmasi Password Baru</label>
+              <input type="password" id="prof-conf-pass" class="form-input" placeholder="••••••••">
+            </div>
 
-        <!-- Change Password -->
-        <div class="card">
-          <div class="card-title">🔒 Ubah Password</div>
+            <button class="btn btn-primary" onclick="PageProfile.changePassword()">🔑 Ubah Password</button>
 
-          <div id="pass-alert" class="alert" style="display:none"></div>
-
-          <div class="form-group">
-            <label class="form-label">Password Lama</label>
-            <input type="password" id="prof-old-pass" class="form-input" placeholder="••••••••">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Password Baru</label>
-            <input type="password" id="prof-new-pass" class="form-input" placeholder="Min. 6 karakter">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Konfirmasi Password Baru</label>
-            <input type="password" id="prof-conf-pass" class="form-input" placeholder="••••••••">
-          </div>
-
-          <button class="btn btn-primary" onclick="PageProfile.changePassword()">🔑 Ubah Password</button>
-
-          <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
-            <div class="card-title">ℹ Info Akun</div>
-            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text-muted)">
-              <div>Username: <strong style="color:var(--text-primary)">${u.username}</strong></div>
-              <div>Last Login: <strong style="color:var(--text-primary)">${u.last_login || 'Belum pernah'}</strong></div>
-              <div>Terdaftar: <strong style="color:var(--text-primary)">${u.created_at}</strong></div>
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+              <div class="card-title">ℹ Info Akun</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text-muted)">
+                <div>Username: <strong style="color:var(--text-primary)">${u.username}</strong></div>
+                <div>Last Login: <strong style="color:var(--text-primary)">${u.last_login || 'Belum pernah'}</strong></div>
+                <div>Terdaftar: <strong style="color:var(--text-primary)">${u.created_at}</strong></div>
+              </div>
             </div>
           </div>
         </div>

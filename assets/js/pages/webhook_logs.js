@@ -6,51 +6,53 @@ export const PageWebhookLogs = {
     const canDelete = window.CurrentUser?.permissions?.webhook_logs?.includes('delete');
 
     view.innerHTML = `
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h2 class="text-xl font-bold">Webhook Logs</h2>
-          <p class="text-muted text-sm">Monitor semua trafik webhook yang masuk ke aplikasi.</p>
-        </div>
-        ${canDelete ? `
-          <button id="btn-clear-webhook-logs" class="btn btn-danger btn-sm">
-            <span class="nav-icon">🗑</span> Bersihkan Semua
-          </button>
-        ` : ''}
-      </div>
-
-      <div class="card overflow-hidden">
-        <div class="table-wrap">
-          <table id="webhook-logs-table">
-            <thead>
-              <tr>
-                <th>Waktu</th>
-                <th>Project</th>
-                <th>Event</th>
-                <th>Summary</th>
-                <th>Status</th>
-                <th>IP Address</th>
-                <th class="text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="webhook-logs-tbody">
-              <tr><td colspan="7" class="text-center py-8"><span class="spinner"></span> Memuat log...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Detail Modal -->
-      <div id="webhook-detail-modal" class="modal-overlay">
-        <div class="modal-box max-w-2xl">
-          <div class="modal-header">
-            <h3 class="modal-title">Webhook Detail</h3>
-            <button class="modal-close">×</button>
+      <div class="fade-in-up">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-xl font-bold">Webhook Logs</h2>
+            <p class="text-muted text-sm">Monitor semua trafik webhook yang masuk ke aplikasi.</p>
           </div>
-          <div class="modal-body">
-            <div id="webhook-detail-content" class="space-y-4"></div>
+          ${canDelete ? `
+            <button id="btn-clear-webhook-logs" class="btn btn-danger btn-sm">
+              <span class="nav-icon">🗑</span> Bersihkan Semua
+            </button>
+          ` : ''}
+        </div>
+
+        <div class="card overflow-hidden">
+          <div class="table-wrap">
+            <table id="webhook-logs-table">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Project</th>
+                  <th>Event</th>
+                  <th>Summary</th>
+                  <th>Status</th>
+                  <th>IP Address</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="webhook-logs-tbody">
+                <tr><td colspan="7" class="text-center py-8"><span class="spinner"></span> Memuat log...</td></tr>
+              </tbody>
+            </table>
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-ghost modal-close-btn">Tutup</button>
+        </div>
+
+        <!-- Detail Modal -->
+        <div id="webhook-detail-modal" class="modal-overlay">
+          <div class="modal-box max-w-2xl">
+            <div class="modal-header">
+              <h3 class="modal-title">Webhook Detail</h3>
+              <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+              <div id="webhook-detail-content" class="space-y-4"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-ghost modal-close-btn">Tutup</button>
+            </div>
           </div>
         </div>
       </div>

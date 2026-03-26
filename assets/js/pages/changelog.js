@@ -5,20 +5,22 @@ export const PageChangelog = {
     const view = document.getElementById('page-view');
     
     view.innerHTML = `
-      <div class="mb-6">
-        <h2 class="text-2xl font-bold">Changelog</h2>
-        <p class="text-muted">Pantau rilis terbaru dan riwayat perubahan aplikasi serta project Anda.</p>
-      </div>
-
-      <div class="tabs-wrap mb-6">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="projects">Project Updates</button>
-          <button class="tab-btn" data-tab="system">System Updates</button>
+      <div class="fade-in-up">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold">Changelog</h2>
+          <p class="text-muted">Pantau rilis terbaru dan riwayat perubahan aplikasi serta project Anda.</p>
         </div>
-      </div>
 
-      <div id="changelog-content" class="changelog-container">
-        <div class="text-center py-12"><span class="spinner"></span> Memuat riwayat...</div>
+        <div class="tabs-wrap mb-6">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="projects">Project Updates</button>
+            <button class="tab-btn" data-tab="system">System Updates</button>
+          </div>
+        </div>
+
+        <div id="changelog-content" class="changelog-container">
+          <div class="text-center py-12"><span class="spinner"></span> Memuat riwayat...</div>
+        </div>
       </div>
     `;
 

@@ -7,6 +7,7 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/csrf.php';
+require_once __DIR__ . '/../includes/AuditLog.php';
 
 header('Content-Type: application/json');
 
@@ -66,6 +67,24 @@ switch ($action) {
             ],
         ]);
 
+    case 'drift':
+        requirePermission('git', 'view');
+        if (!is_dir($path . '/.git')) {
+            jsonError("Direktori '$path' bukan git repository");
+        }
+        $status = runGit('status --porcelain', $path);
+        $lines  = array_filter(explode("\n", $status['output']));
+        $hasDrift = count($lines) > 0;
+        
+        // Update project table for cache
+        DB::execute("UPDATE projects SET last_drift_check = NOW(), is_drift = ? WHERE id = ?", [$hasDrift ? 1 : 0, $projectId]);
+
+        jsonSuccess([
+            'is_drift' => $hasDrift,
+            'changes'  => array_values($lines),
+            'count'    => count($lines)
+        ]);
+
     case 'branches':
         requirePermission('git', 'view');
         $result = runGit('branch -a', $path);
@@ -101,12 +120,61 @@ switch ($action) {
             [$status, $result['output'], $hash, $logId]
         );
 
+        AuditLog::record('git', 'pull_' . $status, $project['id'], "Git pull $status on branch $branch (commit $hash)");
+
         jsonSuccess([
             'status'    => $status,
             'output'    => $result['output'],
             'branch'    => $branch,
             'log_id'    => $logId,
         ], $status === 'success' ? 'Git pull berhasil' : 'Git pull gagal');
+
+    case 'history':
+        requirePermission('git', 'view');
+        $limit = (int) ($_GET['limit'] ?? 20);
+        // Format: Hash | Author | Subject | RelativeDate | UnixTimestamp
+        $result = runGit("log --pretty=format:\"%h|%an|%s|%ar|%ct\" -n $limit", $path);
+        $lines = array_filter(explode("\n", $result['output']));
+        $history = array_map(function($line) {
+            $p = explode('|', $line);
+            return [
+                'hash' => $p[0] ?? '',
+                'author' => $p[1] ?? '',
+                'subject' => $p[2] ?? '',
+                'date' => $p[3] ?? '',
+                'timestamp' => $p[4] ?? ''
+            ];
+        }, $lines);
+        jsonSuccess(['history' => $history]);
+
+    case 'rollback':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
+        $currentUser = requirePermission('git', 'pull');
+        requireCsrf();
+        
+        $hash = $_POST['hash'] ?? '';
+        if (!$hash) jsonError('Commit hash wajib diisi');
+
+        // record audit before
+        AuditLog::record('git', 'rollback_start', $project['id'], "Rollback project {$project['name']} to $hash");
+
+        $result = runGit("reset --hard $hash", $path);
+        $status = $result['exit_code'] === 0 ? 'success' : 'failed';
+
+        // Log to deployment logs too
+        DB::execute(
+            "INSERT INTO deploy_logs (project_id, triggered_by, user_id, branch, commit_hash, status, output, ip_address) 
+             VALUES (?, 'manual', ?, ?, ?, ?, ?, ?)",
+            [$project['id'], 'manual', $currentUser['id'], $project['branch'], $hash, $status, "ROLLBACK TO $hash\n\n" . $result['output'], $_SERVER['REMOTE_ADDR'] ?? 'localhost']
+        );
+
+        if ($status === 'success') {
+            AuditLog::record('git', 'rollback_success', $project['id'], "Rollback project {$project['name']} to $hash successful");
+            jsonSuccess(['output' => $result['output']], "Rollback ke $hash berhasil");
+        } else {
+            AuditLog::record('git', 'rollback_failed', $project['id'], "Rollback project {$project['name']} to $hash failed: " . $result['output']);
+            jsonError("Rollback gagal: " . $result['output']);
+        }
 
     default:
         jsonError('Action tidak ditemukan', 404);

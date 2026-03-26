@@ -14,11 +14,13 @@ export const PageGit = (() => {
 
     if (!projectId) {
       view.innerHTML = `
-        <div class="card p-10 text-center">
-          <div class="text-4xl mb-4">🔍</div>
-          <h4 class="text-lg font-bold mb-2">Project tidak dipilih</h4>
-          <p class="text-muted mb-4">Silakan pilih project dari dashboard atau menu Manage Projects.</p>
-          <a href="#dashboard" class="btn btn-primary inline-flex">Kembali ke Dashboard</a>
+        <div class="fade-in-up">
+          <div class="card p-10 text-center">
+            <div class="text-4xl mb-4">🔍</div>
+            <h4 class="text-lg font-bold mb-2">Project tidak dipilih</h4>
+            <p class="text-muted mb-4">Silakan pilih project dari dashboard atau menu Manage Projects.</p>
+            <a href="#dashboard" class="btn btn-primary inline-flex">Kembali ke Dashboard</a>
+          </div>
         </div>`;
       return;
     }
@@ -30,12 +32,13 @@ export const PageGit = (() => {
         <h2 class="text-xl font-bold">${res?.data?.project?.name || 'Git Operations'}</h2>
         <div class="flex gap-2">
           <button class="btn ${view_mode === 'status' ? 'btn-primary' : 'btn-ghost'} btn-sm" onclick="PageGit.switchTab('status')">🌿 Status</button>
+          <button class="btn ${view_mode === 'history' ? 'btn-primary' : 'btn-ghost'} btn-sm" onclick="PageGit.switchTab('history')">📜 History & Rollback</button>
           <button class="btn ${view_mode === 'pull' ? 'btn-primary' : 'btn-ghost'} btn-sm" onclick="PageGit.switchTab('pull')">🔄 Pull Now</button>
         </div>
       </div>`;
 
     if (!res || !res.success) {
-      view.innerHTML = tabs + `
+      view.innerHTML = `<div class="fade-in-up">` + tabs + `
         <div class="card">
           <div class="alert alert-warning">
             <span>⚠</span>
@@ -45,7 +48,8 @@ export const PageGit = (() => {
             </div>
           </div>
           <a href="#projects" class="btn btn-primary btn-sm mt-4">⚙ Periksa Konfigurasi Project</a>
-        </div>`;
+        </div>
+      </div>`;
       return;
     }
 
@@ -58,7 +62,13 @@ export const PageGit = (() => {
           <div class="flex flex-col gap-3">
             <div>
               <div class="text-muted text-xs mb-1 uppercase">Branch aktif</div>
-              <span class="badge badge-indigo">⎇ ${g.branch}</span>
+              <div class="flex items-center gap-2">
+                <span class="badge badge-indigo">⎇ ${g.branch}</span>
+                ${g.status ? 
+                  `<span class="badge badge-danger !text-[10px]" title="Ada perubahan lokal yang belum di-commit">⚠️ OUT OF SYNC</span>` : 
+                  `<span class="badge badge-success !text-[10px]">✓ IN SYNC</span>`
+                }
+              </div>
             </div>
             <div>
               <div class="text-muted text-xs mb-1 uppercase">Remote URL</div>
@@ -108,7 +118,14 @@ export const PageGit = (() => {
         </div>
       </div>`;
 
-    view.innerHTML = tabs + (view_mode === 'status' ? statusContent : pullContent);
+    if (view_mode === 'status') {
+      view.innerHTML = `<div class="fade-in-up">${tabs + statusContent}</div>`;
+    } else if (view_mode === 'pull') {
+      view.innerHTML = `<div class="fade-in-up">${tabs + pullContent}</div>`;
+    } else if (view_mode === 'history') {
+      view.innerHTML = `<div class="fade-in-up">${tabs + `<div class="card p-8 text-center"><span class="spinner"></span> Memuat riwayat commit...</div>`}</div>`;
+      this.renderHistory(projectId);
+    }
   }
 
   async function doPull() {
@@ -143,9 +160,82 @@ export const PageGit = (() => {
     else Toast.error('Git pull gagal');
   }
 
+  async function renderHistory(projectId) {
+    const res = await Api.get('git', { action: 'history', project_id: projectId });
+    const view = document.querySelector('#page-view .card');
+    if (!res || !res.success) {
+      view.innerHTML = `<div class="alert alert-error">Gagal memuat riwayat: ${res?.message || 'Unknown error'}</div>`;
+      return;
+    }
+
+    view.className = 'card overflow-hidden';
+    view.innerHTML = `
+      <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+        <h3 class="font-bold">📜 Riwayat Commit (Top 20)</h3>
+        <span class="text-xs text-muted">Klik tombol Rollback untuk kembali ke commit tersebut.</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Hash</th>
+              <th>Pesan</th>
+              <th>Author</th>
+              <th>Waktu</th>
+              <th class="text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${res.data.history.map(c => `
+              <tr>
+                <td><code class="text-indigo-600 font-bold">${c.hash}</code></td>
+                <td class="text-sm font-medium">${escapeHtml(c.subject)}</td>
+                <td class="text-xs text-muted">${c.author}</td>
+                <td class="text-xs text-muted">${c.date}</td>
+                <td class="text-right">
+                  <button class="btn btn-danger btn-xs" onclick="PageGit.doRollback('${c.hash}')">
+                    Rollback
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  async function doRollback(hash) {
+    const projectId = currentParams.get('project_id');
+    const confirm = await Swal.fire({
+      title: 'Rollback ke ' + hash + '?',
+      text: "Operasi ini akan melakukan `git reset --hard` dan menghapus semua perubahan lokal yang belum di-commit!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Ya, Rollback!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    Toast.info('Sedang melakukan rollback...');
+    const res = await Api.post('git?action=rollback', { project_id: projectId, hash: hash });
+    
+    if (res?.success) {
+      Swal.fire('Berhasil!', res.message, 'success');
+      this.render('status', currentParams);
+    } else {
+      Swal.fire('Gagal!', res?.message || 'Terjadi kesalahan saat rollback', 'error');
+    }
+  }
+
   function switchTab(tab) {
     const projectId = currentParams.get('project_id');
-    window.location.hash = (tab === 'pull' ? 'git-pull' : 'git-status') + '?project_id=' + projectId;
+    let hash = 'git-status';
+    if (tab === 'pull') hash = 'git-pull';
+    if (tab === 'history') hash = 'git-history';
+    window.location.hash = hash + '?project_id=' + projectId;
   }
 
   function escapeHtml(s) {
@@ -153,5 +243,5 @@ export const PageGit = (() => {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  return { render, doPull, switchTab };
+  return { render, doPull, switchTab, renderHistory, doRollback };
 })();

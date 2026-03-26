@@ -1,6 +1,30 @@
 <?php
 require_once __DIR__ . '/includes/config.php';
 
+// HTML Minifier Callback
+function minify_html($buffer) {
+    // Regex logic to strip whitespaces, newlines, and comments
+    $search = [
+        '/\>[^\S ]+/s',     // strip whitespaces after tags, except space
+        '/[^\S ]+\</s',     // strip whitespaces before tags, except space
+        '/(\s)+/s',         // shorten multiple whitespace sequences
+        '/<!--(.|\s)*?-->/' // strip HTML comments
+    ];
+
+    $replace = [
+        '>',
+        '<',
+        '\\1',
+        ''
+    ];
+
+    $buffer = preg_replace($search, $replace, $buffer);
+    return str_replace(["\r", "\n", "\t"], '', $buffer);
+}
+
+// Start buffering with the callback
+ob_start("minify_html");
+
 // Determine page title from settings if DB is available
 $appName = 'GitDeploy';
 try {
@@ -48,6 +72,9 @@ try {
   
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 

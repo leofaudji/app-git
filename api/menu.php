@@ -11,90 +11,97 @@ $user = requireLogin();
 // Full menu structure with permission guards
 $allMenus = [
     [
-        'id'    => 'dashboard',
+        'id' => 'dashboard',
         'label' => 'Dashboard',
-        'icon'  => 'dashboard',
+        'icon' => 'dashboard',
         'route' => '#dashboard',
-        'perm'  => ['module' => 'dashboard', 'action' => 'view'],
+        'perm' => ['module' => 'dashboard', 'action' => 'view'],
     ],
     [
-        'id'    => 'changelog',
-        'label' => 'Changelog',
-        'icon'  => 'logs',
-        'route' => '#changelog',
-        'perm'  => null, // accessible to everyone logged in
-    ],
-    [
-        'id'    => 'projects',
+        'id' => 'projects',
         'label' => 'Manage Projects',
-        'icon'  => 'git',
+        'icon' => 'projects',
         'route' => '#projects',
-        'perm'  => ['module' => 'projects', 'action' => 'view'],
+        'perm' => ['module' => 'projects', 'action' => 'view'],
     ],
+    // --- Monitoring Group ---
     [
-        'id'    => 'git',
-        'label' => 'Git Operations',
-        'icon'  => 'git',
-        'children' => [
-            [
-                'id'    => 'git-status',
-                'label' => 'Status & Branch',
-                'route' => '#git-status',
-                'perm'  => ['module' => 'git', 'action' => 'view'],
-            ],
-            [
-                'id'    => 'git-pull',
-                'label' => 'Pull Now',
-                'route' => '#git-pull',
-                'perm'  => ['module' => 'git', 'action' => 'pull'],
-            ],
-        ],
-    ],
-    [
-        'id'    => 'logs',
+        'id' => 'logs',
         'label' => 'Deploy Logs',
-        'icon'  => 'logs',
+        'icon' => null,
         'route' => '#logs',
-        'perm'  => ['module' => 'logs', 'action' => 'view'],
+        'perm' => ['module' => 'logs', 'action' => 'view'],
     ],
     [
-        'id'    => 'webhook-logs',
+        'id' => 'webhook-logs',
         'label' => 'Webhook Logs',
-        'icon'  => '📬',
+        'icon' => null,
         'route' => '#webhook-logs',
-        'perm'  => ['module' => 'webhook_logs', 'action' => 'view'],
+        'perm' => ['module' => 'webhook_logs', 'action' => 'view'],
     ],
     [
-        'id'    => 'users',
+        'id' => 'audit-logs',
+        'label' => 'Audit Logs',
+        'icon' => null,
+        'route' => '#audit-logs',
+        'perm' => ['module' => 'audit', 'action' => 'view'],
+    ],
+    // --- configuration & Security ---
+    [
+        'id' => 'env-manager',
+        'label' => 'Env Manager',
+        'icon' => 'env',
+        'route' => '#env-manager',
+        'perm' => ['module' => 'settings', 'action' => 'edit'],
+    ],
+    [
+        'id' => 'backup',
+        'label' => 'Database Backup',
+        'icon' => 'backup',
+        'route' => '#backup',
+        'perm' => ['module' => 'settings', 'action' => 'edit'],
+    ],
+    // --- Access Control ---
+    [
+        'id' => 'users',
         'label' => 'Users',
-        'icon'  => 'users',
+        'icon' => null,
         'route' => '#users',
-        'perm'  => ['module' => 'users', 'action' => 'view'],
+        'perm' => ['module' => 'users', 'action' => 'view'],
     ],
     [
-        'id'    => 'roles',
+        'id' => 'roles',
         'label' => 'Roles & Permissions',
-        'icon'  => 'roles',
+        'icon' => null,
         'route' => '#roles',
-        'perm'  => ['module' => 'roles', 'action' => 'view'],
+        'perm' => ['module' => 'roles', 'action' => 'view'],
     ],
+    // --- Bottom/Settings ---
     [
-        'id'    => 'settings',
+        'id' => 'settings',
         'label' => 'Settings',
-        'icon'  => 'settings',
+        'icon' => 'settings',
         'route' => '#settings',
-        'perm'  => ['module' => 'settings', 'action' => 'view'],
+        'perm' => ['module' => 'settings', 'action' => 'view'],
     ],
     [
-        'id'    => 'profile',
-        'label' => 'Profile',
-        'icon'  => 'profile',
+        'id' => 'changelog',
+        'label' => 'System Updates',
+        'icon' => null,
+        'route' => '#changelog',
+        'perm' => null,
+    ],
+    [
+        'id' => 'profile',
+        'label' => 'My Profile',
+        'icon' => 'profile',
         'route' => '#profile',
-        'perm'  => null, // always visible to any logged-in user
+        'perm' => null,
     ],
 ];
 
-function filterMenu(array $items, array $userPerms): array {
+function filterMenu(array $items, array $userPerms): array
+{
     $result = [];
     foreach ($items as $item) {
         // Check permission
@@ -108,7 +115,8 @@ function filterMenu(array $items, array $userPerms): array {
         // Filter children
         if (!empty($item['children'])) {
             $item['children'] = filterMenu($item['children'], $userPerms);
-            if (empty($item['children'])) continue;
+            if (empty($item['children']))
+                continue;
         }
         unset($item['perm']);
         $result[] = $item;

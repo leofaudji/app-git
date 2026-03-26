@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/csrf.php';
+require_once __DIR__ . '/../includes/AuditLog.php';
 
 header('Content-Type: application/json');
 header('X-Content-Type-Options: nosniff');
@@ -37,6 +38,9 @@ switch ($action) {
         // Update last login
         DB::execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
 
+        // Audit Log
+        AuditLog::record('auth', 'login', $user['id'], "User {$user['username']} logged in");
+
         // Generate fresh CSRF token
         $token = regenerateCsrfToken();
 
@@ -54,6 +58,10 @@ switch ($action) {
     case 'logout':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
         requireCsrf();
+        $user = getCurrentUser();
+        if ($user) {
+            AuditLog::record('auth', 'logout', $user['id'], "User {$user['username']} logged out");
+        }
         $_SESSION = [];
         session_destroy();
         jsonSuccess(null, 'Logout berhasil');

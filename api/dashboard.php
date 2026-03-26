@@ -37,13 +37,25 @@ $recentLogs = DB::fetchAll(
      ORDER BY dl.created_at DESC LIMIT 8"
 );
 
-// Project List Summary
+// Project List Summary with Health
 $projects = DB::fetchAll(
-    "SELECT p.id, p.name, p.branch, p.is_active,
+    "SELECT p.id, p.name, p.branch, p.is_active, p.app_url,
      (SELECT dl.status FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_status,
-     (SELECT dl.created_at FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_deploy
+     (SELECT dl.created_at FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_deploy,
+     (SELECT ph.status FROM project_health ph WHERE ph.project_id = p.id ORDER BY ph.checked_at DESC LIMIT 1) as health_status,
+     (SELECT ph.response_time FROM project_health ph WHERE ph.project_id = p.id ORDER BY ph.checked_at DESC LIMIT 1) as health_time
      FROM projects p ORDER BY p.name ASC"
 );
+
+// Health summary
+$upCount = 0;
+$downCount = 0;
+foreach ($projects as $p) {
+    if ($p['app_url']) {
+        if ($p['health_status'] === 'up') $upCount++;
+        else if ($p['health_status'] === 'down') $downCount++;
+    }
+}
 
 jsonSuccess([
     'stats' => [
@@ -55,6 +67,10 @@ jsonSuccess([
         'sources'       => [
             'webhook' => $webhookDeploys,
             'manual'  => $manualDeploys
+        ],
+        'health' => [
+            'up'   => $upCount,
+            'down' => $downCount
         ]
     ],
     'recent'   => $recentLogs,

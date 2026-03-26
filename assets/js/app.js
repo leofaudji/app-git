@@ -13,19 +13,28 @@ import { PageRoles } from "./pages/roles.js";
 import { PageSettings } from "./pages/settings.js";
 import { PageProfile } from "./pages/profile.js";
 import { PageChangelog } from "./pages/changelog.js";
+import { PageAuditLogs } from "./pages/audit_logs.js";
+import { PageBackup } from "./pages/backup.js";
+import { PageEnvManager } from "./pages/envmanager.js";
 
 export const App = (() => {
   let currentUser = null;
 
   // ─── Icons for menu ───
   const ICONS = {
-    dashboard: '◈',
+    dashboard: '⊞',
+    projects:  '📂',
     git:       '⎇',
-    logs:      '📋',
+    logs:      '📜',
+    webhook:   '📡',
+    audit:     '📋',
     users:     '👥',
     roles:     '🔑',
     settings:  '⚙',
     profile:   '👤',
+    changelog: '✨',
+    backup:    '💾',
+    env:       '🔐',
   };
 
   // ─── Render sidebar menu from RBAC API ───
@@ -36,69 +45,55 @@ export const App = (() => {
     const nav = document.getElementById('sidebar-nav');
     nav.innerHTML = '';
 
-    // Group items
-    const mainItems = res.data.filter(m => !['profile','settings'].includes(m.id));
-    const bottomItems = res.data.filter(m => ['profile','settings'].includes(m.id));
+    // Group items for a cleaner look
+    const groups = [
+      { label: 'Utama', items: res.data.filter(m => ['dashboard', 'projects'].includes(m.id)) },
+      { label: 'Monitoring', items: res.data.filter(m => m.id.includes('-logs') || m.id === 'logs') },
+      { label: 'Security & Config', items: res.data.filter(m => ['env-manager', 'backup'].includes(m.id)) },
+      { label: 'Akses', items: res.data.filter(m => ['users', 'roles'].includes(m.id)) },
+      { label: 'Sistem', items: res.data.filter(m => ['settings', 'changelog', 'profile'].includes(m.id)) }
+    ];
 
     const buildItem = (item) => {
-      if (item.children) {
-        // Parent with submenu
-        const wrap = document.createElement('div');
-        wrap.innerHTML = `
-          <div class="nav-item" data-menu="${item.id}">
-            <div class="nav-item-inner">
-              <span class="nav-icon">${ICONS[item.icon] ?? '●'}</span>
-              <span>${item.label}</span>
-              <span class="nav-chevron">›</span>
-            </div>
-          </div>
-          <div class="nav-submenu" id="sub-${item.id}">
-            ${item.children.map(child => `
-              <div class="nav-sub-item" data-route="${child.route}" onclick="window.RouterInstance.navigate('${child.route.replace('#','')}');closeMobileSidebar()">
-                ${child.label}
-              </div>`).join('')}
-          </div>`;
-
-        const parent = wrap.querySelector('.nav-item');
-        const submenu = wrap.querySelector('.nav-submenu');
-        parent.addEventListener('click', () => {
-          const open = submenu.classList.toggle('open');
-          parent.classList.toggle('expanded', open);
-        });
-        return wrap;
-      } else {
-        // Single item
-        const el = document.createElement('div');
-        el.className = 'nav-item';
-        el.dataset.route = item.route;
-        el.innerHTML = `
-          <div class="nav-item-inner">
-            <span class="nav-icon">${ICONS[item.icon] ?? '●'}</span>
-            <span>${item.label}</span>
-          </div>`;
-        el.addEventListener('click', () => {
-          Router.navigate(item.route.replace('#', ''));
-          closeMobileSidebar();
-        });
-        return el;
+      const el = document.createElement('div');
+      el.className = 'nav-item';
+      
+      // Highlight active route
+      if (window.location.hash === item.route || (window.location.hash === '' && item.id === 'dashboard')) {
+        el.classList.add('active');
       }
+
+      el.dataset.route = item.route;
+      el.innerHTML = `
+        <div class="nav-item-inner">
+          ${item.icon ? `<span class="nav-icon">${ICONS[item.icon] ?? '●'}</span>` : '<span class="nav-icon-spacer"></span>'}
+          <span>${item.label}</span>
+        </div>`;
+      el.addEventListener('click', () => {
+        Router.navigate(item.route.replace('#', ''));
+        // Close sidebar on mobile
+        if (window.innerWidth < 1024) document.getElementById('sidebar').classList.remove('open');
+      });
+      return el;
     };
 
-    if (mainItems.length) {
+    groups.forEach(group => {
+      if (group.items.length === 0) return;
+      
+      const groupWrapper = document.createElement('div');
+      groupWrapper.className = 'nav-group mb-4';
+      
       const label = document.createElement('div');
       label.className = 'nav-section-label';
-      label.textContent = 'Menu Utama';
-      nav.appendChild(label);
-      mainItems.forEach(item => nav.appendChild(buildItem(item)));
-    }
-
-    if (bottomItems.length) {
-      const label = document.createElement('div');
-      label.className = 'nav-section-label';
-      label.textContent = 'Akun';
-      nav.appendChild(label);
-      bottomItems.forEach(item => nav.appendChild(buildItem(item)));
-    }
+      label.textContent = group.label;
+      groupWrapper.appendChild(label);
+      
+      group.items.forEach(item => {
+        groupWrapper.appendChild(buildItem(item));
+      });
+      
+      nav.appendChild(groupWrapper);
+    });
   }
 
   // ─── Update topbar user info ───
@@ -128,7 +123,9 @@ export const App = (() => {
     });
     Router.on('git', async (hash, params) => {
       setPageTitle('Git Operations');
-      const action = hash === 'git-pull' ? 'pull' : 'status';
+      let action = 'status';
+      if (hash === 'git-pull') action = 'pull';
+      if (hash === 'git-history') action = 'history';
       await PageGit.render(action, params);
     });
     Router.on('logs', async (hash, params) => {
@@ -158,6 +155,18 @@ export const App = (() => {
     Router.on('changelog', async (hash, params) => {
       setPageTitle('Changelog');
       await PageChangelog.render(params);
+    });
+    Router.on('audit-logs', async (hash, params) => {
+      setPageTitle('Audit Logs');
+      await PageAuditLogs.render(params);
+    });
+    Router.on('backup', async (hash, params) => {
+      setPageTitle('Database Backup');
+      await PageBackup.render(params);
+    });
+    Router.on('env-manager', async (hash, params) => {
+      setPageTitle('Environment Manager');
+      await PageEnvManager.render(params);
     });
   }
 
@@ -198,6 +207,7 @@ export const App = (() => {
 
     currentUser = statusRes.data.user;
     Api.setCsrf(statusRes.data.csrf_token);
+    window.CurrentUser = currentUser; // Move this early
 
     // Switch UI
     document.getElementById('login-page').style.display = 'none';
@@ -210,9 +220,6 @@ export const App = (() => {
 
     // Fetch and display latest version
     updateAppVersion();
-
-    // Expose user globally for pages
-    window.CurrentUser = currentUser;
   }
 
   async function updateAppVersion() {

@@ -6,6 +6,7 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/csrf.php';
+require_once __DIR__ . '/../includes/AuditLog.php';
 
 header('Content-Type: application/json');
 
@@ -19,6 +20,7 @@ switch ($action) {
             (SELECT dl.created_at FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_deploy
             FROM projects p ORDER BY p.name ASC");
         jsonSuccess($projects);
+        break;
 
     case 'detail':
         requirePermission('projects', 'view');
@@ -26,6 +28,7 @@ switch ($action) {
         $project = DB::fetchOne("SELECT * FROM projects WHERE id = ?", [$id]);
         if (!$project) jsonError('Project tidak ditemukan', 404);
         jsonSuccess($project);
+        break;
 
     case 'save':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
@@ -37,6 +40,7 @@ switch ($action) {
         $repo_name      = trim($_POST['repo_name'] ?? '');
         $folder_name    = trim($_POST['folder_name'] ?? '');
         $branch         = trim($_POST['branch'] ?? 'main');
+        $app_url        = trim($_POST['app_url'] ?? '');
         $current_version = trim($_POST['current_version'] ?? '1.0.0');
         $webhook_secret = trim($_POST['webhook_secret'] ?? '');
         $description    = trim($_POST['description'] ?? '');
@@ -47,20 +51,25 @@ switch ($action) {
         try {
             if ($id > 0) {
                 DB::execute(
-                    "UPDATE projects SET name=?, repo_name=?, folder_name=?, branch=?, current_version=?, webhook_secret=?, description=?, is_active=? WHERE id=?",
-                    [$name, $repo_name, $folder_name, $branch, $current_version, $webhook_secret, $description, $is_active, $id]
+                    "UPDATE projects SET name=?, repo_name=?, folder_name=?, branch=?, app_url=?, current_version=?, webhook_secret=?, description=?, is_active=? WHERE id=?",
+                    [$name, $repo_name, $folder_name, $branch, $app_url, $current_version, $webhook_secret, $description, $is_active, $id]
                 );
+                AuditLog::record('projects', 'update', $id, "Updated project: $name");
                 jsonSuccess(['id' => $id], 'Project diperbarui');
             } else {
                 DB::execute(
-                    "INSERT INTO projects (name, repo_name, folder_name, branch, current_version, webhook_secret, description, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    [$name, $repo_name, $folder_name, $branch, $current_version, $webhook_secret, $description, $is_active]
+                    "INSERT INTO projects (name, repo_name, folder_name, branch, app_url, current_version, webhook_secret, description, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [$name, $repo_name, $folder_name, $branch, $app_url, $current_version, $webhook_secret, $description, $is_active]
                 );
-                jsonSuccess(['id' => DB::lastInsertId()], 'Project ditambahkan');
+                $newId = (int) DB::lastInsertId();
+                AuditLog::record('projects', 'create', $newId, "Created new project: $name");
+                jsonSuccess(['id' => $newId], 'Project ditambahkan');
             }
         } catch (Exception $e) {
+            error_log("[Projects API Error] " . $e->getMessage());
             jsonError('Database Error: ' . $e->getMessage());
         }
+        break;
 
     case 'delete':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
@@ -68,8 +77,13 @@ switch ($action) {
         requireCsrf();
 
         $id = (int) ($_POST['id'] ?? 0);
+        $project = DB::fetchOne("SELECT name FROM projects WHERE id = ?", [$id]);
         DB::execute("DELETE FROM projects WHERE id = ?", [$id]);
+        if ($project) {
+            AuditLog::record('projects', 'delete', $id, "Deleted project: " . $project['name']);
+        }
         jsonSuccess(null, 'Project dihapus');
+        break;
 
     case 'scan':
         requirePermission('projects', 'manage');
@@ -93,6 +107,7 @@ switch ($action) {
             }
         }
         jsonSuccess($folders);
+        break;
 
     case 'changelog_list':
         requirePermission('projects', 'view');
@@ -102,6 +117,7 @@ switch ($action) {
             LEFT JOIN users u ON u.id = cl.user_id 
             WHERE cl.project_id = ? ORDER BY cl.created_at DESC", [$id]);
         jsonSuccess($logs);
+        break;
 
     case 'changelog_save':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
@@ -120,10 +136,13 @@ switch ($action) {
             [$project_id, $version, $changelog, $user_id]
         );
         
+        AuditLog::record('projects', 'changelog_add', $project_id, "Added changelog version $version to project ID $project_id");
+        
         // Also update project current_version
         DB::execute("UPDATE projects SET current_version = ? WHERE id = ?", [$version, $project_id]);
 
         jsonSuccess(null, 'Changelog ditambahkan');
+        break;
 
     default:
         jsonError('Action tidak ditemukan', 404);

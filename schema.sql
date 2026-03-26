@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS `projects` (
   `repo_name` VARCHAR(100) NOT NULL, -- For webhook matching (e.g. "username/repo")
   `folder_name` VARCHAR(100) NOT NULL, -- Relative to global base dir or absolute
   `branch` VARCHAR(100) DEFAULT 'main',
+  `app_url` VARCHAR(255) DEFAULT NULL,
   `current_version` VARCHAR(50) DEFAULT '1.0.0',
   `webhook_secret` VARCHAR(255) DEFAULT '',
   `description` TEXT,
@@ -162,3 +163,26 @@ INSERT IGNORE INTO `settings` (`key`, `value`, `label`, `type`) VALUES
   ('webhook_secret_default', 'change_me_secret_key', 'Default Webhook Secret', 'password'),
   ('notify_email', '', 'Notification Email', 'text'),
   ('auto_deploy', '1', 'Enable Auto Deploy on Webhook', 'boolean');
+
+-- Audit Logs
+CREATE TABLE IF NOT EXISTS `audit_logs` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT UNSIGNED NULL,
+  `action` VARCHAR(100) NOT NULL,
+  `module` VARCHAR(50) NOT NULL,
+  `target_id` INT UNSIGNED NULL,
+  `description` TEXT,
+  `ip_address` VARCHAR(45) DEFAULT NULL,
+  `user_agent` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Add Audit Logs permission
+INSERT IGNORE INTO `permissions` (`module`, `action`, `label`) VALUES
+  ('audit', 'view', 'View Audit Logs');
+
+-- Assign to admin
+INSERT IGNORE INTO `role_permissions` (`role_id`, `permission_id`)
+  SELECT r.id, p.id FROM `roles` r, `permissions` p 
+  WHERE r.name = 'admin' AND p.module = 'audit' AND p.action = 'view';

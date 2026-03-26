@@ -21,7 +21,8 @@ export const PageSettings = (() => {
     const webhookUrl = `${window.location.origin}${window.APP_PATH}/api/webhook`;
 
     view.innerHTML = `
-      <div class="grid-2 gap-6">
+      <div class="fade-in-up">
+        <div class="grid-2 gap-6">
 
         <!-- Global Configuration -->
         <div class="card">
@@ -136,7 +137,8 @@ export const PageSettings = (() => {
             </div>
           </div>
         </div>
-      </div>`;
+      </div>
+    </div>`;
   }
 
   async function save() {

@@ -86,51 +86,53 @@ export const PageLogs = (() => {
     const projects = projRes?.success ? projRes.data : [];
 
     view.innerHTML = `
-      <div class="card mb-4 overflow-hidden">
-        <div class="p-4 border-b flex flex-wrap items-center justify-between gap-4 bg-gray-50">
-          <div class="flex gap-2 items-center flex-wrap">
-            <select id="filter-project" class="form-select text-sm w-40" onchange="PageLogs.applyFilter()">
-              <option value="">Semua Project</option>
-              ${projects.map(p => `<option value="${p.id}" ${currentFilter.project_id == p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
-            </select>
-            <select id="filter-status" class="form-select text-sm w-32" onchange="PageLogs.applyFilter()">
-              <option value="">Semua Status</option>
-              <option value="success">Success</option>
-              <option value="failed">Failed</option>
-              <option value="running">Running</option>
-            </select>
-            <select id="filter-trigger" class="form-select text-sm w-32" onchange="PageLogs.applyFilter()">
-              <option value="">Semua Trigger</option>
-              <option value="manual">Manual</option>
-              <option value="webhook">Webhook</option>
-            </select>
+      <div class="fade-in-up">
+        <div class="card mb-4 overflow-hidden">
+          <div class="p-4 border-b flex flex-wrap items-center justify-between gap-4 bg-gray-50">
+            <div class="flex gap-2 items-center flex-wrap">
+              <select id="filter-project" class="form-select text-sm w-40" onchange="PageLogs.applyFilter()">
+                <option value="">Semua Project</option>
+                ${projects.map(p => `<option value="${p.id}" ${currentFilter.project_id == p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+              </select>
+              <select id="filter-status" class="form-select text-sm w-32" onchange="PageLogs.applyFilter()">
+                <option value="">Semua Status</option>
+                <option value="success">Success</option>
+                <option value="failed">Failed</option>
+                <option value="running">Running</option>
+              </select>
+              <select id="filter-trigger" class="form-select text-sm w-32" onchange="PageLogs.applyFilter()">
+                <option value="">Semua Trigger</option>
+                <option value="manual">Manual</option>
+                <option value="webhook">Webhook</option>
+              </select>
+            </div>
+            <div class="flex gap-4 items-center">
+              <span id="logs-count" class="text-xs text-muted uppercase font-bold tracking-wider">—</span>
+              ${canDelete ? '<button class="btn btn-danger btn-sm" onclick="PageLogs.clearAll()">🗑 Clear Logs</button>' : ''}
+            </div>
           </div>
-          <div class="flex gap-4 items-center">
-            <span id="logs-count" class="text-xs text-muted uppercase font-bold tracking-wider">—</span>
-            ${canDelete ? '<button class="btn btn-danger btn-sm" onclick="PageLogs.clearAll()">🗑 Clear Logs</button>' : ''}
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>#</th><th>Project & Trigger</th><th>Branch</th><th>Commit</th>
+                <th>Status</th><th>User & IP</th><th>Waktu</th><th></th>
+              </tr></thead>
+              <tbody id="logs-tbody"><tr><td colspan="8" class="text-center py-10"><span class="spinner"></span></td></tr></tbody>
+            </table>
           </div>
+          <div id="logs-pagination" class="pagination p-4 border-t bg-gray-50 flex justify-center"></div>
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>#</th><th>Project & Trigger</th><th>Branch</th><th>Commit</th>
-              <th>Status</th><th>User & IP</th><th>Waktu</th><th></th>
-            </tr></thead>
-            <tbody id="logs-tbody"><tr><td colspan="8" class="text-center py-10"><span class="spinner"></span></td></tr></tbody>
-          </table>
-        </div>
-        <div id="logs-pagination" class="pagination p-4 border-t bg-gray-50 flex justify-center"></div>
-      </div>
-
-      <!-- Detail Modal -->
-      <div class="modal-overlay" id="log-detail-modal">
-        <div class="modal-box max-w-2xl">
-          <div class="modal-header">
-            <h3 class="modal-title font-bold">Deployment Detail</h3>
-            <button class="modal-close" onclick="PageLogs.closeModal()">×</button>
+        <!-- Detail Modal -->
+        <div class="modal-overlay" id="log-detail-modal">
+          <div class="modal-box max-w-2xl">
+            <div class="modal-header">
+              <h3 class="modal-title font-bold">Deployment Detail</h3>
+              <button class="modal-close" onclick="PageLogs.closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="log-detail-body"></div>
           </div>
-          <div class="modal-body" id="log-detail-body"></div>
         </div>
       </div>`;
 

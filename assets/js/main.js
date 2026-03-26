@@ -12,6 +12,10 @@ import { PageUsers } from "./pages/users.js";
 import { PageRoles } from "./pages/roles.js";
 import { PageSettings } from "./pages/settings.js";
 import { PageProfile } from "./pages/profile.js";
+import { PageChangelog } from "./pages/changelog.js";
+import { PageAuditLogs } from "./pages/audit_logs.js";
+import { PageBackup } from "./pages/backup.js";
+import { PageEnvManager } from "./pages/envmanager.js";
 
 // Expose some objects globally for convenience in inline handlers (like onclick)
 // or for debugging. Mobile sidebar helper needs Router.
@@ -30,6 +34,10 @@ window.PageUsers = PageUsers;
 window.PageRoles = PageRoles;
 window.PageSettings = PageSettings;
 window.PageProfile = PageProfile;
+window.PageChangelog = PageChangelog;
+window.PageAuditLogs = PageAuditLogs;
+window.PageBackup = PageBackup;
+window.PageEnvManager = PageEnvManager;
 
 // Helper global function for inline onclicks
 window.closeMobileSidebar = () => {
