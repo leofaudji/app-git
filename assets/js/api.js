@@ -44,8 +44,8 @@ export const Api = (() => {
         return await res.json();
       }
       const text = await res.text();
-      console.error('[Api Error] Non-JSON response:', text.substring(0, 200));
-      return { success: false, message: `Server error (${res.status}): Response was not JSON.` };
+      console.error('[Api Error] Non-JSON response for ' + url + ':', text.substring(0, 500));
+      return { success: false, message: `Server error (${res.status}): Terjadi kesalahan sistem. Cek console browser.` };
     } catch (err) {
       console.error('[Api Error]', err);
       return { success: false, message: 'Network error or connection refused.' };

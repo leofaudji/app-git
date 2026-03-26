@@ -134,7 +134,8 @@ INSERT IGNORE INTO `permissions` (`module`, `action`, `label`) VALUES
   ('settings', 'edit', 'Edit Settings'),
   ('projects', 'view', 'View Projects'),
   ('projects', 'manage', 'Manage Projects'),
-  ('webhook', 'receive', 'Receive Webhook');
+  ('webhook', 'receive', 'Receive Webhook'),
+  ('webhook_logs', 'view', 'View Webhook Logs');
 
 -- Assign all permissions to admin
 INSERT IGNORE INTO `role_permissions` (`role_id`, `permission_id`)

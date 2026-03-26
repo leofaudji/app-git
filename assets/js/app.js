@@ -39,10 +39,20 @@ export const App = (() => {
 
   // ─── Render sidebar menu from RBAC API ───
   async function renderMenu() {
-    const res = await Api.get('menu');
-    if (!res || !res.success) return;
-
     const nav = document.getElementById('sidebar-nav');
+    const res = await Api.get('menu');
+    
+    if (!res || !res.success) {
+      console.error('[App] Failed to load menu:', res);
+      if (nav) {
+        nav.innerHTML = `
+          <div class="p-4 text-[10px] text-danger bg-red-50 rounded-lg border border-red-100 m-2">
+            <strong>Gagal memuat menu:</strong><br>
+            ${res?.message || 'Unknown error'}
+          </div>`;
+      }
+      return;
+    }
     nav.innerHTML = '';
 
     // Group items for a cleaner look
