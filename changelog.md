@@ -2,7 +2,7 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
-## [1.4.0] - 2026-03-19
+## [1.4.1] - 2026-03-19
 ### Added
 - **Database Backup Manager**: Halaman manajemen backup database yang lengkap (`#backup`) dengan fitur save-to-disk, riwayat backup, download, hapus, dan restore.
 - **Backup API Upgrade**: Endpoint `backup.php` ditingkatkan dengan aksi `list`, `save`, `delete`, dan `download` untuk mendukung manajemen backup berbasis disk.
