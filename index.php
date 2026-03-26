@@ -75,6 +75,25 @@ try {
   
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Force Update Utility (Bypass SW Cache) -->
+  <script>
+    if (window.location.search.includes('force_update=1')) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) { registration.unregister(); }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          for (let name of names) { caches.delete(name); }
+        });
+      }
+      setTimeout(() => {
+        window.location.href = window.location.pathname;
+      }, 1000);
+    }
+  </script>
 </head>
 <body>
 
