@@ -35,6 +35,7 @@ export const Api = (() => {
     try {
       const res = await fetch(url, { ...options, headers });
       if (res.status === 401) {
+        console.warn(`[Api] 401 Unauthorized for ${url}. Reloading page...`);
         window.location.reload();
         return;
       }

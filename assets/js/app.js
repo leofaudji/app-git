@@ -280,11 +280,12 @@ export const App = (() => {
     // PWA install
     initPWA();
 
-    // Initial version load
-    App.updateAppVersion();
-
     // Check if already logged in
     const statusRes = await Api.get('auth?action=status');
+    
+    // Version load (safe now as it's public, but good to have after initial status)
+    App.updateAppVersion();
+
     if (statusRes?.data?.authenticated) {
       await showApp();
     }

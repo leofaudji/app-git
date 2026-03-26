@@ -6,8 +6,17 @@ require_once __DIR__ . '/../includes/csrf.php';
 
 header('Content-Type: application/json');
 
-$user = requireLogin();
 $action = $_GET['action'] ?? 'list';
+
+if ($action === 'latest_version') {
+    require_once __DIR__ . '/../includes/changelog_parser.php';
+    $file = __DIR__ . '/../changelog.md';
+    $parsed = ChangelogParser::parse($file);
+    jsonSuccess(['version' => $parsed ? $parsed['version'] : '1.0.0']);
+}
+
+// All other actions require login
+$user = requireLogin();
 
 if ($action === 'list') {
     // Fetch global changelog (cross-project)
@@ -84,9 +93,4 @@ elseif ($action === 'system') {
     jsonSuccess($logs);
 }
 
-elseif ($action === 'latest_version') {
-    require_once __DIR__ . '/../includes/changelog_parser.php';
-    $file = __DIR__ . '/../changelog.md';
-    $parsed = ChangelogParser::parse($file);
-    jsonSuccess(['version' => $parsed ? $parsed['version'] : '1.0.0']);
-}
+  // Already handled above for public access
