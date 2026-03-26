@@ -15,9 +15,16 @@ export const Router = (() => {
   }
 
   function resolve() {
-    const fullHash = window.location.hash.replace('#', '') || 'dashboard';
+    // Robust hash extraction: handles #dashboard, #/dashboard, #/dashboard?id=1
+    const rawHash = window.location.hash || '#dashboard';
+    const fullHash = rawHash.replace(/^#\/?/, '') || 'dashboard';
+    
     const [hash, queryString] = fullHash.split('?');
     const params = new URLSearchParams(queryString || '');
+
+    console.log(`[Router] Resolving: "${hash}" (from "${rawHash}")`);
+    console.log(`[Router] Registered routes:`, Object.keys(routes));
+
     const view = document.getElementById('page-view');
     const loading = document.getElementById('page-loading');
 
@@ -40,7 +47,10 @@ export const Router = (() => {
         <div class="empty-state">
           <div class="empty-icon">🔍</div>
           <h3>Halaman tidak ditemukan</h3>
-          <p>Route <code>${hash}</code> tidak ada</p>
+          <p>Route <code>${hash}</code> tidak terdaftar di sistem.</p>
+          <div style="font-size:10px; color:var(--text-muted); margin-top:10px;">
+            Debug: Hash="${hash}", Full="${fullHash}"
+          </div>
         </div>`;
       loading.style.display = 'none';
       view.style.display = '';
