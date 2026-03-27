@@ -13,6 +13,7 @@ echo "\n--- File Stats ---\n";
 $files = [
     'includes/config.php',
     'sw.js',
+    'assets/css/app.css',
     'assets/js/app.js',
     'assets/js/api.js',
     'assets/js/router.js'
