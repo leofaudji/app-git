@@ -120,6 +120,12 @@ switch ($action) {
             [$status, $result['output'], $hash, $logId]
         );
 
+        // --- NEW: Sync Project Changelog ---
+        if ($status === 'success') {
+            require_once __DIR__ . '/../includes/changelog_helper.php';
+            ChangelogHelper::syncProject($project, $path, $currentUser['id']);
+        }
+
         AuditLog::record('git', 'pull_' . $status, $project['id'], "Git pull $status on branch $branch (commit $hash)");
 
         jsonSuccess([
@@ -145,6 +151,11 @@ switch ($action) {
                 'timestamp' => $p[4] ?? ''
             ];
         }, $lines);
+
+        // Optional: Trigger sync on history view to ensure DB is up to date
+        require_once __DIR__ . '/../includes/changelog_helper.php';
+        ChangelogHelper::syncProject($project, $path);
+
         jsonSuccess(['history' => $history]);
 
     case 'rollback':
@@ -169,6 +180,9 @@ switch ($action) {
         );
 
         if ($status === 'success') {
+            require_once __DIR__ . '/../includes/changelog_helper.php';
+            ChangelogHelper::syncProject($project, $path, $currentUser['id']);
+
             AuditLog::record('git', 'rollback_success', $project['id'], "Rollback project {$project['name']} to $hash successful");
             jsonSuccess(['output' => $result['output']], "Rollback ke $hash berhasil");
         } else {

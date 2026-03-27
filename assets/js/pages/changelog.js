@@ -65,51 +65,61 @@ export const PageChangelog = {
       return;
     }
 
-    container.innerHTML = `
-      <div class="timeline">
-        ${logs.map(log => `
-          <div class="timeline-item">
-            <div class="timeline-marker"></div>
-            <div class="timeline-content card">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2">
-                  <span class="badge badge-indigo">v${log.version}</span>
-                  <h3 class="font-bold text-lg">${log.title}</h3>
-                </div>
-                <span class="text-sm text-muted font-mono">${log.date}</span>
-              </div>
-              
-              <div class="space-y-4">
-                ${log.changes_categorized.map(cat => `
-                  <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2 ${this.getCategoryColor(cat.category)}">
-                       <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                       ${cat.category}
-                    </h4>
-                    <ul class="space-y-1.5 text-secondary pl-1">
-                      ${cat.items.map(item => `
-                        <li class="flex gap-2 text-sm">
-                          <span class="text-muted opacity-50">•</span>
-                          <span>${item}</span>
-                        </li>
-                      `).join('')}
-                    </ul>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
+    container.innerHTML = logs.map((log, index) => `
+      <div class="changelog-card card ${index === 0 ? 'open' : ''}" data-version="${log.version}">
+        <div class="changelog-header" onclick="this.parentElement.classList.toggle('open')">
+          <div class="changelog-title-area">
+            <span class="changelog-version-tag">v${log.version}</span>
+            <h3 class="font-bold text-base text-primary">${log.title}</h3>
           </div>
-        `).join('')}
+          <div class="flex items-center gap-4">
+            <span class="changelog-date">${this.formatDate(log.date)}</span>
+            <span class="changelog-toggle-icon">▼</span>
+          </div>
+        </div>
+        
+        <div class="changelog-body">
+          <div class="space-y-6">
+            ${log.changes_categorized.map(cat => `
+              <div class="changelog-category">
+                <h4 class="changelog-category-title ${this.getCategoryClass(cat.category)}">
+                  ${this.getCategoryIcon(cat.category)}
+                  ${cat.category}
+                </h4>
+                <ul class="changelog-list">
+                  ${cat.items.map(item => `<li>${item}</li>`).join('')}
+                </ul>
+              </div>
+            `).join('')}
+          </div>
+        </div>
       </div>
-    `;
+    `).join('');
   },
 
-  getCategoryColor(cat) {
+  getCategoryClass(cat) {
     cat = cat.toLowerCase();
-    if (cat.includes('add')) return 'text-success';
-    if (cat.includes('fix')) return 'text-danger';
-    if (cat.includes('change')) return 'text-orange-500';
+    if (cat.includes('add')) return 'cat-added';
+    if (cat.includes('fix')) return 'cat-fixed';
+    if (cat.includes('change')) return 'cat-changed';
+    if (cat.includes('secur')) return 'cat-security';
+    if (cat.includes('remov')) return 'cat-removed';
     return 'text-indigo-500';
+  },
+
+  getCategoryIcon(cat) {
+    cat = cat.toLowerCase();
+    if (cat.includes('add')) return '✨';
+    if (cat.includes('fix')) return '🛠';
+    if (cat.includes('change')) return '🔄';
+    if (cat.includes('secur')) return '🛡';
+    if (cat.includes('remov')) return '🗑';
+    return '•';
+  },
+
+  formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   },
 
   renderProjectLogs(logs) {
@@ -119,38 +129,29 @@ export const PageChangelog = {
       return;
     }
 
-    // Group by Date
-    const grouped = {};
-    logs.forEach(log => {
-      const date = log.created_at.split(' ')[0];
-      if (!grouped[date]) grouped[date] = [];
-      grouped[date].push(log);
-    });
-
-    container.innerHTML = `
-      <div class="timeline">
-        ${Object.keys(grouped).map(date => `
-          <div class="timeline-group">
-            <div class="timeline-date">${date}</div>
-            ${grouped[date].map(log => `
-              <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content card">
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="badge badge-success">${log.project_name}</span>
-                    <span class="badge badge-indigo">v${log.version}</span>
-                    <span class="text-xs text-muted ml-auto">${log.created_at.split(' ')[1]}</span>
-                  </div>
-                  <div class="text-sm text-secondary whitespace-pre-wrap">${log.changelog}</div>
-                  <div class="mt-2 pt-2 border-top text-xs text-muted">
-                    Triggered by: <code class="bg-gray-100 px-1 rounded">${log.author || 'System'}</code>
-                  </div>
-                </div>
-              </div>
-            `).join('')}
+    container.innerHTML = logs.map((log, index) => `
+      <div class="changelog-card card ${index === 0 ? 'open' : ''}" data-id="${log.id}">
+        <div class="changelog-header" onclick="this.parentElement.classList.toggle('open')">
+          <div class="changelog-title-area">
+            <span class="badge badge-success">${log.project_name}</span>
+            <span class="changelog-version-tag">v${log.version}</span>
           </div>
-        `).join('')}
+          <div class="flex items-center gap-4">
+            <span class="changelog-date">${log.created_at}</span>
+            <span class="changelog-toggle-icon">▼</span>
+          </div>
+        </div>
+        
+        <div class="changelog-body">
+          <div class="p-1">
+            <div class="text-sm text-secondary whitespace-pre-wrap mb-4">${log.changelog}</div>
+            <div class="pt-3 border-t text-[11px] text-muted flex items-center justify-between">
+              <span>Author: <strong class="text-primary">${log.author || 'System'}</strong></span>
+              <span>Repo: <code class="bg-gray-100 px-1 rounded">${log.repo_name}</code></span>
+            </div>
+          </div>
+        </div>
       </div>
-    `;
+    `).join('');
   }
 };
