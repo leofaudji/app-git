@@ -2,6 +2,17 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
+## [1.4.4] - 2026-03-28
+### Added
+- **Security Audit System**: Integrasi penuh dengan API eksternal untuk pemindaian kerentanan website (SQL Injection, XSS, dll).
+- **Drift Detection**: Peringatan otomatis jika file website berubah tanpa melalui proses deployment Git.
+- **Security Score**: Dashboard visual yang menampilkan kesehatan keamanan setiap project (0-100).
+- **Audit Logs**: Pencatatan otomatis setiap kali audit keamanan atau drift check dilakukan.
+
+### Fixed
+- **Cache Busting**: Perbaikan total pada sistem cache (Service Worker & HTML) untuk memastikan pengguna selalu mendapatkan versi terbaru.
+- **UI Responsiveness**: Penyesuaian layout untuk layar kecil dan perbaikan elemen yang tumpang tindih.
+
 ## [1.4.1] - 2026-03-19
 ### Added
 - **Database Backup Manager**: Halaman manajemen backup database yang lengkap (`#backup`) dengan fitur save-to-disk, riwayat backup, download, hapus, dan restore.
