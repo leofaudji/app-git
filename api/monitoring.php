@@ -24,6 +24,12 @@ $stats = [
         'used' => 0,
         'percent' => 0
     ],
+    'disk' => [
+        'total' => 0,
+        'free' => 0,
+        'used' => 0,
+        'percent' => 0
+    ],
     'timestamp' => date('H:i:s')
 ];
 
@@ -60,6 +66,17 @@ if ($isWin) {
             'percent' => round(($used / $total) * 100, 1)
         ];
     }
+
+    // 3. Disk Usage (Windows)
+    $totalDisk = disk_total_space(__DIR__);
+    $freeDisk  = disk_free_space(__DIR__);
+    $usedDisk  = $totalDisk - $freeDisk;
+    $stats['disk'] = [
+        'total' => round($totalDisk / 1024 / 1024 / 1024, 1), // GB
+        'free'  => round($freeDisk / 1024 / 1024 / 1024, 1),
+        'used'  => round($usedDisk / 1024 / 1024 / 1024, 1),
+        'percent' => round(($usedDisk / $totalDisk) * 100, 1)
+    ];
 } else {
     // Linux: Parsing /proc/meminfo
     $memInfo = @file_get_contents('/proc/meminfo');
@@ -85,6 +102,17 @@ if ($isWin) {
             ];
         }
     }
+
+    // 3. Disk Usage (Linux)
+    $totalDisk = disk_total_space(__DIR__);
+    $freeDisk  = disk_free_space(__DIR__);
+    $usedDisk  = $totalDisk - $freeDisk;
+    $stats['disk'] = [
+        'total' => round($totalDisk / 1024 / 1024 / 1024, 1), // GB
+        'free'  => round($freeDisk / 1024 / 1024 / 1024, 1),
+        'used'  => round($usedDisk / 1024 / 1024 / 1024, 1),
+        'percent' => round(($usedDisk / $totalDisk) * 100, 1)
+    ];
 }
 
 $output = json_encode(['success' => true, 'data' => $stats]);

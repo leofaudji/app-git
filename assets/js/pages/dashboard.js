@@ -5,156 +5,187 @@ export const PageDashboard = {
     const view = document.getElementById('page-view');
     view.innerHTML = `
       <div class="fade-in-up">
-        <div class="flex items-center justify-between mb-10">
+        <!-- ─── Header Section ─── -->
+        <div class="flex items-center justify-between mb-8">
           <div>
-            <h2 class="text-2xl font-bold tracking-tight text-primary">Dashboard Overview</h2>
-            <p class="text-muted text-sm">Monitor seluruh aktivitas deployment dan kesehatan sistem Anda.</p>
+            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900">Infrastructure Dashboard</h2>
+            <p class="text-gray-500 mt-1">Real-time system performance and deployment insights.</p>
           </div>
-          <div class="flex gap-2">
-            <div id="last-update" class="text-xs text-muted font-bold bg-white px-4 py-2 rounded-full border shadow-sm">
-              Memuat data...
-            </div>
+          <div class="flex items-center gap-3">
+             <div id="system-health-badge" class="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-bold flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                SYSTEM HEALTHY
+             </div>
+             <div id="last-update" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+               Syncing...
+             </div>
           </div>
         </div>
         
-        <!-- ─── Premium Stats Grid (Vibrant Mesh) ─── -->
-        <div class="grid-4 mb-10">
-          <div class="stat-card-premium h-full flex flex-col justify-between bg-mesh-green shine hover-glow-green border-0 shadow-md">
-            <div class="stat-label uppercase tracking-widest text-[10px] font-bold text-success mb-1">App Availability</div>
-            <div class="flex items-end gap-2">
-              <div class="text-3xl font-bold text-success" id="stat-health-up">0</div>
-              <div class="text-sm text-muted mb-1">Online</div>
-              <div class="text-3xl font-bold text-danger ml-2" id="stat-health-down">0</div>
-              <div class="text-sm text-muted mb-1">Offline</div>
-            </div>
-            <p class="text-[10px] text-muted mt-2 uppercase tracking-tighter">Real-time applications status</p>
-          </div>
-
-          <div class="stat-card-premium h-full flex flex-col justify-between bg-mesh-blue shine hover-glow-blue border-0 shadow-md">
-            <div class="icon-bg text-blue-500">📊</div>
-            <div class="stat-label uppercase tracking-widest text-[10px] font-bold text-blue-600 mb-1">Success Rate</div>
-            <div class="flex items-center gap-4">
-              <div class="text-3xl font-bold text-blue-700" id="stat-rate">0%</div>
-              <div class="donut-container">
-                <svg viewBox="0 0 36 36" class="w-10 h-10">
-                  <path class="text-blue-100" stroke-width="3" fill="none" stroke="currentColor" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path id="donut-segment" class="text-blue-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" stroke="currentColor" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div class="stat-card-premium h-full flex flex-col justify-between bg-mesh-orange shine hover-glow-orange border-0 shadow-md">
-            <div class="icon-bg text-orange-500">🚀</div>
-            <div class="stat-label uppercase tracking-widest text-[10px] font-bold text-orange-600 mb-1">Total Deploys</div>
-            <div class="text-3xl font-bold text-orange-700" id="stat-total">0</div>
-            <p class="text-xs text-muted mt-2"><span class="text-orange-600 font-bold" id="stat-24h">0</span> in last 24h</p>
-          </div>
-
-          <div class="stat-card-premium h-full flex flex-col justify-between bg-mesh-indigo shine hover-glow-indigo border-0 shadow-md">
-            <div class="icon-bg text-indigo-500">⚓</div>
-            <div class="stat-label uppercase tracking-widest text-[10px] font-bold text-indigo-600 mb-1">Incoming Traffic</div>
-            <div class="text-3xl font-bold text-indigo-700" id="stat-webhook">0</div>
-            <div class="flex items-center gap-1 mt-2">
-              <div class="w-full bg-indigo-50 h-1.5 rounded-full overflow-hidden">
-                <div id="bar-webhook" class="bg-indigo-500 h-full" style="width: 0%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ─── Row 1: System Health & Diagnostics (Symmetrical Grid-3) ─── -->
-        <div class="mb-10">
-          <div class="flex items-center gap-2 mb-5">
-            <span class="w-2 h-6 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]"></span>
-            <h3 class="text-base font-bold text-primary tracking-tight">System Infrastructure Health</h3>
-          </div>
-          <div class="grid-3 gap-6 items-stretch">
-            <div class="card p-6 h-full flex flex-col card-accent-blue hover-glow-blue border-0 shadow-md transition-all">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">CPU Real-time</h3>
-                <div id="cpu-value" class="text-sm font-bold text-indigo-600">0%</div>
-              </div>
-              <div class="flex-1 min-h-140 relative">
-                <canvas id="cpu-chart"></canvas>
-              </div>
-            </div>
-
-            <div class="card p-6 h-full flex flex-col card-accent-blue hover-glow-blue border-0 shadow-md transition-all">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">RAM Performance</h3>
-                <div id="ram-value" class="text-[10px] text-muted font-medium">0/0 GB</div>
-              </div>
-              <div class="flex-1 min-h-140 relative">
-                <canvas id="ram-chart"></canvas>
-              </div>
-            </div>
-
-            <div class="card p-6 h-full flex flex-col card-accent-green hover-glow-green border-0 shadow-md transition-all">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">App Stability Index</h3>
-                <div class="flex items-center gap-2 text-[9px] font-bold">
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-success"></span> Success</span>
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-danger"></span> Failed</span>
+        <!-- ─── Row 1: Top KPIs (Visual & Vibrant) ─── -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="stat-card-premium bg-gradient-to-br from-indigo-600 to-violet-700 text-white p-6 rounded-2xl shadow-xl relative overflow-hidden group">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+            <div class="relative z-10">
+              <div class="text-indigo-100 text-xs font-bold uppercase tracking-widest mb-4">Total Projects</div>
+              <div class="flex items-end justify-between">
+                <div class="text-5xl font-black tracking-tighter" id="stat-projects">0</div>
+                <div class="flex flex-col items-end">
+                  <span class="text-xs font-bold bg-white/20 px-2 py-0.5 rounded" id="stat-active-projs">0 Active</span>
+                  <span class="text-indigo-200 text-[10px] mt-1">Workspace managed</span>
                 </div>
               </div>
-              <div class="flex-1 min-h-140 relative">
-                <canvas id="stability-chart"></canvas>
-              </div>
             </div>
+          </div>
+
+          <div class="stat-card-premium bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-6 rounded-2xl shadow-xl relative overflow-hidden group">
+             <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+             <div class="relative z-10">
+               <div class="text-emerald-100 text-xs font-bold uppercase tracking-widest mb-4">Deployment Success</div>
+               <div class="flex items-end justify-between">
+                 <div class="text-5xl font-black tracking-tighter" id="stat-rate">0%</div>
+                 <div class="flex flex-col items-end">
+                   <div class="w-16 h-1 w-full bg-white/20 rounded-full mt-2 overflow-hidden">
+                      <div id="rate-bar" class="bg-white h-full transition-all duration-1000" style="width: 0%"></div>
+                   </div>
+                   <span class="text-emerald-100 text-[10px] mt-1 font-bold">Reliability Index</span>
+                 </div>
+               </div>
+             </div>
+          </div>
+
+          <div class="stat-card-premium bg-gradient-to-br from-orange-500 to-rose-600 text-white p-6 rounded-2xl shadow-xl relative overflow-hidden group">
+             <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+             <div class="relative z-10">
+               <div class="text-orange-100 text-xs font-bold uppercase tracking-widest mb-4">Total Deliveries</div>
+               <div class="flex items-end justify-between">
+                 <div class="text-5xl font-black tracking-tighter" id="stat-total">0</div>
+                 <div class="flex flex-col items-end text-right">
+                   <span class="text-xs font-bold italic" id="stat-24h">+0 today</span>
+                   <span class="text-orange-100 text-[10px] mt-1 uppercase">Cloud-native pulls</span>
+                 </div>
+               </div>
+             </div>
           </div>
         </div>
 
-        <!-- ─── Row 2: Workspace & Operations (Integrated 2/3 + 1/3) ─── -->
-        <div>
-          <div class="grid-3 gap-6 items-stretch">
+        <!-- ─── Row 2: System Core Health (Infrastructure focus) ─── -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          
+          <!-- CPU Monitor -->
+          <div class="card p-0 overflow-hidden border-0 shadow-lg bg-white group">
+             <div class="p-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+                <div class="flex items-center gap-2">
+                   <span class="p-1.5 rounded-lg bg-indigo-100 text-indigo-600">⚡</span>
+                   <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide">CPU Core Load</h3>
+                </div>
+                <div id="cpu-value" class="text-lg font-black text-indigo-600">0%</div>
+             </div>
+             <div class="h-[180px] relative">
+               <canvas id="cpu-chart"></canvas>
+             </div>
+          </div>
+
+          <!-- RAM Monitor -->
+          <div class="card p-0 overflow-hidden border-0 shadow-lg bg-white">
+             <div class="p-5 border-b border-gray-0 flex items-center justify-between bg-gray-50/50">
+                <div class="flex items-center gap-2">
+                   <span class="p-1.5 rounded-lg bg-pink-100 text-pink-600">🧠</span>
+                   <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide">Memory Usage</h3>
+                </div>
+                <div id="ram-percent" class="text-lg font-black text-pink-600">0%</div>
+             </div>
+             <div class="h-[140px] relative">
+               <canvas id="ram-chart"></canvas>
+             </div>
+             <div class="p-4 pt-1">
+                <div class="flex justify-between text-[10px] font-bold text-gray-400 mb-1 px-1">
+                   <span>ALOCATED: <span id="ram-used" class="text-gray-600">0 GB</span></span>
+                   <span>TOTAL: <span id="ram-total" class="text-gray-600">0 GB</span></span>
+                </div>
+                <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                   <div id="ram-bar" class="bg-pink-500 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+             </div>
+          </div>
+
+          <!-- Disk & Stability -->
+          <div class="flex flex-col gap-6">
+            <!-- Disk Usage Card -->
+            <div class="card p-5 border-0 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900 text-white flex-1 relative overflow-hidden">
+               <div class="absolute right-[-20px] bottom-[-20px] text-8xl opacity-10 rotate-12">💾</div>
+               <div class="relative z-10 h-full flex flex-col justify-between">
+                  <div class="flex items-center justify-between mb-4">
+                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Storage Capacity</h3>
+                     <span id="disk-percent" class="text-xs font-bold bg-white/10 px-2 py-0.5 rounded">0%</span>
+                  </div>
+                  <div class="flex items-center gap-6 mb-4">
+                     <div class="text-4xl font-black text-white" id="disk-used">0 GB</div>
+                     <div class="text-slate-400 text-xs">Used of <span id="disk-total">0 GB</span></div>
+                  </div>
+                  <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                    <div id="disk-bar" class="bg-sky-400 h-full shadow-[0_0_10px_#38bdf8]" style="width: 0%"></div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- Health Status mini-card -->
+             <div class="card p-5 border-0 shadow-lg bg-white flex items-center justify-between">
+               <div class="flex items-center gap-3">
+                 <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg shadow-sm">🛡️</div>
+                 <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-tighter">Security Perimeter</h4>
+                    <p class="text-sm font-bold text-gray-800">All Agents Active</p>
+                 </div>
+               </div>
+               <span class="badge badge-success">Verified</span>
+             </div>
+          </div>
+        </div>
+
+        <!-- ─── Row 3: Active Workspaces & Activity Stream ─── -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          <!-- Column: Projects (3/4) -->
+          <div class="lg:col-span-3">
+            <div class="flex items-center justify-between mb-6">
+               <div class="flex items-center gap-3">
+                  <div class="w-1 h-6 bg-orange-500 rounded-full"></div>
+                  <h3 class="text-xl font-extrabold text-gray-800">Operational Workspaces</h3>
+               </div>
+               <a href="#projects" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group">
+                 View Workspace Map <span class="group-hover:translate-x-1 transition-transform">→</span>
+               </a>
+            </div>
             
-            <!-- Column: Workspace (2/3) -->
-            <div class="col-span-2 flex flex-col gap-10">
-              <section>
-                <div class="flex items-center justify-between mb-5">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2 h-6 bg-orange-500 rounded-full shadow-[0_0_10px_rgba(246,130,31,0.5)]"></span>
-                    <h3 class="text-base font-bold text-primary tracking-tight">Active Workspaces</h3>
-                  </div>
-                  <a href="#projects" class="text-xs text-primary font-bold hover:underline transition-all ring-1 ring-orange-100 px-3 py-1 rounded-full bg-orange-50">Manage All ›</a>
-                </div>
-                
-                <div id="projects-grid" class="grid-2 gap-6">
-                  <!-- Project Cards Injected via JS -->
-                </div>
-              </section>
-
-              <section>
-                <div class="flex items-center gap-2 mb-4">
-                  <span class="w-1.5 h-4 bg-gray-300 rounded-full"></span>
-                  <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">Deployment Velocity (Weekly)</h3>
-                </div>
-                <div class="card p-6 card-accent-indigo border-0 shadow-md">
-                  <div class="h-[140px] relative">
-                    <canvas id="frequency-chart"></canvas>
-                  </div>
-                </div>
-              </section>
+            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <!-- Project Cards -->
             </div>
-
-            <!-- Column: Activity Timeline (1/3) -->
-            <div class="col-span-1">
-              <div class="flex items-center gap-2 mb-5">
-                <span class="w-2 h-6 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]"></span>
-                <h3 class="text-base font-bold text-primary tracking-tight">Live Activity Stream</h3>
-              </div>
-              <div class="card p-6 pt-7 h-full min-h-[500px] flex flex-col card-accent-indigo border-0 shadow-md">
-                <div id="activity-timeline" class="timeline flex-1">
-                  <!-- Recent Activity Injected via JS -->
-                </div>
-                <div class="mt-8 pt-4 border-t text-center">
-                  <a href="#logs" class="text-xs text-primary font-bold hover:underline py-2 block bg-indigo-50 rounded-lg border border-indigo-100">See Full Audit History ›</a>
-                </div>
-              </div>
-            </div>
-
           </div>
+
+          <!-- Column: Activity Stream (1/4) -->
+          <div class="lg:col-span-1">
+             <div class="flex items-center gap-3 mb-6">
+                <div class="w-1 h-6 bg-indigo-500 rounded-full"></div>
+                <h3 class="text-xl font-extrabold text-gray-800">Activity Stream</h3>
+             </div>
+             <div class="card p-0 border-0 shadow-xl bg-white overflow-hidden min-h-[500px]">
+                <div class="bg-gray-50/80 p-4 border-b border-gray-100 flex items-center justify-between">
+                   <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Real-time Logs</span>
+                   <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                   </span>
+                </div>
+                <div id="activity-timeline" class="p-6 timeline-modern">
+                   <!-- Recent Activity -->
+                </div>
+                <div class="p-4 mt-auto">
+                   <a href="#logs" class="block w-full text-center py-2.5 bg-gray-50 hover:bg-gray-100 text-xs font-bold text-indigo-600 rounded-xl border border-gray-100 transition-colors">Complete Audit Trail</a>
+                </div>
+             </div>
+          </div>
+
         </div>
       </div>
     `;
@@ -163,7 +194,6 @@ export const PageDashboard = {
   },
 
   async init() {
-    // Parallel fetch for better performance
     const [dashRes, analyticsRes] = await Promise.all([
       Api.get('dashboard'),
       Api.get('analytics')
@@ -176,181 +206,101 @@ export const PageDashboard = {
 
     const { stats, recent, projects } = dashRes.data;
 
-    // 1. Update Stats - Safely
-    this.setElText('stat-total', stats.total);
+    // 1. Update Core Stats
+    this.setElText('stat-projects', projects.length);
+    this.setElText('stat-active-projs', projects.filter(p => p.is_active).length + ' Active');
     this.setElText('stat-rate', stats.success_rate + '%');
-    this.setElText('stat-24h', stats.logs_24h);
-    this.setElText('stat-webhook', stats.sources.webhook);
-    this.setElText('stat-health-up', stats.health.up);
-    this.setElText('stat-health-down', stats.health.down);
+    this.setElStyle('rate-bar', 'width', stats.success_rate + '%');
+    this.setElText('stat-total', stats.total);
+    this.setElText('stat-24h', `+${stats.logs_24h} today`);
 
-    // Donut visualization
-    const donutSegment = document.getElementById('donut-segment');
-    if (donutSegment) {
-      donutSegment.setAttribute('stroke-dasharray', `${stats.success_rate}, 100`);
-    }
+    this.setElText('last-update', 'Synced: ' + new Date().toLocaleTimeString());
 
-    // Progress bar
-    const totalSource = (stats.sources.webhook + stats.sources.manual) || 1;
-    this.setElStyle('bar-webhook', 'width', (stats.sources.webhook / totalSource * 100) + '%');
-
-    this.setElText('last-update', 'Last update: ' + new Date().toLocaleTimeString());
-
-    // 2. Render Charts if analytics data available
-    if (analyticsRes?.success) {
-      this.renderCharts(analyticsRes.data);
-    }
-
-    // 3. Start Server Monitoring (Real-time)
+    // 2. Monitoring Setup
     this.initMonitorCharts();
     this.startPolling();
 
-    // 3. Render Projects Grid
+    // 3. Project Cards Redesign
     const projGrid = document.getElementById('projects-grid');
     if (projGrid) {
       if (projects.length === 0) {
-        projGrid.innerHTML = `<div class="col-span-full py-10 text-center text-muted">No projects found. Add your first project to monitor it here.</div>`;
+        projGrid.innerHTML = `<div class="col-span-full py-20 text-center"><p class="text-gray-400">No projects indexed yet.</p></div>`;
       } else {
-        projGrid.innerHTML = projects.map(p => `
-        <div class="card p-6 h-full flex flex-col card-accent-orange hover-glow-orange border-0 shadow-md transition-all">
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <div class="font-bold text-sm truncate max-w-[140px] flex items-center gap-1">
-                ${p.name}
-                ${p.app_url ? `<span class="opacity-50 text-[10px]">🔗</span>` : ''}
+        projGrid.innerHTML = projects.slice(0, 6).map(p => `
+          <div class="group relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-indigo-100 transition-all duration-300 overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50/30 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
+            
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-6">
+                <div class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-xl shadow-inner group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                  ${p.name.charAt(0).toUpperCase()}
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                   ${this.getStatusBadge(p.last_status)}
+                   <span class="text-[9px] font-black text-gray-400 uppercase tracking-tighter">${p.branch || 'main'}</span>
+                </div>
               </div>
-              <div class="text-[10px] font-mono text-muted uppercase mt-0.5">${p.branch || 'main'}</div>
-            </div>
-            <div class="flex gap-1.5 items-center">
-              ${p.app_url ? this.getHealthDot(p.health_status) : ''}
-              ${this.getStatusBadge(p.last_status)}
-            </div>
-          </div>
-          
-          <div class="bg-orange-50 rounded-md p-3 mb-4 flex-1 flex flex-col justify-center border border-orange-100/50">
-            <div class="text-[9px] text-orange-600 uppercase font-bold tracking-tighter mb-1">Last Deployment</div>
-            <div class="flex justify-between items-end">
-              <div class="text-xs font-medium truncate text-orange-900">${p.last_deploy || 'Never'}</div>
-              ${p.health_time ? `<div class="text-[10px] text-orange-400 font-mono">${(p.health_time * 1000).toFixed(0)}ms</div>` : ''}
-            </div>
-          </div>
 
-          <div class="flex gap-2">
-            <a href="#git?project_id=${p.id}" class="btn btn-ghost btn-xs flex-1 justify-center py-1">Git</a>
-            <a href="#logs?project_id=${p.id}" class="btn btn-primary btn-xs flex-1 justify-center py-1">Logs</a>
+              <h3 class="font-bold text-gray-800 text-lg mb-1 truncate">${p.name}</h3>
+              <p class="text-gray-400 text-xs mb-5 truncate font-medium">Last deployment: <span class="text-gray-600">${this.formatTime(p.last_deploy)}</span></p>
+              
+              <div class="flex gap-2">
+                <a href="#git?project_id=${p.id}" class="flex-1 text-center py-2 rounded-lg bg-gray-50 text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors">GIT OPS</a>
+                <a href="#logs?project_id=${p.id}" class="flex-1 text-center py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-colors">DEPLOYS</a>
+              </div>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
       }
     }
 
-    // 3. Render Timeline
+    // 4. Timeline Modernized
     const timeline = document.getElementById('activity-timeline');
     if (timeline) {
       if (recent.length === 0) {
-        timeline.innerHTML = `<div class="text-center text-muted text-sm py-4">No recent activity.</div>`;
+        timeline.innerHTML = `<p class="text-center text-gray-400 text-xs py-10">Waiting for activity...</p>`;
       } else {
         timeline.innerHTML = recent.map(log => `
-        <div class="timeline-item">
-          <div class="timeline-dot ${log.status === 'success' ? 'success' : log.status === 'failed' ? 'failed' : 'running'}"></div>
-          <div class="timeline-content">
-            <span class="timeline-time">${this.formatTime(log.created_at)}</span>
-            <div class="text-xs">
-              <span class="font-bold">${log.project_name || 'N/A'}</span> 
-              <span class="text-muted">deployed via</span>
-              <span class="font-medium text-primary">${log.triggered_by}</span>
-            </div>
-            ${log.commit_hash ? `<div class="text-[10px] font-mono text-muted mt-1 truncate">#${log.commit_hash.substring(0,7)}</div>` : ''}
+          <div class="flex gap-4 mb-6 last:mb-0 group/tl">
+             <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full border-2 border-white shadow-sm flex items-center justify-center text-xs z-10 ${this.getLogColor(log.status)}">
+                  ${this.getLogIcon(log.triggered_by)}
+                </div>
+                <div class="w-0.5 flex-1 bg-gray-100 -mt-1 group-last/tl:hidden"></div>
+             </div>
+             <div class="pt-0.5 flex-1 pb-4">
+                <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center justify-between">
+                   ${this.formatTime(log.created_at)}
+                   ${log.status === 'success' ? '✅' : '❌'}
+                </div>
+                <p class="text-xs text-gray-700 font-bold leading-tight mb-1">
+                   ${log.project_name || 'System'} <span class="text-gray-400 font-medium">updated via</span> ${log.triggered_by}
+                </p>
+                <code class="text-[10px] text-indigo-500 font-mono">#${(log.commit_hash || '------').substring(0,7)}</code>
+             </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
       }
     }
   },
 
-  renderCharts(data) {
-    // 1. Stability Index Chart (Vibrant Stacked Bar)
-    const elStab = document.getElementById('stability-chart');
-    if (!elStab) return;
-    const ctxStab = elStab.getContext('2d');
-    new Chart(ctxStab, {
-      type: 'bar',
-      data: {
-        labels: data.stability.map(s => {
-          const d = new Date(s.date);
-          return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-        }),
-        datasets: [
-          {
-            label: 'Success',
-            data: data.stability.map(s => s.success),
-            backgroundColor: '#10b981',
-            borderRadius: 6,
-            barThickness: 12
-          },
-          {
-            label: 'Failed',
-            data: data.stability.map(s => s.failed),
-            backgroundColor: '#ef4444',
-            borderRadius: 6,
-            barThickness: 12
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { stacked: true, display: false },
-          x: { stacked: true, display: false }
-        }
-      }
-    });
+  getLogIcon(triggered) {
+    if (triggered === 'webhook') return '📡';
+    if (triggered === 'manual') return '👤';
+    return '🚀';
+  },
 
-    // 2. Deployment Velocity Chart (Vibrant Line with Gradient)
-    const elFreq = document.getElementById('frequency-chart');
-    if (!elFreq) return;
-    const ctxFreq = elFreq.getContext('2d');
-    const freqGradient = ctxFreq.createLinearGradient(0, 0, 0, 140);
-    freqGradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
-    freqGradient.addColorStop(1, 'rgba(99, 102, 241, 0.05)');
-
-    new Chart(ctxFreq, {
-      type: 'line',
-      data: {
-        labels: data.frequency.map(f => f.project_name),
-        datasets: [{
-          label: 'Deploys',
-          data: data.frequency.map(f => f.deploy_count),
-          borderColor: '#6366f1',
-          borderWidth: 3,
-          backgroundColor: freqGradient,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointBackgroundColor: '#fff',
-          pointBorderColor: '#6366f1',
-          pointBorderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 10 } } },
-          y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.03)' }, ticks: { color: '#9ca3af', font: { size: 10 } } }
-        }
-      }
-    });
+  getLogColor(status) {
+    if (status === 'success') return 'bg-emerald-500 text-white';
+    if (status === 'failed') return 'bg-rose-500 text-white';
+    return 'bg-amber-500 text-white';
   },
 
   initMonitorCharts() {
     const sharedOptions = {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
       scales: {
         y: { beginAtZero: true, max: 100, display: false },
         x: { display: false }
@@ -358,22 +308,22 @@ export const PageDashboard = {
       animation: { duration: 0 }
     };
 
-    // CPU Chart - Vibrant Indigo with Shadow Gradient
+    // CPU Chart - Indigo Area
     const elCpu = document.getElementById('cpu-chart');
     if (!elCpu) return;
     const cpuCtx = elCpu.getContext('2d');
-    const cpuGradiant = cpuCtx.createLinearGradient(0, 0, 0, 140);
-    cpuGradiant.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
-    cpuGradiant.addColorStop(1, 'rgba(99, 102, 241, 0)');
+    const cpuGradiant = cpuCtx.createLinearGradient(0, 0, 0, 180);
+    cpuGradiant.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+    cpuGradiant.addColorStop(1, 'rgba(79, 70, 229, 0)');
 
     this.cpuChart = new Chart(cpuCtx, {
       type: 'line',
       data: {
-        labels: Array(20).fill(''),
+        labels: Array(30).fill(''),
         datasets: [{
-          data: Array(20).fill(0),
-          borderColor: '#6366f1',
-          borderWidth: 2.5,
+          data: Array(30).fill(0),
+          borderColor: '#4f46e5',
+          borderWidth: 3,
           backgroundColor: cpuGradiant,
           fill: true,
           pointRadius: 0,
@@ -383,72 +333,89 @@ export const PageDashboard = {
       options: sharedOptions
     });
 
-    // RAM Chart - Vibrant Pink with Shadow Gradient
+    // RAM Chart - Pink Area
     const elRam = document.getElementById('ram-chart');
     if (!elRam) return;
     const ramCtx = elRam.getContext('2d');
     const ramGradiant = ramCtx.createLinearGradient(0, 0, 0, 140);
-    ramGradiant.addColorStop(0, 'rgba(236, 72, 153, 0.3)');
+    ramGradiant.addColorStop(0, 'rgba(236, 72, 153, 0.15)');
     ramGradiant.addColorStop(1, 'rgba(236, 72, 153, 0)');
 
     this.ramChart = new Chart(ramCtx, {
       type: 'line',
       data: {
-        labels: Array(20).fill(''),
+        labels: Array(30).fill(''),
         datasets: [{
-          data: Array(20).fill(0),
+          data: Array(30).fill(0),
           borderColor: '#ec4899',
-          borderWidth: 2.5,
+          borderWidth: 2,
           backgroundColor: ramGradiant,
           fill: true,
           pointRadius: 0,
           tension: 0.4
         }]
       },
-      options: { ...sharedOptions, scales: { ...sharedOptions.scales, y: { ...sharedOptions.scales.y, max: undefined } } }
+      options: sharedOptions
     });
   },
 
   async startPolling() {
-    // Clear existing interval if any
     if (window.monitorInterval) clearInterval(window.monitorInterval);
 
     const poll = async () => {
-      // Direct health check of DOM to stop polling if navigating away
       if (!document.getElementById('cpu-chart')) {
         clearInterval(window.monitorInterval);
         return;
       }
-
       const res = await Api.get('monitoring');
-      if (res?.success) {
-        this.updateMonitorCharts(res.data);
-      }
+      if (res?.success) this.updateMonitorCharts(res.data);
     };
 
-    poll(); // Initial call
-    window.monitorInterval = setInterval(poll, 5000);
+    poll();
+    window.monitorInterval = setInterval(poll, 3000);
   },
 
   updateMonitorCharts(data) {
     if (!this.cpuChart || !this.ramChart) return;
 
-    // Update CPU
+    // CPU
     const cpuData = this.cpuChart.data.datasets[0].data;
     cpuData.shift();
     cpuData.push(data.cpu);
     this.cpuChart.update();
     this.setElText('cpu-value', data.cpu + '%');
 
-    // Update RAM
+    // System Health Status (Dynamic)
+    const healthBadge = document.getElementById('system-health-badge');
+    if (healthBadge) {
+       if (data.cpu > 90 || data.ram.percent > 90) {
+          healthBadge.className = 'px-3 py-1.5 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold flex items-center gap-2';
+          healthBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span> HIGH LOAD';
+       } else {
+          healthBadge.className = 'px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-bold flex items-center gap-2';
+          healthBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> SYSTEM HEALTHY';
+       }
+    }
+
+    // RAM
     const ramData = this.ramChart.data.datasets[0].data;
     ramData.shift();
     ramData.push(data.ram.percent);
     this.ramChart.update();
-    this.setElText('ram-value', `${data.ram.used} / ${data.ram.total} GB (${data.ram.percent}%)`);
+    this.setElText('ram-percent', data.ram.percent + '%');
+    this.setElText('ram-used', data.ram.used + ' GB');
+    this.setElText('ram-total', data.ram.total + ' GB');
+    this.setElStyle('ram-bar', 'width', data.ram.percent + '%');
+
+    // Disk
+    if (data.disk) {
+      this.setElText('disk-percent', data.disk.percent + '%');
+      this.setElText('disk-used', data.disk.used + ' GB');
+      this.setElText('disk-total', data.disk.total + ' GB');
+      this.setElStyle('disk-bar', 'width', data.disk.percent + '%');
+    }
   },
 
-  // Helper for safe UI updates
   setElText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
@@ -460,27 +427,22 @@ export const PageDashboard = {
   },
 
   getStatusBadge(status) {
-    if (status === 'success') return '<span class="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_rgba(22,163,74,0.4)]"></span>';
-    if (status === 'failed')  return '<span class="w-2 h-2 rounded-full bg-danger shadow-[0_0_8px_rgba(220,38,38,0.4)]"></span>';
-    if (status === 'running') return '<span class="w-2 h-2 rounded-full bg-info animate-pulse"></span>';
-    return '<span class="w-2 h-2 rounded-full bg-gray-300"></span>';
-  },
-
-  getHealthDot(status) {
-    if (status === 'up') return '<span class="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_rgba(22,163,74,0.4)]" title="Online"></span>';
-    if (status === 'down') return '<span class="w-2 h-2 rounded-full bg-danger shadow-[0_0_8px_rgba(220,38,38,0.4)]" title="Offline"></span>';
-    return '<span class="w-2 h-2 rounded-full bg-gray-300" title="No data"></span>';
+    if (status === 'success') return '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 text-[9px] font-black uppercase">Success</span>';
+    if (status === 'failed')  return '<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[9px] font-black uppercase">Failed</span>';
+    if (status === 'running') return '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-[9px] font-black uppercase animate-pulse">Running</span>';
+    return '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[9px] font-black uppercase">Inactive</span>';
   },
 
   formatTime(dateStr) {
+    if (!dateStr) return 'Never';
     const date = new Date(dateStr);
     const now = new Date();
-    const diff = Math.floor((now - date) / 1000); // seconds
+    const diff = Math.floor((now - date) / 1000);
 
     if (diff < 60) return 'Just now';
     if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
     if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
     
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
   }
 };

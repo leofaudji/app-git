@@ -1323,3 +1323,23 @@ tbody tr:last-child td { border-bottom: none; }
 .cat-changed { color: var(--color-warning); }
 .cat-security { color: var(--color-indigo); }
 .cat-removed { color: #6b7280; }
+
+/* ================================================================
+   MODERN DASHBOARD UTILS
+   ================================================================ */
+.timeline-modern {
+  position: relative;
+}
+
+.timeline-modern::before {
+  content: '';
+  position: absolute;
+  left: 31px; top: 30px; bottom: 30px;
+  width: 1px;
+  background: #f1f5f9;
+}
+
+.timeline-item-modern {
+  display: flex; gap: 16px;
+  margin-bottom: 24px;
+}

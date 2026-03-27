@@ -1,8 +1,8 @@
 // ============================================================
 // Service Worker for GitDeploy PWA
 // ============================================================
-const CACHE_NAME = 'gitdeploy-v11';
-const STATIC_CACHE = 'gitdeploy-static-v11';
+const CACHE_NAME = 'gitdeploy-v12';
+const STATIC_CACHE = 'gitdeploy-static-v12';
 
 // Using relative paths so it works regardless of the app's subdirectory
 const STATIC_ASSETS = [

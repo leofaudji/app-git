@@ -31,7 +31,7 @@ function env($key, $default = null) {
 
 // ─── 3. Global Config ───
 define('APP_NAME',    env('APP_NAME', 'GitDeploy'));
-define('APP_VERSION', '1.4.7');
+define('APP_VERSION', '1.4.8');
 define('APP_DEBUG',   env('APP_DEBUG', true));
 
 // Auto-detect Base Path (Portable)
