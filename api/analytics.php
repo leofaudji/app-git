@@ -57,6 +57,44 @@ switch ($action) {
         ]);
         break;
 
+    case 'contributions':
+        $year = $_GET['year'] ?? 'last_year';
+        $where = "created_at >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)";
+        
+        if ($year !== 'last_year' && is_numeric($year)) {
+            $where = "YEAR(created_at) = " . (int)$year;
+        }
+
+        $contributions = DB::fetchAll("
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(*) as count
+            FROM deploy_logs
+            WHERE $where
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ");
+        
+        $result = [];
+        foreach ($contributions as $c) {
+            $result[$c['date']] = (int)$c['count'];
+        }
+
+        // Get available years for filtering
+        $availableYears = DB::fetchAll("
+            SELECT DISTINCT YEAR(created_at) as year 
+            FROM deploy_logs 
+            ORDER BY year DESC
+        ");
+
+        jsonSuccess([
+            'contributions' => $result,
+            'daily_total'   => array_sum($result),
+            'year'          => $year,
+            'available_years' => array_column($availableYears, 'year')
+        ]);
+        break;
+
     default:
         jsonError('Action tidak ditemukan', 404);
 }

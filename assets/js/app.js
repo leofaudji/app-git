@@ -22,19 +22,19 @@ export const App = (() => {
 
   // ─── Icons for menu ───
   const ICONS = {
-    dashboard: '⊞',
-    projects:  '📂',
-    git:       '⎇',
-    logs:      '📜',
-    webhook:   '📡',
-    audit:     '📋',
-    users:     '👥',
-    roles:     '🔑',
-    settings:  '⚙',
-    profile:   '👤',
-    changelog: '✨',
-    backup:    '💾',
-    env:       '🔐',
+    dashboard: 'layout-dashboard',
+    projects:  'folder',
+    git:       'git-branch',
+    logs:      'file-text',
+    webhook:   'rss',
+    audit:     'clipboard-list',
+    users:     'users',
+    roles:     'key',
+    settings:  'settings',
+    profile:   'user',
+    changelog: 'sparkles',
+    backup:    'database',
+    env:       'shield-check',
   };
 
   // ─── Render sidebar menu from RBAC API ───
@@ -76,7 +76,7 @@ export const App = (() => {
       el.dataset.route = item.route;
       el.innerHTML = `
         <div class="nav-item-inner">
-          ${item.icon ? `<span class="nav-icon">${ICONS[item.icon] ?? '●'}</span>` : '<span class="nav-icon-spacer"></span>'}
+          ${item.icon ? `<span class="nav-icon"><i data-lucide="${ICONS[item.icon] ?? 'circle'}"></i></span>` : '<span class="nav-icon-spacer"></span>'}
           <span>${item.label}</span>
         </div>`;
       el.addEventListener('click', () => {
@@ -104,6 +104,9 @@ export const App = (() => {
       
       nav.appendChild(groupWrapper);
     });
+
+    // Initialize icons
+    if (window.lucide) lucide.createIcons();
   }
 
   // ─── Update topbar user info ───
@@ -111,8 +114,11 @@ export const App = (() => {
     const initials = user.full_name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
     document.getElementById('user-avatar-initials').textContent = initials;
     document.getElementById('user-full-name').textContent = user.full_name;
-    document.getElementById('user-role-label').textContent = user.roles.map(r => r.label).join(', ') || 'User';
+    document.getElementById('user-role-label').textContent = user.role_label || (user.roles?.map(r => r.label).join(', ') || 'User');
     document.getElementById('topbar-user').textContent = user.username;
+    
+    // Refresh icons in case any were added
+    if (window.lucide) lucide.createIcons();
   }
 
   // ─── Update page title ───
@@ -227,6 +233,8 @@ export const App = (() => {
     await renderMenu();
     registerRoutes();
     Router.init();
+    
+    if (window.lucide) lucide.createIcons();
 
     // Fetch and display latest version
     updateAppVersion();
@@ -274,7 +282,15 @@ export const App = (() => {
     // Toggle password visibility
     document.getElementById('toggle-pass').addEventListener('click', () => {
       const inp = document.getElementById('inp-password');
-      inp.type = inp.type === 'password' ? 'text' : 'password';
+      const icon = document.querySelector('#toggle-pass i');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        inp.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      if (window.lucide) lucide.createIcons();
     });
 
     // Logout button
@@ -298,6 +314,8 @@ export const App = (() => {
 
     if (statusRes?.data?.authenticated) {
       await showApp();
+    } else {
+      if (window.lucide) lucide.createIcons();
     }
     // (login page is already visible by default)
   }

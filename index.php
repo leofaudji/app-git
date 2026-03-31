@@ -76,6 +76,9 @@ try {
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <!-- Force Update Utility (Bypass SW Cache) -->
   <script>
     if (window.location.search.includes('force_update=1')) {
@@ -103,7 +106,7 @@ try {
 <div id="login-page">
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-ring">🚀</div>
+      <div class="logo-ring"><i data-lucide="rocket"></i></div>
       <h1><?= htmlspecialchars($appName) ?></h1>
       <p>Git Webhook Auto-Deploy</p>
       <div id="login-version" style="font-size:10px;color:var(--text-muted);margin-top:2px;">Memuat versi...</div>
@@ -123,7 +126,9 @@ try {
           <input type="password" id="inp-password" name="password" class="form-input"
                  placeholder="••••••••" autocomplete="current-password" required>
           <button type="button" id="toggle-pass"
-            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;">👁</button>
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <i data-lucide="eye" style="width:18px;height:18px;"></i>
+          </button>
         </div>
       </div>
       <button type="submit" class="btn btn-primary" id="login-btn" style="width:100%;justify-content:center;margin-top:8px;">
@@ -146,7 +151,7 @@ try {
   <!-- ── Sidebar ── -->
   <aside id="sidebar">
     <div id="sidebar-logo">
-      <div class="logo-icon">🚀</div>
+      <div class="logo-icon"><i data-lucide="rocket" style="width:16px;height:16px;color:white;"></i></div>
       <div>
         <div class="logo-text" id="sidebar-app-name"><?= htmlspecialchars($appName) ?></div>
         <div class="logo-version" id="sidebar-version">v<?= APP_VERSION ?></div>
@@ -163,7 +168,9 @@ try {
         <div class="user-name" id="user-full-name">—</div>
         <div class="user-role" id="user-role-label">—</div>
       </div>
-      <button class="user-logout-btn" id="logout-btn" title="Logout">⇥</button>
+      <button class="user-logout-btn" id="logout-btn" title="Logout">
+        <i data-lucide="log-out" style="width:18px;height:18px;"></i>
+      </button>
     </div>
   </aside>
 
@@ -171,7 +178,7 @@ try {
   <div id="main">
     <!-- Topbar -->
     <header id="topbar">
-      <button id="sidebar-toggle">☰</button>
+      <button id="sidebar-toggle"><i data-lucide="menu"></i></button>
       <div class="page-title" id="page-title">Dashboard</div>
       <span class="badge-online">● Online</span>
       <div style="font-size:13px;color:var(--text-muted);" id="topbar-user">—</div>
