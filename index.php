@@ -50,8 +50,8 @@ try {
 
   <!-- PWA -->
   <link rel="manifest" href="<?= APP_PATH ?>/manifest.json">
-  <link rel="apple-touch-icon" href="<?= APP_PATH ?>/assets/icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_PATH ?>/assets/icons/icon-96.png">
+  <link rel="apple-touch-icon" href="<?= APP_PATH ?>/assets/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_PATH ?>/assets/favicon.png">
   <script>window.APP_PATH = "<?= APP_PATH ?>";</script>
 
   <!-- Tailwind CSS via CDN -->
@@ -139,6 +139,22 @@ try {
 
     <div style="margin-top:20px;text-align:center;font-size:12px;color:var(--text-muted)">
       &copy; <?= date('Y') ?> <?= htmlspecialchars($appName) ?> &mdash; Secure Deployment Platform
+    </div>
+  </div>
+</div>
+
+<!-- ── Splash Screen (New) ── -->
+<div id="splash-screen" style="display:none">
+  <div class="splash-inner">
+    <div class="splash-logo">
+      <div class="logo-ring pulse"><i data-lucide="rocket"></i></div>
+      <h1 id="splash-app-name"><?= htmlspecialchars($appName) ?></h1>
+    </div>
+    <div class="splash-loader">
+       <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="splash-progress"></div>
+       </div>
+       <div class="splash-status" id="splash-status">Menghubungkan ke server...</div>
     </div>
   </div>
 </div>

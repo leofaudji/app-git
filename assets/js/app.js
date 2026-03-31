@@ -223,21 +223,47 @@ export const App = (() => {
 
     currentUser = statusRes.data.user;
     Api.setCsrf(statusRes.data.csrf_token);
-    window.CurrentUser = currentUser; // Move this early
+    window.CurrentUser = currentUser;
 
-    // Switch UI
+    // 1. Switch UI to Splash
     document.getElementById('login-page').style.display = 'none';
-    document.getElementById('app-layout').style.display = 'flex';
+    const splash = document.getElementById('splash-screen');
+    splash.style.display = 'flex';
+    splash.className = ''; // Reset any fade-out
 
+    // 2. Prepare App in background
     updateUserUI(currentUser);
     await renderMenu();
     registerRoutes();
     Router.init();
-    
-    if (window.lucide) lucide.createIcons();
-
-    // Fetch and display latest version
     updateAppVersion();
+
+    // 3. Realistic Loading Simulation (Splash)
+    const prog = document.getElementById('splash-progress');
+    const stat = document.getElementById('splash-status');
+    
+    // Step 1: Init
+    prog.style.width = '30%';
+    stat.textContent = 'Mempersiapkan workspace...';
+    await new Promise(r => setTimeout(r, 600));
+
+    // Step 2: Auth
+    prog.style.width = '70%';
+    stat.textContent = 'Memverifikasi sesi aman...';
+    await new Promise(r => setTimeout(r, 600));
+
+    // Step 3: Finish
+    prog.style.width = '100%';
+    stat.textContent = 'Berhasil! Memuat dashboard...';
+    await new Promise(r => setTimeout(r, 500));
+
+    // 4. Fade to App
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.style.display = 'none';
+      document.getElementById('app-layout').style.display = 'flex';
+      if (window.lucide) lucide.createIcons();
+    }, 500);
   }
 
   async function updateAppVersion() {
@@ -294,7 +320,29 @@ export const App = (() => {
     });
 
     // Logout button
-    document.getElementById('logout-btn').addEventListener('click', () => logout());
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      const result = await Swal.fire({
+        title: 'Konfirmasi Logout',
+        text: "Apakah Anda yakin ingin keluar?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f6821f', // Cloudflare orange
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Ya, Logout!',
+        cancelButtonText: 'Batal',
+        background: '#ffffff',
+        customClass: {
+          title: 'text-sm font-bold',
+          content: 'text-xs',
+          confirmButton: 'text-xs px-4 py-2',
+          cancelButton: 'text-xs px-4 py-2'
+        }
+      });
+
+      if (result.isConfirmed) {
+        logout();
+      }
+    });
 
     // Mobile sidebar toggle
     document.getElementById('sidebar-toggle').addEventListener('click', () => {
