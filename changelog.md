@@ -2,6 +2,21 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
+## [1.6.0] - 2026-04-01
+### Added
+- **Login Splash Screen**: Transisi mulus setelah login dengan simulasi progress loading dan animasi logo pulse.
+- **Logout Confirmation**: Dialog konfirmasi kustom menggunakan SweetAlert2 untuk mencegah logout tidak sengaja.
+- **Markdown Support in Changelog**: Dukungan pemformatan `**bold**`, `*italic*`, dan `` `code` `` pada halaman riwayat perubahan.
+- **Custom Favicon**: Implementasi `assets/favicon.png` sebagai ikon aplikasi dan Apple touch icon.
+
+### Changed
+- **Dashboard Reordering (Contribution First)**: Memindahkan heatmap aktivitas ke posisi paling atas untuk menonjolkan konsistensi pengembangan.
+- **Light Theme Header**: Transformasi Topbar dan Sidebar logo ke warna putih bersih (Light) untuk estetika yang lebih modern.
+- **Minimalist Version Badge**: Menghapus background pada label versi di sidebar agar lebih bersih dan menyatu dengan tema baru.
+
+### Fixed
+- **Changelog Rendering**: Perbaikan sistem rendering yang sebelumnya hanya mendukung plain text.
+
 ## [1.4.4] - 2026-03-28
 ### Added
 - **Security Audit System**: Integrasi penuh dengan API eksternal untuk pemindaian kerentanan website (SQL Injection, XSS, dll).

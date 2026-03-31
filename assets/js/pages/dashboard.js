@@ -348,7 +348,16 @@ export const PageDashboard = {
   },
 
   setLastUpdate() {
-    this.setElText('last-update', new Date().toLocaleTimeString());
+    const now = new Date();
+    const options = { 
+      day: 'numeric', 
+      month: 'short', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit',
+      hour12: false 
+    };
+    this.setElText('last-update', now.toLocaleString('id-ID', options) + ' WIB');
   },
 
   getStatusBadge(status) {

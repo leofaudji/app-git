@@ -87,7 +87,7 @@ export const PageChangelog = {
                   ${cat.category}
                 </h4>
                 <ul class="changelog-list">
-                  ${cat.items.map(item => `<li>${item}</li>`).join('')}
+                  ${cat.items.map(item => `<li>${this.parseMarkdown(item)}</li>`).join('')}
                 </ul>
               </div>
             `).join('')}
@@ -95,6 +95,14 @@ export const PageChangelog = {
         </div>
       </div>
     `).join('');
+  },
+
+  parseMarkdown(text) {
+    if (!text) return '';
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')             // Italic
+      .replace(/`(.*?)`/g, '<code class="bg-slate-100 px-1 rounded text-orange-600 font-mono text-[11px]">$1</code>'); // Code
   },
 
   getCategoryClass(cat) {
@@ -144,7 +152,7 @@ export const PageChangelog = {
         
         <div class="changelog-body">
           <div class="p-1">
-            <div class="text-sm text-secondary whitespace-pre-wrap mb-4">${log.changelog}</div>
+            <div class="text-sm text-secondary whitespace-pre-wrap mb-4">${this.parseMarkdown(log.changelog)}</div>
             <div class="pt-3 border-t text-[11px] text-muted flex items-center justify-between">
               <span>Author: <strong class="text-primary">${log.author || 'System'}</strong></span>
               <span>Repo: <code class="bg-gray-100 px-1 rounded">${log.repo_name}</code></span>
