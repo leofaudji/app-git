@@ -27,36 +27,7 @@ export const PageDashboard = {
           </div>
         </div>
 
-        <!-- ─── Top Stats row (Segments) ─── -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-           <div class="cf-card p-6 flex flex-col">
-              <div class="cf-label mb-2">Total Deployed Projects</div>
-              <div class="text-3xl font-bold text-slate-900" id="stat-projects">0</div>
-              <div class="mt-4 text-[10px] text-slate-400 font-bold flex items-center gap-1">
-                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ACTIVE INFRASTRUCTURE
-              </div>
-           </div>
-           <div class="cf-card p-6 flex flex-col">
-              <div class="cf-label mb-2">Success Rate (Last 24h)</div>
-              <div class="flex items-end justify-between">
-                 <div class="text-3xl font-bold cf-blue" id="stat-rate">0%</div>
-                 <div class="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
-                    <div id="rate-bar" class="h-full cf-bg-blue transition-all duration-1000" style="width: 0%"></div>
-                 </div>
-              </div>
-              <div class="mt-auto text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Reliability Index</div>
-           </div>
-           <div class="cf-card p-6 flex flex-col">
-              <div class="cf-label mb-2">Total Deployments</div>
-              <div class="text-3xl font-bold text-slate-900" id="stat-total">0</div>
-              <div class="mt-4 flex items-center justify-between">
-                 <span class="text-[10px] text-indigo-600 font-bold" id="stat-24h">+0 today</span>
-                 <span class="text-[9px] text-slate-400 uppercase">System wide</span>
-              </div>
-           </div>
-        </div>
-
-        <!-- ─── Contribution Graph (GitHub Style) ─── -->
+        <!-- ─── 1. Contribution Graph (Heatmap) - TOP ─── -->
         <div class="cf-card mb-8">
            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
               <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -90,7 +61,36 @@ export const PageDashboard = {
            </div>
         </div>
 
-        <!-- ─── Main Monitoring Center ─── -->
+        <!-- ─── 2. Top Stats row ─── -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+           <div class="cf-card p-6 flex flex-col">
+              <div class="cf-label mb-2">Total Deployed Projects</div>
+              <div class="text-3xl font-bold text-slate-900" id="stat-projects">0</div>
+              <div class="mt-4 text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ACTIVE INFRASTRUCTURE
+              </div>
+           </div>
+           <div class="cf-card p-6 flex flex-col">
+              <div class="cf-label mb-2">Success Rate (Last 24h)</div>
+              <div class="flex items-end justify-between">
+                 <div class="text-3xl font-bold cf-blue" id="stat-rate">0%</div>
+                 <div class="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
+                    <div id="rate-bar" class="h-full cf-bg-blue transition-all duration-1000" style="width: 0%"></div>
+                 </div>
+              </div>
+              <div class="mt-auto text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Reliability Index</div>
+           </div>
+           <div class="cf-card p-6 flex flex-col">
+              <div class="cf-label mb-2">Total Deployments</div>
+              <div class="text-3xl font-bold text-slate-900" id="stat-total">0</div>
+              <div class="mt-4 flex items-center justify-between">
+                 <span class="text-[10px] text-indigo-600 font-bold" id="stat-24h">+0 today</span>
+                 <span class="text-[9px] text-slate-400 uppercase">System wide</span>
+              </div>
+           </div>
+        </div>
+
+        <!-- ─── 3. Main Monitoring Center ─── -->
         <div class="cf-card mb-8">
            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
               <h3 class="text-sm font-bold text-slate-800">Performance & Infrastructure Analytics</h3>
@@ -152,9 +152,8 @@ export const PageDashboard = {
            </div>
         </div>
 
-        <!-- ─── Details Grid ─── -->
+        <!-- ─── 4. Details Grid ─── -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           
            <!-- Active Workspaces -->
            <div class="lg:col-span-2 flex flex-col gap-4">
               <div class="flex items-center justify-between">
@@ -178,7 +177,6 @@ export const PageDashboard = {
                  </div>
               </div>
            </div>
-
         </div>
       </div>
     `;
@@ -267,7 +265,9 @@ export const PageDashboard = {
   },
 
   initInfraChart() {
-    const ctx = document.getElementById('infra-chart').getContext('2d');
+    const canvas = document.getElementById('infra-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     this.infraChart = new Chart(ctx, {
       type: 'line',
       data: {

@@ -91,7 +91,7 @@ export const App = (() => {
       if (group.items.length === 0) return;
       
       const groupWrapper = document.createElement('div');
-      groupWrapper.className = 'nav-group mb-4';
+      groupWrapper.className = 'nav-group';
       
       const label = document.createElement('div');
       label.className = 'nav-section-label';
