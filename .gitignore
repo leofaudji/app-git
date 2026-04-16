@@ -2,3 +2,4 @@ schema.sql
 .htaccess
 .env
 .DS_Store
+backups

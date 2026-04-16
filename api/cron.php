@@ -5,7 +5,7 @@
  */
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/backup.php'; // Include backup helpers
+require_once __DIR__ . '/../includes/backup_helper.php'; 
 
 header('Content-Type: application/json');
 
