@@ -119,9 +119,17 @@ export const PageSettings = (() => {
                 <div class="form-hint">Pilih hari kapan saja backup otomatis akan dijalankan.</div>
               </div>
               
-              <div class="bg-gray-50 p-3 rounded text-[10px] font-mono text-muted border">
-                <strong>Cron Command:</strong><br>
-                curl -s "${window.location.origin}${window.APP_PATH}/api/cron.php?secret=${settings.backup_cron_secret?.value || 'SECRET'}"
+              <div class="mt-6 p-4 bg-slate-900 rounded-xl border border-slate-800 shadow-inner">
+                <div class="flex justify-between items-center mb-3">
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Cron Command (Linux/cPanel)</span>
+                  <button class="btn btn-xs btn-primary py-1 h-auto text-[9px]" onclick="PageSettings.copyCronCommand()">📋 Copy Command</button>
+                </div>
+                <div class="font-mono text-[11px] text-blue-400 break-all leading-relaxed" id="cron-command-display">
+                  * * * * * curl -s "${window.location.origin}${window.APP_PATH}/api/cron.php?secret=${settings.backup_cron_secret?.value || 'SECRET'}" &gt; /dev/null 2&gt;&amp;1
+                </div>
+                <div class="mt-3 text-[10px] text-slate-500 italic">
+                  Setup ini diperlukan sekali saja di server agar backup otomatis berjalan.
+                </div>
               </div>
             </div>
 
@@ -200,7 +208,10 @@ export const PageSettings = (() => {
             <div class="mb-4">
               <p class="text-sm text-muted mb-3 italic">Simpan cadangan data Anda atau pulihkan dari file backup sebelumnya.</p>
               <button class="btn btn-ghost w-full justify-center mb-3" onclick="PageSettings.downloadBackup()">
-                📥 Download Backup (.sql)
+                📥 Download Backup Sistem (.sql)
+              </button>
+              <button class="btn btn-primary w-full justify-center mb-3 flex items-center gap-2" onclick="PageSettings.runFullBackup()">
+                🚀 Jalankan Backup Penuh (Semua Project)
               </button>
             </div>
 
@@ -368,6 +379,47 @@ export const PageSettings = (() => {
     }
   }
 
-  return { render, save, copyWebhookUrl, toggleSecret, downloadBackup, restoreBackup, testEmail };
-})();
+  async function runFullBackup() {
+    const result = await Swal.fire({
+      title: 'Jalankan Backup Penuh?',
+      text: 'Sistem akan membackup database semua project yang aktif dan mengirimkan laporan ke email Anda.',
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Jalankan!',
+      cancelButtonText: 'Batal'
+    });
 
+    if (!result.isConfirmed) return;
+
+    const btn = document.querySelector('button[onclick="PageSettings.runFullBackup()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Memproses Backup...'; }
+
+    try {
+      const res = await Api.post('backup?action=full_system_backup', {});
+      if (res?.success) {
+        let msg = `Berhasil memproses ${res.data.results.length} backup.`;
+        if (res.data.notified) msg += ' Laporan email telah kirim.';
+        
+        await Swal.fire({
+          title: 'Selesai!',
+          html: `${msg}<br><br><small class="text-muted">Cek halaman Backup Manager untuk melihat file.</small>`,
+          icon: 'success'
+        });
+      } else {
+        Toast.error(res?.message || 'Gagal menjalankan backup penuh');
+      }
+    } catch (e) {
+      Toast.error('Terjadi kesalahan sistem');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '🚀 Jalankan Backup Penuh (Semua Project)'; }
+    }
+  }
+
+  function copyCronCommand() {
+    const text = document.getElementById('cron-command-display').innerText.trim();
+    navigator.clipboard.writeText(text);
+    Toast.success('Perintah Cron disalin!');
+  }
+
+  return { render, save, copyWebhookUrl, toggleSecret, downloadBackup, restoreBackup, testEmail, runFullBackup, copyCronCommand };
+})();

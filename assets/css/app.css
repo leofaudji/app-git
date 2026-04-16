@@ -1697,3 +1697,27 @@ tbody tr:last-child td { border-bottom: none; }
   background: var(--sb-hover-bg);
   color: var(--text-primary);
 }
+
+/* ─── Scroll Utilities ─── */
+.scroll-y-auto {
+  max-height: 450px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.scroll-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-y-auto::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.scroll-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}

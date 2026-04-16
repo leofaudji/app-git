@@ -62,9 +62,9 @@ export const PageBackup = (() => {
                 <h3 class="text-base font-bold text-primary">Riwayat Backup</h3>
               </div>
               <div class="card border-0 shadow-md card-accent-indigo overflow-hidden">
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto scroll-y-auto">
                   <table class="table w-full">
-                    <thead>
+                    <thead class="sticky top-0 bg-white z-10 shadow-sm">
                       <tr>
                         <th>Identitas Backup</th>
                         <th>Waktu & Ukuran</th>
@@ -223,7 +223,7 @@ export const PageBackup = (() => {
                   <span class="text-xs font-bold">Files on ${filterDate}</span>
                   <span class="badge badge-indigo">${backups.length} Files</span>
                </div>
-               <div class="table-wrap">
+               <div class="table-wrap scroll-y-auto" style="max-height: 250px;">
                   <table class="table w-full">
                      <tbody>${html || '<tr><td class="text-center py-4 text-muted">No backups found for this date.</td></tr>'}</tbody>
                   </table>
