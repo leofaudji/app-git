@@ -163,7 +163,8 @@ INSERT IGNORE INTO `settings` (`key`, `value`, `label`, `type`) VALUES
   ('git_base_dir', '', 'Global Projects Base Directory (absolute path)', 'text'),
   ('webhook_secret_default', 'change_me_secret_key', 'Default Webhook Secret', 'password'),
   ('notify_email', '', 'Notification Email', 'text'),
-  ('auto_deploy', '1', 'Enable Auto Deploy on Webhook', 'boolean');
+  ('auto_deploy', '1', 'Enable Auto Deploy on Webhook', 'boolean'),
+  ('backup_base_dir', 'D:\\laragon\\backups\\gitdeploy', 'Global Backups Directory (absolute path)', 'text');
 
 -- Audit Logs
 CREATE TABLE IF NOT EXISTS `audit_logs` (

@@ -236,9 +236,10 @@ export const PageDashboard = {
                    <div class="text-[9px] font-bold text-slate-300 uppercase">Updated</div>
                    <div class="text-[10px] font-bold text-slate-600">${this.formatTime(p.last_deploy)}</div>
                 </div>
-                <div class="flex gap-1 group-hover:opacity-100 opacity-0 transition-opacity">
-                   <a href="#git?project_id=${p.id}" class="text-xs font-bold cf-blue p-1">⚙️</a>
-                </div>
+                 <div class="flex gap-2 group-hover:opacity-100 opacity-0 transition-opacity">
+                    <button onclick="event.stopPropagation(); PageDashboard.quickBackup(${p.id}, '${p.name}')" class="text-xs font-bold text-emerald-500 p-1 hover:bg-emerald-50 rounded" title="Quick Backup DB">🗄️</button>
+                    <a href="#git?project_id=${p.id}" class="text-xs font-bold cf-blue p-1 hover:bg-blue-50 rounded" title="Settings">⚙️</a>
+                 </div>
              </div>
           </div>
        `).join('');
@@ -508,5 +509,35 @@ export const PageDashboard = {
     if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
     if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
     return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
+  },
+
+  async quickBackup(id, name) {
+    if (this.isBackingUp) return;
+    this.isBackingUp = true;
+    
+    // Toast is usually global in this app or available via Swal
+    if (window.Toast) window.Toast.info(`Memulai backup database ${name}...`);
+    else if (window.Swal) Swal.fire({ title: 'Backup', text: `Memulai backup database ${name}...`, icon: 'info', timer: 2000, showConfirmButton: false });
+
+    try {
+      const res = await Api.post('backup', { action: 'project_save', id });
+      if (res?.success) {
+        if (window.Swal) {
+          Swal.fire({
+            title: 'Berhasil',
+            text: `Backup ${name} selesai.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      } else {
+        if (window.Swal) Swal.fire('Gagal', res?.message || 'Gagal melakukan backup', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      this.isBackingUp = false;
+    }
   }
 };

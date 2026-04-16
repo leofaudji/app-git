@@ -2,17 +2,32 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
-## [1.6.0] - 2026-04-01
+## [1.7.0] - 2026-04-16
 ### Added
-- **Login Splash Screen**: Transisi mulus setelah login dengan simulasi progress loading dan animasi logo pulse.
-- **Logout Confirmation**: Dialog konfirmasi kustom menggunakan SweetAlert2 untuk mencegah logout tidak sengaja.
-- **Markdown Support in Changelog**: Dukungan pemformatan `**bold**`, `*italic*`, dan `` `code` `` pada halaman riwayat perubahan.
-- **Custom Favicon**: Implementasi `assets/favicon.png` sebagai ikon aplikasi dan Apple touch icon.
+- **Backup Database Per Project**: Sekarang Anda bisa membackup database untuk setiap project secara terpisah. Aplikasi akan otomatis mendeteksi pengaturan database dari file project Anda.
+- **Backup Otomatis Terjadwal**: Menambahkan fitur backup otomatis yang bisa diatur jam dan harinya melalui menu Pengaturan agar data selalu terjaga.
+- **Kalender Riwayat Backup**: Tampilan riwayat backup kini lebih rapi dalam bentuk kalender, memudahkan Anda memantau ketersediaan data cadangan setiap harinya.
+- **Pemicu Backup Manual**: Menambahkan opsi untuk menjalankan backup kapan saja melalui sistem luar (seperti Crontab) tanpa harus menunggu jadwal rutin.
+- **Penyimpanan Lebih Aman**: File backup kini disimpan di folder khusus yang terpisah dari folder aplikasi utama untuk meningkatkan keamanan data.
 
 ### Changed
-- **Dashboard Reordering (Contribution First)**: Memindahkan heatmap aktivitas ke posisi paling atas untuk menonjolkan konsistensi pengembangan.
-- **Light Theme Header**: Transformasi Topbar dan Sidebar logo ke warna putih bersih (Light) untuk estetika yang lebih modern.
-- **Minimalist Version Badge**: Menghapus background pada label versi di sidebar agar lebih bersih dan menyatu dengan tema baru.
+- **Pengaturan Hari Backup**: Cara memilih hari backup kini lebih mudah dengan sistem centang (checkbox), bukan lagi mengetik manual.
+- **Pembaruan Sistem Backup**: Memperbaiki cara kerja internal sistem backup agar lebih stabil saat dijalankan otomatis maupun manual.
+
+### Fixed
+- **Masalah Menu Backup**: Memperbaiki error "Invalid Action" yang terkadang muncul saat mengklik tombol backup.
+- **Perbaikan Tampilan**: Memperbaiki masalah teknis yang sempat membuat halaman riwayat backup tidak muncul dengan benar.
+
+## [1.6.0] - 2026-04-01
+### Added
+- **Tampilan Loading Login**: Menambahkan layar loading yang cantik setelah login agar transisi masuk ke aplikasi terasa lebih mulus.
+- **Konfirmasi Keluar**: Sekarang akan muncul kotak konfirmasi saat Anda ingin Logout, untuk mencegah tidak sengaja keluar dari aplikasi.
+- **Format Tulisan di Riwayat**: Catatan perubahan kini mendukung tulisan **tebal**, *miring*, dan kode agar lebih mudah dibaca.
+- **Icon Baru**: Memasang icon (favicon) baru agar tab aplikasi di browser terlihat lebih profesional.
+
+### Changed
+- **Tampilan Dashboard Baru**: Memindahkan grafik aktivitas ke posisi paling atas agar Anda bisa langsung melihat perkembangan project.
+- **Tema Warna Putih (Light)**: Mengubah warna bagian atas dan samping menjadi putih bersih agar mata tidak cepat lelah dan terlihat lebih modern.
 
 ### Fixed
 - **Changelog Rendering**: Perbaikan sistem rendering yang sebelumnya hanya mendukung plain text.

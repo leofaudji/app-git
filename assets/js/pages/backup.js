@@ -4,6 +4,10 @@
 import { Api, Toast } from "../api.js";
 
 export const PageBackup = (() => {
+  let currentView = 'history';
+  let selectedDate = null;
+  let currentMonth = new Date();
+  let allBackups = [];
 
   async function render() {
     const view = document.getElementById('page-view');
@@ -13,11 +17,17 @@ export const PageBackup = (() => {
         <div class="flex items-center justify-between mb-8">
           <div>
             <h2 class="text-2xl font-bold tracking-tight text-primary">Database Backup Manager</h2>
-            <p class="text-muted text-sm mt-1">Lindungi data Anda dengan backup otomatis sebelum deployment.</p>
+            <p class="text-muted text-sm mt-1">Lindungi data Anda dengan backup otomatis dan pantau riwayat melalui kalender.</p>
           </div>
-          <button onclick="PageBackup.saveBackup()" class="btn btn-primary flex items-center gap-2">
-            💾 Backup Sekarang
-          </button>
+          <div class="flex gap-3">
+             <div class="flex bg-gray-100 p-1 rounded-lg border">
+                <button onclick="PageBackup.switchView('history')" id="view-btn-history" class="btn btn-xs px-4 rounded-md transition-all">📜 History</button>
+                <button onclick="PageBackup.switchView('calendar')" id="view-btn-calendar" class="btn btn-xs px-4 rounded-md transition-all">📅 Calendar</button>
+             </div>
+             <button onclick="PageBackup.saveBackup()" class="btn btn-primary flex items-center gap-2">
+               💾 Backup Sekarang
+             </button>
+          </div>
         </div>
 
         <div id="backup-alert"></div>
@@ -44,30 +54,45 @@ export const PageBackup = (() => {
         <!-- Main Content: History + Restore -->
         <div class="grid-3 gap-6 items-start">
 
-          <!-- Backup History Table (col-span-2) -->
+          <!-- Backup History Table / Calendar View (col-span-2) -->
           <div class="col-span-2">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="w-2 h-6 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]"></span>
-              <h3 class="text-base font-bold text-primary">Riwayat Backup</h3>
+            <div id="view-history">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="w-2 h-6 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]"></span>
+                <h3 class="text-base font-bold text-primary">Riwayat Backup</h3>
+              </div>
+              <div class="card border-0 shadow-md card-accent-indigo overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="table w-full">
+                    <thead>
+                      <tr>
+                        <th>Nama File</th>
+                        <th>Project / Type</th>
+                        <th>Ukuran</th>
+                        <th>Dibuat</th>
+                        <th class="text-right">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="backup-list">
+                      <tr><td colspan="5" class="text-center text-muted py-8">
+                        <div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>
+                        Memuat riwayat backup...
+                      </td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div class="card border-0 shadow-md card-accent-indigo overflow-hidden">
-              <div class="overflow-x-auto">
-                <table class="table w-full">
-                  <thead>
-                    <tr>
-                      <th>Nama File</th>
-                      <th>Ukuran</th>
-                      <th>Dibuat</th>
-                      <th class="text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody id="backup-list">
-                    <tr><td colspan="4" class="text-center text-muted py-8">
-                      <div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>
-                      Memuat riwayat backup...
-                    </td></tr>
-                  </tbody>
-                </table>
+
+            <div id="view-calendar" style="display:none">
+               <div class="flex items-center gap-2 mb-4">
+                <span class="w-2 h-6 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+                <h3 class="text-base font-bold text-primary">Kalender Backup</h3>
+              </div>
+              <div id="calendar-mount"></div>
+              
+              <div id="selected-date-backups" class="mt-6">
+                 <!-- filtered list here -->
               </div>
             </div>
           </div>
@@ -112,19 +137,28 @@ export const PageBackup = (() => {
       </div>
     `;
 
+    currentView = 'history';
+    selectedDate = null;
+    currentMonth = new Date();
+    allBackups = [];
+
     await loadList();
+    switchView('history');
   }
 
-  async function loadList() {
+  async function loadList(filterDate = null) {
     const tbody = document.getElementById('backup-list');
     const res = await Api.get('backup', { action: 'list' });
 
     if (!res?.success) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-6">Gagal memuat riwayat backup.</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-6">Gagal memuat riwayat backup.</td></tr>`;
       return;
     }
 
-    const backups = res.data;
+    allBackups = res.data;
+    const backups = filterDate 
+      ? allBackups.filter(b => b.created.startsWith(filterDate))
+      : allBackups;
 
     // Update stats
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -151,26 +185,134 @@ export const PageBackup = (() => {
       return;
     }
 
-    tbody.innerHTML = backups.map((b, i) => `
-      <tr class="${i === 0 ? 'bg-green-50' : ''}">
+    const html = backups.map((b, i) => `
+      <tr class="${!filterDate && i === 0 ? 'bg-green-50' : ''}">
         <td>
           <div class="flex items-center gap-2">
-            ${i === 0 ? '<span class="badge badge-success text-[9px]">TERBARU</span>' : ''}
-            <span class="font-mono text-xs truncate max-w-[220px]" title="${b.filename}">${b.filename}</span>
+            ${!filterDate && i === 0 ? '<span class="badge badge-success text-[9px]">TERBARU</span>' : ''}
+            <span class="font-mono text-xs truncate max-w-[200px]" title="${b.filename}">${b.filename.split('/').pop()}</span>
           </div>
+        </td>
+        <td>
+           <div class="flex flex-col">
+              <span class="text-xs font-bold ${b.type === 'system' ? 'text-indigo-600' : 'text-emerald-600'}">${b.project}</span>
+              <span class="text-[9px] uppercase opacity-50">${b.type}</span>
+           </div>
         </td>
         <td class="text-xs text-muted font-mono">${b.size_fmt}</td>
         <td class="text-xs text-muted">${b.created}</td>
         <td class="text-right">
           <div class="flex gap-2 justify-end">
-            <a href="${window.APP_PATH}/api/backup?action=download&file=${encodeURIComponent(b.filename)}"
+            <a href="${window.APP_PATH}/api/backup?action=download&file=${encodeURIComponent(b.filename)}&type=${b.type}"
                class="btn btn-ghost btn-xs" title="Download" download>📥</a>
-            <button onclick="PageBackup.deleteBackup('${b.filename}')"
+            <button onclick="PageBackup.deleteBackup('${b.filename}', '${b.type}')"
                class="btn btn-ghost btn-xs text-danger hover:bg-red-50" title="Hapus">🗑</button>
           </div>
         </td>
       </tr>
     `).join('');
+
+    if (filterDate) {
+       const container = document.getElementById('selected-date-backups');
+       if (container) {
+          container.innerHTML = `
+            <div class="card border-0 shadow-md">
+               <div class="p-3 border-b bg-gray-50 flex justify-between items-center rounded-t-lg">
+                  <span class="text-xs font-bold">Files on ${filterDate}</span>
+                  <span class="badge badge-indigo">${backups.length} Files</span>
+               </div>
+               <div class="table-wrap">
+                  <table class="table w-full">
+                     <tbody>${html || '<tr><td class="text-center py-4 text-muted">No backups found for this date.</td></tr>'}</tbody>
+                  </table>
+               </div>
+            </div>
+          `;
+       }
+    } else if (tbody) {
+       tbody.innerHTML = html;
+    }
+    
+    if (!filterDate) renderCalendarUI();
+  }
+
+  function renderCalendarUI() {
+    const mount = document.getElementById('calendar-mount');
+    if (!mount) return;
+
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const monthName = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(currentMonth);
+    
+    // Has backup set for quick lookup
+    const datesWithBackup = new Set(allBackups.map(b => b.created.split(' ')[0]));
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    let html = `
+      <div class="calendar-container shadow-sm">
+        <div class="calendar-header">
+           <button onclick="PageBackup.navMonth(-1)" class="calendar-nav-btn">‹</button>
+           <div class="text-sm font-bold text-slate-800">${monthName}</div>
+           <button onclick="PageBackup.navMonth(1)" class="calendar-nav-btn">›</button>
+        </div>
+        <div class="calendar-grid">
+           ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="calendar-day-label">${d}</div>`).join('')}
+    `;
+
+    // Empty cells
+    for (let i = 0; i < firstDay; i++) {
+       html += `<div class="calendar-cell empty"></div>`;
+    }
+
+    // Days
+    for (let d = 1; d <= daysInMonth; d++) {
+       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+       const hasBackup = datesWithBackup.has(dateStr);
+       const isToday = dateStr === todayStr;
+       const isSelected = dateStr === selectedDate;
+
+       html += `
+         <div class="calendar-cell ${hasBackup ? 'has-backup' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}"
+              onclick="PageBackup.selectDate('${dateStr}')">
+            ${d}
+         </div>
+       `;
+    }
+
+    html += `</div></div>`;
+    mount.innerHTML = html;
+  }
+
+  function switchView(view) {
+    currentView = view;
+    document.getElementById('view-history').style.display = view === 'history' ? 'block' : 'none';
+    document.getElementById('view-calendar').style.display = view === 'calendar' ? 'block' : 'none';
+    
+    const hBtn = document.getElementById('view-btn-history');
+    const cBtn = document.getElementById('view-btn-calendar');
+    
+    if (view === 'history') {
+       hBtn.className = 'btn btn-xs px-4 rounded-md bg-white shadow-sm border-gray-200';
+       cBtn.className = 'btn btn-xs px-4 rounded-md transition-all text-muted';
+    } else {
+       cBtn.className = 'btn btn-xs px-4 rounded-md bg-white shadow-sm border-gray-200';
+       hBtn.className = 'btn btn-xs px-4 rounded-md transition-all text-muted';
+       renderCalendarUI();
+    }
+  }
+
+  function navMonth(dir) {
+     currentMonth.setMonth(currentMonth.getMonth() + dir);
+     renderCalendarUI();
+  }
+
+  function selectDate(date) {
+     selectedDate = date;
+     renderCalendarUI();
+     loadList(date);
   }
 
   async function saveBackup() {
@@ -188,7 +330,7 @@ export const PageBackup = (() => {
     }
   }
 
-  async function deleteBackup(filename) {
+  async function deleteBackup(filename, type = 'system') {
     const result = await Swal.fire({
       title: 'Hapus Backup?',
       text: `File "${filename}" akan dihapus permanen dari server.`,
@@ -200,8 +342,9 @@ export const PageBackup = (() => {
       cancelButtonText: 'Batal'
     });
     if (!result.isConfirmed) return;
-
-    const res = await Api.post('backup?action=delete', { filename });
+    
+    // Convert to basename for display if needed but pass full path to api
+    const res = await Api.post('backup?action=delete', { filename, type });
     if (res?.success) {
       Toast.success(res.message);
       await loadList();
@@ -245,5 +388,5 @@ export const PageBackup = (() => {
     window.location.href = `${window.APP_PATH}/api/backup?action=export`;
   }
 
-  return { render, saveBackup, deleteBackup, restoreBackup, quickExport };
+  return { render, saveBackup, deleteBackup, restoreBackup, quickExport, switchView, navMonth, selectDate };
 })();

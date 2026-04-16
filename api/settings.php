@@ -28,7 +28,10 @@ switch ($action) {
         if (!is_array($data)) jsonError('Format data tidak valid');
 
         // Allowed keys
-        $allowed = ['app_name','git_base_dir','webhook_secret_default','notify_email','auto_deploy'];
+        $allowed = [
+            'app_name', 'git_base_dir', 'webhook_secret_default', 'notify_email', 'auto_deploy',
+            'backup_base_dir', 'backup_auto_enable', 'backup_schedule_time', 'backup_schedule_days', 'backup_cron_secret'
+        ];
 
         foreach ($data as $key => $value) {
             if (!in_array($key, $allowed)) continue;

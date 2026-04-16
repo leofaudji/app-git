@@ -44,6 +44,13 @@ export const PageSettings = (() => {
             </div>
 
             <div class="form-group">
+              <label class="form-label text-xs uppercase font-bold tracking-tight">Global Backups Directory</label>
+              <input type="text" id="set-backup_base_dir" class="form-input font-mono" value="${settings.backup_base_dir?.value || ''}"
+                placeholder="D:\\backups\\gitdeploy" ${canEdit ? '' : 'disabled'}>
+              <div class="form-hint">Folder penyimpanan hasil backup database project (di luar project root).</div>
+            </div>
+
+            <div class="form-group">
               <label class="form-label text-xs uppercase font-bold tracking-tight">Default Webhook Secret</label>
               <div class="flex gap-2">
                 <input type="password" id="set-webhook_secret_default" class="form-input font-mono" placeholder="Kosongkan untuk mempertahankan"
@@ -68,6 +75,54 @@ export const PageSettings = (() => {
                 <span class="text-sm font-medium">Enable Auto Deploy (Global)</span>
               </div>
               <div class="form-hint">Jika mati, semua webhook akan diabaikan.</div>
+            </div>
+
+            <div class="pt-4 border-t mt-4">
+              <h4 class="text-xs font-bold uppercase text-primary mb-3">📅 Automatic Backup Schedule</h4>
+              
+              <div class="form-group">
+                <div class="toggle-wrap">
+                  <label class="toggle">
+                    <input type="checkbox" id="set-backup_auto_enable" ${settings.backup_auto_enable?.value === '1' ? 'checked' : ''} ${canEdit ? '' : 'disabled'}>
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="text-sm font-medium">Enable Automatic Backups</span>
+                </div>
+              </div>
+
+              <div class="grid-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label text-xs uppercase font-bold tracking-tight">Schedule Time</label>
+                  <input type="time" id="set-backup_schedule_time" class="form-input" value="${settings.backup_schedule_time?.value || '02:00'}" ${canEdit ? '' : 'disabled'}>
+                </div>
+                <div class="form-group">
+                  <label class="form-label text-xs uppercase font-bold tracking-tight">Cron Secret</label>
+                  <div class="flex gap-2">
+                    <input type="password" id="set-backup_cron_secret" class="form-input font-mono" value="${settings.backup_cron_secret?.value || ''}" ${canEdit ? '' : 'disabled'}>
+                    <button class="btn btn-ghost" type="button" onclick="PageSettings.toggleSecret('set-backup_cron_secret')" title="Show/Hide">👁</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label text-xs uppercase font-bold tracking-tight">Schedule Days</label>
+                <div class="grid grid-cols-4 sm:grid-cols-7 gap-2 mt-2" id="backup-days-selector">
+                  ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => `
+                    <label class="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                      <input type="checkbox" name="backup_day" value="${day}" 
+                        ${(settings.backup_schedule_days?.value || '').includes(day) ? 'checked' : ''} 
+                        ${canEdit ? '' : 'disabled'}>
+                      <span class="text-xs font-medium">${day}</span>
+                    </label>
+                  `).join('')}
+                </div>
+                <div class="form-hint">Pilih hari kapan saja backup otomatis akan dijalankan.</div>
+              </div>
+              
+              <div class="bg-gray-50 p-3 rounded text-[10px] font-mono text-muted border">
+                <strong>Cron Command:</strong><br>
+                curl -s "${window.location.origin}${window.APP_PATH}/api/cron.php?secret=${settings.backup_cron_secret?.value || 'SECRET'}"
+              </div>
             </div>
 
             ${canEdit ? '<button class="btn btn-primary w-full justify-center" onclick="PageSettings.save()">💾 Simpan Konfigurasi</button>' : ''}
@@ -147,9 +202,14 @@ export const PageSettings = (() => {
       settings: {
         app_name:               document.getElementById('set-app_name')?.value || '',
         git_base_dir:           document.getElementById('set-git_base_dir')?.value || '',
+        backup_base_dir:        document.getElementById('set-backup_base_dir')?.value || '',
         notify_email:           document.getElementById('set-notify_email')?.value || '',
         auto_deploy:            document.getElementById('set-auto_deploy')?.checked ? '1' : '0',
         webhook_secret_default: document.getElementById('set-webhook_secret_default')?.value || '',
+        backup_auto_enable:     document.getElementById('set-backup_auto_enable')?.checked ? '1' : '0',
+        backup_schedule_time:   document.getElementById('set-backup_schedule_time')?.value || '',
+        backup_schedule_days:   Array.from(document.querySelectorAll('input[name="backup_day"]:checked')).map(cb => cb.value).join(','),
+        backup_cron_secret:     document.getElementById('set-backup_cron_secret')?.value || '',
       }
     };
 

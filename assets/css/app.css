@@ -1590,3 +1590,110 @@ tbody tr:last-child td { border-bottom: none; }
 .splash-logo h1 {
   animation: slideDown 0.6s ease-out forwards;
 }
+
+/* ================================================================
+   BACKUP CALENDAR COMPONENT
+   ================================================================ */
+.calendar-container {
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  user-select: none;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day-label {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding-bottom: 8px;
+}
+
+.calendar-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: #f9fafb;
+  border: 1px solid transparent;
+}
+
+.calendar-cell:hover:not(.empty) {
+  background: var(--sb-hover-bg);
+  border-color: var(--border);
+}
+
+.calendar-cell.empty {
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-cell.today {
+  color: var(--color-orange);
+  font-weight: 800;
+  background: #fff;
+  border-color: rgba(246,130,31,0.3);
+}
+
+.calendar-cell.selected {
+  background: var(--color-orange) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(246,130,31,0.3);
+}
+
+.calendar-cell.has-backup::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  background: var(--color-success);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--color-success);
+}
+
+.calendar-cell.selected.has-backup::after {
+  background: #fff;
+  box-shadow: none;
+}
+
+.calendar-nav-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.calendar-nav-btn:hover {
+  background: var(--sb-hover-bg);
+  color: var(--text-primary);
+}

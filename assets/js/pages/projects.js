@@ -730,6 +730,7 @@ export const PageProjects = {
         <div class="dropdown-item" onclick="PageProjects.showLogs(${id}); PageProjects.closeGlobalMenu()"><span>📄</span> View Logs</div>
         <div class="dropdown-item" onclick="PageProjects.checkSecurity(${id}); PageProjects.closeGlobalMenu()"><span>🛡️</span> Security Audit</div>
         <div class="dropdown-item" onclick="PageProjects.checkDrift(${id}); PageProjects.closeGlobalMenu()"><span>⚖</span> Check Sync</div>
+        <div class="dropdown-item" onclick="PageProjects.backupProject(${id}); PageProjects.closeGlobalMenu()"><span>🗄️</span> Backup Database</div>
         ${app_url ? `<div class="dropdown-item" onclick="PageProjects.checkHealth(${id}); PageProjects.closeGlobalMenu()"><span>🔍</span> Check Health</div>` : ''}
         <hr class="my-1 border-gray-100">
         <div class="dropdown-item" onclick="PageProjects.showModal(${id}); PageProjects.closeGlobalMenu()"><span>✎</span> Edit Project</div>
@@ -763,5 +764,36 @@ export const PageProjects = {
       delete menu.dataset.activeId;
     }
     document.querySelectorAll('.dropdown-btn').forEach(b => b.classList.remove('active'));
+  },
+
+  async backupProject(id) {
+    if (this.isBackingUp) return;
+    this.isBackingUp = true;
+    
+    Toast.info('Sedang melakukan backup database project...');
+    
+    try {
+      const res = await Api.post('backup', { action: 'project_save', id });
+      if (res?.success) {
+        Swal.fire({
+          title: 'Berhasil',
+          text: `Backup berhasil disimpan: ${res.data.filename}`,
+          icon: 'success',
+          showCancelButton: true,
+          confirmButtonText: 'Buka Menu Backup',
+          cancelButtonText: 'Tutup'
+        }).then(result => {
+          if (result.isConfirmed) {
+            location.hash = '#backup';
+          }
+        });
+      } else {
+        Swal.fire('Gagal', res?.message || 'Gagal melakukan backup', 'error');
+      }
+    } catch (err) {
+      Toast.error('Gagal menghubungi server');
+    } finally {
+      this.isBackingUp = false;
+    }
   }
 };
