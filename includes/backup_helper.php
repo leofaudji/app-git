@@ -113,6 +113,7 @@ if (!function_exists('performProjectBackup')) {
         if (file_put_contents($filepath, $sql) === false) throw new Exception('Gagal menulis file backup ke disk');
         
         $size = filesize($filepath);
+        $size_fmt = $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB';
         return ['filename' => $filename, 'project_name' => $project['name'], 'size_fmt' => $size_fmt, 'filepath' => $filepath, 'size_bytes' => $size];
     }
 }
