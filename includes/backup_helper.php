@@ -113,9 +113,7 @@ if (!function_exists('performProjectBackup')) {
         if (file_put_contents($filepath, $sql) === false) throw new Exception('Gagal menulis file backup ke disk');
         
         $size = filesize($filepath);
-        $size_fmt = $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB';
-        
-        return ['filename' => $filename, 'project_name' => $project['name'], 'size_fmt' => $size_fmt];
+        return ['filename' => $filename, 'project_name' => $project['name'], 'size_fmt' => $size_fmt, 'filepath' => $filepath, 'size_bytes' => $size];
     }
 }
 
@@ -146,7 +144,13 @@ if (!function_exists('performFullBackupChain')) {
             file_put_contents($sysPath, generateSqlDump());
             $size = filesize($sysPath);
             $size_fmt = $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB';
-            $results[] = ['filename' => $sysFile, 'project_name' => 'System', 'size_fmt' => $size_fmt];
+            $results[] = [
+                'filename'     => $sysFile, 
+                'project_name' => 'System', 
+                'size_fmt'     => $size_fmt,
+                'filepath'     => $sysPath,
+                'size_bytes'   => $size
+            ];
         } catch (Exception $e) {
             $errors[] = "[System] " . $e->getMessage();
         }
@@ -171,6 +175,26 @@ if (!function_exists('performFullBackupChain')) {
                 $mailer = new Mailer($smtpConfig);
                 $successCount = count($results);
                 $errorCount = count($errors);
+
+                // Attachments logic (Limit 20MB)
+                $totalBytes = 0;
+                $limit = 20 * 1024 * 1024;
+                $isAttached = false;
+                foreach ($results as $res) {
+                    if (isset($res['filepath']) && file_exists($res['filepath'])) {
+                        $totalBytes += ($res['size_bytes'] ?? 0);
+                    }
+                }
+
+                if ($totalBytes > 0 && $totalBytes <= $limit) {
+                    foreach ($results as $res) {
+                        if (isset($res['filepath']) && file_exists($res['filepath'])) {
+                            $mailer->addAttachment($res['filepath']);
+                        }
+                    }
+                    $isAttached = true;
+                }
+
                 $statusColor = ($errorCount === 0) ? '#16a34a' : '#dc2626';
                 $statusLabel = ($errorCount === 0) ? 'SUCCESS' : 'WARNING';
                 $statusIcon = ($errorCount === 0) ? '✅' : '⚠️';
@@ -200,6 +224,7 @@ if (!function_exists('performFullBackupChain')) {
                             <div style='margin-top: 10px; font-size: 18px; font-weight: 700; color: #111827;'>
                                 " . ($errorCount === 0 ? "Semua Project Berhasil Dicadangkan" : "Backup Selesai dengan $errorCount Kendala") . "
                             </div>
+                            " . ($isAttached ? "<div style='font-size: 11px; color: #16a34a; margin-top: 5px; font-weight: 600;'>📎 File backup telah dilampirkan dalam email ini.</div>" : "") . "
                         </div>
 
                         <!-- Content -->
