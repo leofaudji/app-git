@@ -129,6 +129,70 @@ export const PageSettings = (() => {
           </div>
         </div>
 
+        <!-- SMTP Configuration (NEW) -->
+        <div class="card">
+          <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+             <h3 class="font-bold">📧 SMTP Configuration</h3>
+             <div class="toggle-wrap">
+                <label class="toggle">
+                   <input type="checkbox" id="set-backup_notify_enable" ${settings.backup_notify_enable?.value === '1' ? 'checked' : ''} ${canEdit ? '' : 'disabled'}>
+                   <span class="toggle-slider"></span>
+                </label>
+                <span class="text-xs font-bold uppercase tracking-wider text-muted">Backup Notification</span>
+             </div>
+          </div>
+          <div class="p-4">
+            <div class="form-group">
+              <label class="form-label text-xs uppercase font-bold tracking-tight">SMTP Host</label>
+              <input type="text" id="set-smtp_host" class="form-input font-mono" value="${settings.smtp_host?.value || ''}"
+                placeholder="smtp.gmail.com" ${canEdit ? '' : 'disabled'}>
+            </div>
+            
+            <div class="grid-2 gap-4">
+               <div class="form-group">
+                 <label class="form-label text-xs uppercase font-bold tracking-tight">SMTP Port</label>
+                 <input type="text" id="set-smtp_port" class="form-input font-mono" value="${settings.smtp_port?.value || '587'}"
+                   placeholder="587" ${canEdit ? '' : 'disabled'}>
+               </div>
+               <div class="form-group">
+                 <label class="form-label text-xs uppercase font-bold tracking-tight">Encryption</label>
+                 <select id="set-smtp_encryption" class="form-select" ${canEdit ? '' : 'disabled'}>
+                    <option value="none" ${settings.smtp_encryption?.value === 'none' ? 'selected' : ''}>None</option>
+                    <option value="tls" ${settings.smtp_encryption?.value === 'tls' ? 'selected' : ''}>TLS (Recommended)</option>
+                    <option value="ssl" ${settings.smtp_encryption?.value === 'ssl' ? 'selected' : ''}>SSL</option>
+                 </select>
+               </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label text-xs uppercase font-bold tracking-tight">SMTP Username</label>
+              <input type="text" id="set-smtp_user" class="form-input font-mono" value="${settings.smtp_user?.value || ''}"
+                placeholder="user@gmail.com" ${canEdit ? '' : 'disabled'}>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label text-xs uppercase font-bold tracking-tight">SMTP Password</label>
+              <div class="flex gap-2">
+                <input type="password" id="set-smtp_pass" class="form-input font-mono" placeholder="Kosongkan untuk mempertahankan"
+                  ${canEdit ? '' : 'disabled'}>
+                <button class="btn btn-ghost" type="button" onclick="PageSettings.toggleSecret('set-smtp_pass')" title="Show/Hide">👁</button>
+              </div>
+              <div class="form-hint">Gunakan App Password jika menggunakan Gmail.</div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-100 p-3 rounded text-[10px] text-blue-700 leading-relaxed mb-4">
+               <strong>Note:</strong> Notifikasi backup akan dikirimkan ke <strong>${settings.notify_email?.value || '(Email belum diatur)'}</strong> setiap kali backup otomatis selesai dijalankan.
+            </div>
+
+            ${canEdit ? `
+              <button class="btn btn-ghost w-full justify-center border-dashed border-2 hover:bg-blue-50 hover:border-blue-300 transition-all" 
+                onclick="PageSettings.testEmail()">
+                🧪 Test Connection
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
         <!-- Database Maintenance -->
         <div class="card">
           <div class="p-4 border-b bg-gray-50"><h3 class="font-bold">📦 Database Maintenance</h3></div>
@@ -210,6 +274,12 @@ export const PageSettings = (() => {
         backup_schedule_time:   document.getElementById('set-backup_schedule_time')?.value || '',
         backup_schedule_days:   Array.from(document.querySelectorAll('input[name="backup_day"]:checked')).map(cb => cb.value).join(','),
         backup_cron_secret:     document.getElementById('set-backup_cron_secret')?.value || '',
+        smtp_host:              document.getElementById('set-smtp_host')?.value || '',
+        smtp_port:              document.getElementById('set-smtp_port')?.value || '',
+        smtp_encryption:        document.getElementById('set-smtp_encryption')?.value || 'tls',
+        smtp_user:              document.getElementById('set-smtp_user')?.value || '',
+        smtp_pass:              document.getElementById('set-smtp_pass')?.value || '',
+        backup_notify_enable:   document.getElementById('set-backup_notify_enable')?.checked ? '1' : '0',
       }
     };
 
@@ -222,6 +292,31 @@ export const PageSettings = (() => {
     alertEl.style.display = 'block';
     Toast.success('Settings disimpan');
     setTimeout(() => alertEl.style.display = 'none', 3000);
+    // Refresh UI to show updated email in SMTP note if changed
+    render();
+  }
+
+  async function testEmail() {
+    const btn = document.querySelector('button[onclick="PageSettings.testEmail()"]');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Mengirim...'; }
+
+    const data = {
+      smtp_host:       document.getElementById('set-smtp_host')?.value || '',
+      smtp_port:       document.getElementById('set-smtp_port')?.value || '',
+      smtp_encryption: document.getElementById('set-smtp_encryption')?.value || 'tls',
+      smtp_user:       document.getElementById('set-smtp_user')?.value || '',
+      smtp_pass:       document.getElementById('set-smtp_pass')?.value || '',
+    };
+
+    const res = await Api.post('settings?action=test_email', data);
+    
+    if (btn) { btn.disabled = false; btn.textContent = '🧪 Test Connection'; }
+
+    if (res?.success) {
+      Swal.fire('Berhasil!', res.message, 'success');
+    } else {
+      Swal.fire('Gagal', res?.message || 'Gagal mengirim email uji.', 'error');
+    }
   }
 
   function copyWebhookUrl() {
@@ -273,6 +368,6 @@ export const PageSettings = (() => {
     }
   }
 
-  return { render, save, copyWebhookUrl, toggleSecret, downloadBackup, restoreBackup };
+  return { render, save, copyWebhookUrl, toggleSecret, downloadBackup, restoreBackup, testEmail };
 })();
 

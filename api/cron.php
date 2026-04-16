@@ -91,10 +91,55 @@ try {
 $successCount = count($results);
 $errorCount = count($errors);
 
+// 6. Send Email Notification if enabled
+if (DB::getSetting('backup_notify_enable') === '1') {
+    require_once __DIR__ . '/../includes/mailer.php';
+    
+    $notifyEmail = DB::getSetting('notify_email');
+    if ($notifyEmail) {
+        $smtpConfig = [
+            'host'       => DB::getSetting('smtp_host'),
+            'port'       => DB::getSetting('smtp_port'),
+            'user'       => DB::getSetting('smtp_user'),
+            'pass'       => DB::getSetting('smtp_pass'),
+            'encryption' => DB::getSetting('smtp_encryption'),
+            'from_name'  => APP_NAME . ' Backup'
+        ];
+        
+        $mailer = new Mailer($smtpConfig);
+        
+        $statusIcon = ($errorCount === 0) ? '✅' : '⚠️';
+        $subject = "$statusIcon Backup Report: " . date('Y-m-d H:i');
+        
+        $body = "<h2>Backup Report</h2>";
+        $body .= "<p>Status: <strong>" . ($errorCount === 0 ? 'Success' : 'Completed with errors') . "</strong></p>";
+        $body .= "<p>Time: " . date('Y-m-d H:i:s') . "</p>";
+        
+        $body .= "<h3>Successful Backups ($successCount):</h3><ul>";
+        foreach ($results as $res) {
+            $body .= "<li><strong>{$res['project_name']}</strong>: {$res['filename']}</li>";
+        }
+        $body .= "</ul>";
+        
+        if ($errorCount > 0) {
+            $body .= "<h3>Errors ($errorCount):</h3><ul style='color:red;'>";
+            foreach ($errors as $err) {
+                $body .= "<li>$err</li>";
+            }
+            $body .= "</ul>";
+        }
+        
+        $body .= "<hr><p><small>This is an automated message from " . APP_NAME . ".</small></p>";
+        
+        $mailer->send($notifyEmail, $subject, $body);
+    }
+}
+
 echo json_encode([
     'success' => true,
     'message' => "Processed $successCount projects with $errorCount errors.",
     'backups' => $results,
     'errors'  => $errors,
-    'timestamp' => date('Y-m-d H:i:s')
+    'timestamp' => date('Y-m-d H:i:s'),
+    'notified' => (DB::getSetting('backup_notify_enable') === '1')
 ]);

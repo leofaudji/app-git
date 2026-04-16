@@ -66,10 +66,8 @@ export const PageBackup = (() => {
                   <table class="table w-full">
                     <thead>
                       <tr>
-                        <th>Nama File</th>
-                        <th>Project / Type</th>
-                        <th>Ukuran</th>
-                        <th>Dibuat</th>
+                        <th>Identitas Backup</th>
+                        <th>Waktu & Ukuran</th>
                         <th class="text-right">Aksi</th>
                       </tr>
                     </thead>
@@ -178,7 +176,7 @@ export const PageBackup = (() => {
 
     if (backups.length === 0) {
       tbody.innerHTML = `
-        <tr><td colspan="4" class="text-center text-muted py-10">
+        <tr><td colspan="3" class="text-center text-muted py-10">
           <div style="font-size:2.5rem;opacity:.3">💾</div>
           <div class="text-sm mt-2">Belum ada backup tersimpan. Klik <strong>Backup Sekarang</strong> untuk membuat yang pertama.</div>
         </td></tr>`;
@@ -187,26 +185,30 @@ export const PageBackup = (() => {
 
     const html = backups.map((b, i) => `
       <tr class="${!filterDate && i === 0 ? 'bg-green-50' : ''}">
-        <td>
-          <div class="flex items-center gap-2">
-            ${!filterDate && i === 0 ? '<span class="badge badge-success text-[9px]">TERBARU</span>' : ''}
-            <span class="font-mono text-xs truncate max-w-[200px]" title="${b.filename}">${b.filename.split('/').pop()}</span>
+        <td class="py-3">
+          <div class="flex flex-col gap-0.5">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm ${b.type === 'system' ? 'text-indigo-600' : 'text-emerald-700'}">${b.project}</span>
+              <span class="badge ${b.type === 'system' ? 'badge-indigo' : 'badge-emerald'} text-[9px] uppercase px-1.5 py-0.5">${b.type}</span>
+              ${!filterDate && i === 0 ? '<span class="badge badge-success text-[9px]">TERBARU</span>' : ''}
+            </div>
+            <span class="font-mono text-[10px] text-muted truncate max-w-[300px]" title="${b.filename}">
+              📂 ${b.filename.split('/').pop()}
+            </span>
           </div>
         </td>
-        <td>
+        <td class="py-3">
            <div class="flex flex-col">
-              <span class="text-xs font-bold ${b.type === 'system' ? 'text-indigo-600' : 'text-emerald-600'}">${b.project}</span>
-              <span class="text-[9px] uppercase opacity-50">${b.type}</span>
+              <span class="text-xs text-primary font-semibold">${b.created}</span>
+              <span class="text-[10px] text-muted font-mono uppercase tracking-tighter mt-0.5">${b.size_fmt}</span>
            </div>
         </td>
-        <td class="text-xs text-muted font-mono">${b.size_fmt}</td>
-        <td class="text-xs text-muted">${b.created}</td>
-        <td class="text-right">
-          <div class="flex gap-2 justify-end">
+        <td class="text-right py-3">
+          <div class="flex gap-1 justify-end">
             <a href="${window.APP_PATH}/api/backup?action=download&file=${encodeURIComponent(b.filename)}&type=${b.type}"
-               class="btn btn-ghost btn-xs" title="Download" download>📥</a>
+               class="btn btn-ghost btn-xs w-8 h-8 rounded-full p-0 flex items-center justify-center hover:bg-indigo-50" title="Download" download>📥</a>
             <button onclick="PageBackup.deleteBackup('${b.filename}', '${b.type}')"
-               class="btn btn-ghost btn-xs text-danger hover:bg-red-50" title="Hapus">🗑</button>
+               class="btn btn-ghost btn-xs w-8 h-8 rounded-full p-0 flex items-center justify-center text-danger hover:bg-red-50" title="Hapus">🗑</button>
           </div>
         </td>
       </tr>

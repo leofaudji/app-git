@@ -15,7 +15,9 @@ switch ($action) {
         $settings = DB::fetchAll("SELECT `key`, `value`, `label`, `type` FROM settings ORDER BY `key`");
         // Mask password fields
         foreach ($settings as &$s) {
-            if ($s['type'] === 'password' || $s['key'] === 'webhook_secret_default') $s['value'] = ''; // Don't leak
+            if ($s['type'] === 'password' || $s['key'] === 'webhook_secret_default' || $s['key'] === 'smtp_pass') {
+                $s['value'] = ''; // Don't leak
+            }
         }
         jsonSuccess($settings);
 
@@ -30,13 +32,14 @@ switch ($action) {
         // Allowed keys
         $allowed = [
             'app_name', 'git_base_dir', 'webhook_secret_default', 'notify_email', 'auto_deploy',
-            'backup_base_dir', 'backup_auto_enable', 'backup_schedule_time', 'backup_schedule_days', 'backup_cron_secret'
+            'backup_base_dir', 'backup_auto_enable', 'backup_schedule_time', 'backup_schedule_days', 'backup_cron_secret',
+            'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_encryption', 'backup_notify_enable'
         ];
 
         foreach ($data as $key => $value) {
             if (!in_array($key, $allowed)) continue;
             // For password fields, only update if a value is provided
-            if ($key === 'webhook_secret_default' && empty($value)) continue;
+            if (($key === 'webhook_secret_default' || $key === 'smtp_pass') && empty($value)) continue;
             DB::execute(
                 "UPDATE settings SET `value` = ? WHERE `key` = ?",
                 [trim($value), $key]
@@ -52,6 +55,35 @@ switch ($action) {
         if (!$key) jsonError('Key tidak ada');
         $val = DB::getSetting($key);
         jsonSuccess(['key' => $key, 'value' => $val]);
+
+    case 'test_email':
+        requirePermission('settings', 'edit');
+        require_once __DIR__ . '/../includes/mailer.php';
+        
+        $notifyEmail = DB::getSetting('notify_email');
+        if (!$notifyEmail) jsonError('Notification Email belum diisi di Global Configuration');
+
+        $smtpConfig = [
+            'host'       => $_POST['smtp_host'] ?? DB::getSetting('smtp_host'),
+            'port'       => $_POST['smtp_port'] ?? DB::getSetting('smtp_port'),
+            'user'       => $_POST['smtp_user'] ?? DB::getSetting('smtp_user'),
+            'pass'       => !empty($_POST['smtp_pass']) ? $_POST['smtp_pass'] : DB::getSetting('smtp_pass'),
+            'encryption' => $_POST['smtp_encryption'] ?? DB::getSetting('smtp_encryption'),
+        ];
+
+        if (empty($smtpConfig['host']) || empty($smtpConfig['user'])) {
+            jsonError('SMTP Host dan Username harus diisi untuk pengujian.');
+        }
+
+        $mailer = new Mailer($smtpConfig);
+        $subject = "🧪 GitDeploy: Test Email";
+        $body = "<h2>Konfigurasi SMTP Berhasil!</h2><p>Email ini dikirim untuk memverifikasi bahwa pengaturan SMTP Anda di GitDeploy sudah benar.</p><p>Waktu: " . date('Y-m-d H:i:s') . "</p>";
+        
+        if ($mailer->send($notifyEmail, $subject, $body)) {
+            jsonSuccess(null, 'Email uji berhasil dikirim ke ' . $notifyEmail);
+        } else {
+            jsonError('Gagal mengirim email. Silakan cek error log server untuk detailnya.');
+        }
 
     default:
         jsonError('Action tidak ditemukan', 404);

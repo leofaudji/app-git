@@ -5,6 +5,7 @@ Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 ## [1.7.0] - 2026-04-16
 ### Added
 - **Backup Database Per Project**: Sekarang Anda bisa membackup database untuk setiap project secara terpisah. Aplikasi akan otomatis mendeteksi pengaturan database dari file project Anda.
+- **Sistem Notifikasi Email**: Sekarang Anda akan menerima laporan backup otomatis langsung ke email (konfigurasi SMTP tersedia di menu Pengaturan).
 - **Backup Otomatis Terjadwal**: Menambahkan fitur backup otomatis yang bisa diatur jam dan harinya melalui menu Pengaturan agar data selalu terjaga.
 - **Kalender Riwayat Backup**: Tampilan riwayat backup kini lebih rapi dalam bentuk kalender, memudahkan Anda memantau ketersediaan data cadangan setiap harinya.
 - **Pemicu Backup Manual**: Menambahkan opsi untuk menjalankan backup kapan saja melalui sistem luar (seperti Crontab) tanpa harus menunggu jadwal rutin.
