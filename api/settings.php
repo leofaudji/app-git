@@ -29,7 +29,18 @@ switch ($action) {
         $data = $_POST['settings'] ?? [];
         if (!is_array($data)) jsonError('Format data tidak valid');
 
-        // Allowed keys
+        // Metadata for auto-creation if keys are missing
+        $meta = [
+            'smtp_host'            => ['label' => 'SMTP Host', 'type' => 'text', 'default' => 'smtp.gmail.com'],
+            'smtp_port'            => ['label' => 'SMTP Port', 'type' => 'text', 'default' => '587'],
+            'smtp_user'            => ['label' => 'SMTP Username', 'type' => 'text', 'default' => ''],
+            'smtp_pass'            => ['label' => 'SMTP Password', 'type' => 'password', 'default' => ''],
+            'smtp_encryption'      => ['label' => 'SMTP Encryption', 'type' => 'text', 'default' => 'tls'],
+            'backup_notify_enable' => ['label' => 'Backup Email Notification', 'type' => 'boolean', 'default' => '0'],
+            'notify_email'         => ['label' => 'Notification Email', 'type' => 'text', 'default' => ''],
+            'backup_cron_secret'   => ['label' => 'Cron Secret Token', 'type' => 'password', 'default' => bin2hex(random_bytes(16))],
+        ];
+
         $allowed = [
             'app_name', 'git_base_dir', 'webhook_secret_default', 'notify_email', 'auto_deploy',
             'backup_base_dir', 'backup_auto_enable', 'backup_schedule_time', 'backup_schedule_days', 'backup_cron_secret',
@@ -38,8 +49,19 @@ switch ($action) {
 
         foreach ($data as $key => $value) {
             if (!in_array($key, $allowed)) continue;
-            // For password fields, only update if a value is provided
+            
+            // Password protection logic
             if (($key === 'webhook_secret_default' || $key === 'smtp_pass') && empty($value)) continue;
+
+            // Ensure key exists (Auto-Migration on Save)
+            $exists = DB::fetchOne("SELECT `key` FROM settings WHERE `key` = ?", [$key]);
+            if (!$exists && isset($meta[$key])) {
+                DB::execute(
+                    "INSERT INTO settings (`key`, `label`, `type`, `value`) VALUES (?, ?, ?, ?)",
+                    [$key, $meta[$key]['label'], $meta[$key]['type'], $meta[$key]['default']]
+                );
+            }
+
             DB::execute(
                 "UPDATE settings SET `value` = ? WHERE `key` = ?",
                 [trim($value), $key]
