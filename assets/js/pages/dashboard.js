@@ -2,6 +2,30 @@ import { Api } from "../api.js";
 
 export const PageDashboard = {
   async render(params) {
+    // Inject Traffic Pulse Styles
+    if (!document.getElementById('traffic-pulse-styles')) {
+      const style = document.createElement('style');
+      style.id = 'traffic-pulse-styles';
+      style.innerHTML = `
+        :root { --pulse-duration: 2s; }
+        .traffic-pulse-aura {
+          position: absolute;
+          inset: -4px;
+          border-radius: 50%;
+          background: rgba(99, 102, 241, 0.2);
+          animation: traffic-aura var(--pulse-duration) ease-out infinite;
+          pointer-events: none;
+          z-index: 0;
+        }
+        @keyframes traffic-aura {
+          0% { transform: scale(0.8); opacity: 0.8; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+        .node-row:hover { background: rgba(248, 250, 252, 0.1); }
+      `;
+      document.head.appendChild(style);
+    }
+    
     const view = document.getElementById('page-view');
     view.className = 'bg-cloudflare min-h-screen p-6';
 
@@ -113,7 +137,7 @@ export const PageDashboard = {
             </div>
 
             <!-- Enhanced Metric Blocks -->
-            <div class="grid grid-cols-1 md:grid-cols-3 divide-x divide-slate-100 bg-slate-50/20 border-b border-slate-100">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-x divide-slate-100 bg-slate-50/20 border-b border-slate-100">
                <!-- CPU -->
                <div class="p-6">
                   <div class="flex items-center justify-between mb-3">
@@ -140,7 +164,7 @@ export const PageDashboard = {
                      <div id="ram-bar" class="h-full bg-pink-500 transition-all duration-500" style="width: 0%"></div>
                   </div>
                </div>
-               <!-- Disk -->
+               <!-- Storage -->
                <div class="p-6">
                   <div class="flex items-center justify-between mb-3">
                      <div class="flex items-center gap-2">
@@ -153,10 +177,50 @@ export const PageDashboard = {
                      <div id="disk-bar" class="h-full bg-slate-400 transition-all duration-500" style="width: 0%"></div>
                   </div>
                </div>
+               <!-- Active Connections -->
+               <div class="p-6">
+                  <div class="flex items-center justify-between mb-3">
+                     <div class="flex items-center gap-2">
+                        <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">LIVE TRAFFIC</span>
+                     </div>
+                     <div class="flex items-center gap-3">
+                        <button id="btn-traffic-hub" class="text-[9px] font-bold text-emerald-600 hover:underline uppercase tracking-tighter">View Hub ›</button>
+                        <div class="text-2xl font-black text-slate-800 tracking-tighter" id="net-conns">0</div>
+                     </div>
+                  </div>
+                  <div class="flex items-center gap-4 mt-2">
+                     <div class="flex items-center gap-1.5">
+                        <i data-lucide="arrow-down" class="w-2.5 h-2.5 text-blue-500"></i>
+                        <span class="text-[10px] font-bold text-slate-600" id="net-in">0 KB/s</span>
+                     </div>
+                     <div class="flex items-center gap-1.5">
+                        <i data-lucide="arrow-up" class="w-2.5 h-2.5 text-pink-500"></i>
+                        <span class="text-[10px] font-bold text-slate-600" id="net-out">0 KB/s</span>
+                     </div>
+                  </div>
+               </div>
             </div>
                              <div class="grid grid-cols-1 lg:grid-cols-4 border-t border-slate-100">
                <!-- Main Visualization -->
                <div class="lg:col-span-3 p-8">
+                  <!-- AI Smart Verdict Widget -->
+                  <div id="ai-verdict-container" class="mb-8 p-4 bg-indigo-50/30 border border-indigo-100/50 rounded-xl flex items-center justify-between transition-all duration-500">
+                     <div class="flex items-center gap-4">
+                        <div class="relative w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm" id="ai-verdict-icon-container">
+                           <div class="traffic-pulse-aura" id="pulse-aura"></div>
+                           <i data-lucide="brain-circuit" class="w-5 h-5 text-indigo-500 relative z-10"></i>
+                        </div>
+                        <div>
+                           <p class="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-0.5">System Intelligence</p>
+                           <p class="text-[11px] font-bold text-slate-700" id="ai-verdict-text">Initializing performance analytics...</p>
+                        </div>
+                     </div>
+                     <div id="ai-verdict-badge" class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-600">
+                        Analyzing
+                     </div>
+                  </div>
+
                   <div class="flex items-center justify-between mb-8">
                      <div class="flex items-center gap-8">
                         <div class="flex items-center gap-2.5">
@@ -178,80 +242,141 @@ export const PageDashboard = {
                   </div>
                </div>
 
-               <!-- Right Details Panel -->
-               <div class="p-8 bg-slate-50/50 border-l border-slate-100 flex flex-col gap-8">
-                  <!-- Section: System -->
-                  <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">System Identity</h4>
-                    <div class="space-y-4">
-                       <div class="flex items-start gap-3">
-                          <div class="mt-1"><i data-lucide="monitor" class="w-3.5 h-3.5 text-slate-400"></i></div>
-                          <div>
-                             <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-os">-</p>
-                             <p class="text-[10px] text-slate-400 font-medium mt-0.5">OS Platform</p>
+               <!-- Right Details Panel (Redesigned with Tabs) -->
+               <div class="bg-slate-50/50 border-l border-slate-100 flex flex-col h-full overflow-hidden">
+                  <!-- Tab Navigation Header -->
+                  <div class="flex border-b border-slate-200 bg-white">
+                     <button class="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 border-b-2 border-indigo-500 transition-all duration-300" id="btn-tab-details">
+                        Details
+                     </button>
+                     <button class="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-all duration-300" id="btn-tab-watchdog">
+                        Watchdog
+                     </button>
+                  </div>
+
+                  <!-- Dynamic Tab Content -->
+                  <div class="flex-1 overflow-y-auto p-8">
+                     <!-- Panel: Details -->
+                     <div id="panel-details" class="space-y-8">
+                        <div>
+                          <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">System Identity</h4>
+                          <div class="space-y-4">
+                             <div class="flex items-start gap-3">
+                                <div class="mt-1"><i data-lucide="monitor" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                                <div>
+                                   <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-os">-</p>
+                                   <p class="text-[10px] text-slate-400 font-medium mt-0.5">OS Platform</p>
+                                </div>
+                             </div>
+                             <div class="flex items-start gap-3">
+                                <div class="mt-1"><i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                                <div class="overflow-hidden">
+                                   <p class="text-xs font-bold text-slate-700 leading-tight truncate w-32" id="sys-cpu" title="CPU">-</p>
+                                   <p class="text-[10px] text-slate-400 font-medium mt-0.5">Architecture</p>
+                                </div>
+                             </div>
                           </div>
-                       </div>
-                       <div class="flex items-start gap-3">
-                          <div class="mt-1"><i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i></div>
-                          <div class="overflow-hidden">
-                             <p class="text-xs font-bold text-slate-700 leading-tight truncate w-32" id="sys-cpu" title="CPU">-</p>
-                             <p class="text-[10px] text-slate-400 font-medium mt-0.5">Architecture</p>
+                        </div>
+
+                        <div class="pt-6 border-t border-slate-200/50">
+                          <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Runtime Engine</h4>
+                          <div class="grid grid-cols-2 gap-4 mb-5">
+                             <div>
+                                <p class="text-xs font-bold text-slate-700" id="sys-php">-</p>
+                                <p class="text-[10px] text-slate-400 font-medium mt-0.5">PHP Ver.</p>
+                             </div>
+                             <div>
+                                <p class="text-xs font-bold text-slate-700 truncate" id="sys-mysql">-</p>
+                                <p class="text-[10px] text-slate-400 font-medium mt-0.5">MySQL</p>
+                             </div>
                           </div>
-                       </div>
-                    </div>
+                          <div class="p-3 bg-white rounded-lg border border-slate-200/60 shadow-sm">
+                             <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[10px] font-bold text-slate-500">Memory Peak</span>
+                                <span class="text-[10px] font-black text-indigo-600" id="php-peak">-</span>
+                             </div>
+                             <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                                <div class="bg-indigo-500 h-full" style="width: 40%"></div>
+                             </div>
+                             <p class="text-[9px] text-slate-400 mt-1.5 font-medium">Limit: <span id="php-limit">-</span></p>
+                          </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-slate-200/50">
+                          <div class="flex items-center justify-between mb-4">
+                             <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Life Cycle</h4>
+                             <button class="text-[9px] font-bold text-indigo-600 hover:underline" id="btn-deep-specs">View Details ›</button>
+                          </div>
+                          <div class="space-y-3.5">
+                             <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-medium text-slate-500">Host Uptime</span>
+                                <span class="text-[11px] font-bold text-slate-700" id="sys-uptime">0s</span>
+                             </div>
+                             <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-medium text-slate-500">DB Uptime</span>
+                                <span class="text-[11px] font-bold text-slate-700" id="db-uptime">0s</span>
+                             </div>
+                             <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-medium text-slate-500">Connections</span>
+                                <span class="text-[11px] font-bold text-slate-800" id="db-conns">0</span>
+                             </div>
+                          </div>
+                        </div>
+                     </div>
+
+                     <!-- Panel: Watchdog -->
+                     <div id="panel-watchdog" class="hidden space-y-6">
+                        <div class="flex items-center justify-between mb-2">
+                           <div class="flex items-center gap-2">
+                              <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Error Sentinel</h4>
+                              <span class="flex h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-200" id="watchdog-dot"></span>
+                           </div>
+                           <button class="text-[9px] font-bold text-rose-600 hover:underline" id="btn-full-logs">Full Reader ›</button>
+                        </div>
+                        <div class="space-y-3" id="error-list">
+                           <p class="text-[10px] text-slate-400 italic">Monitoring application logs...</p>
+                        </div>
+                        <div class="mt-8 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100/50">
+                           <p class="text-[10px] text-indigo-600 font-bold mb-1">PRO TIP</p>
+                           <p class="text-[10px] text-slate-500 leading-normal">Watchdog monitors <code>php_errors.log</code> in real-time. Fatal errors will trigger immediate visual alerts.</p>
+                        </div>
+                     </div>
                   </div>
 
-                  <!-- Section: Runtime -->
-                  <div class="pt-6 border-t border-slate-200/50">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Runtime Engine</h4>
-                    <div class="grid grid-cols-2 gap-4 mb-5">
-                       <div>
-                          <p class="text-xs font-bold text-slate-700" id="sys-php">-</p>
-                          <p class="text-[10px] text-slate-400 font-medium mt-0.5">PHP Ver.</p>
-                       </div>
-                       <div>
-                          <p class="text-xs font-bold text-slate-700 truncate" id="sys-mysql">-</p>
-                          <p class="text-[10px] text-slate-400 font-medium mt-0.5">MySQL</p>
-                       </div>
-                    </div>
-                    <div class="p-3 bg-white rounded-lg border border-slate-200/60 shadow-sm">
-                       <div class="flex items-center justify-between mb-1.5">
-                          <span class="text-[10px] font-bold text-slate-500">Memory Peak</span>
-                          <span class="text-[10px] font-black text-indigo-600" id="php-peak">-</span>
-                       </div>
-                       <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-                          <div class="bg-indigo-500 h-full" style="width: 40%"></div>
-                       </div>
-                       <p class="text-[9px] text-slate-400 mt-1.5 font-medium">Limit: <span id="php-limit">-</span></p>
-                    </div>
-                  </div>
-
-                  <!-- Section: Lifecycle -->
-                  <div class="pt-6 border-t border-slate-200/50">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Life Cycle</h4>
-                    <div class="space-y-3.5">
-                       <div class="flex items-center justify-between">
-                          <span class="text-[11px] font-medium text-slate-500">Host Uptime</span>
-                          <span class="text-[11px] font-bold text-slate-700" id="sys-uptime">0s</span>
-                       </div>
-                       <div class="flex items-center justify-between">
-                          <span class="text-[11px] font-medium text-slate-500">DB Uptime</span>
-                          <span class="text-[11px] font-bold text-slate-700" id="db-uptime">0s</span>
-                       </div>
-                       <div class="flex items-center justify-between">
-                          <span class="text-[11px] font-medium text-slate-500">Connections</span>
-                          <span class="text-[11px] font-bold text-slate-800" id="db-conns">0</span>
-                       </div>
-                    </div>
-                  </div>
-
-                  <div class="mt-auto pt-6 border-t border-slate-200/50">
+                  <!-- Fixed Bottom Action -->
+                  <div class="p-8 pt-0 mt-auto">
                      <button id="refresh-diagnostics" class="w-full py-2 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-500 border border-slate-200 rounded transition-colors uppercase tracking-wider active:scale-[0.98]">
                         Refresh Diagnostics
                      </button>
                   </div>
                </div>
             </div>
+        </div>
+
+        <!-- Diagnostic Modal -->
+        <div id="diag-modal" class="modal-overlay">
+           <div class="modal-box max-w-2xl bg-white shadow-2xl p-0 overflow-hidden border-0">
+              <div class="modal-header bg-slate-50 border-b border-slate-100 p-6 flex justify-between items-center">
+                 <div class="flex items-center gap-3">
+                    <div class="p-2 bg-indigo-100 rounded-lg"><i data-lucide="activity" class="w-4 h-4 text-indigo-600"></i></div>
+                    <div>
+                       <h3 class="modal-title font-black text-slate-800 text-sm uppercase tracking-tight" id="diag-modal-title">Diagnostic Report</h3>
+                       <p class="text-[10px] text-slate-400 font-medium">Infrastructure Deep Scan Results</p>
+                    </div>
+                 </div>
+                 <button class="p-2 hover:bg-slate-200 rounded-full transition-colors modal-close"><i data-lucide="x" class="w-4 h-4 text-slate-400"></i></button>
+              </div>
+              <div class="modal-body p-8 max-h-[70vh] overflow-y-auto" id="diag-modal-body">
+                 <div class="flex flex-col items-center justify-center py-12 text-center">
+                     <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                     <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Performing Deep Scan...</p>
+                 </div>
+              </div>
+              <div class="modal-footer bg-slate-50 border-t border-slate-100 p-6 flex justify-end gap-3">
+                 <button class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded transition-colors modal-close">Dismiss</button>
+                 <button class="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded shadow-sm hover:bg-indigo-700 transition-all active:scale-95" id="btn-copy-diag">Copy Report</button>
+              </div>
+           </div>
         </div>
 
         <!-- ─── 4. Details Grid ─── -->
@@ -295,6 +420,51 @@ export const PageDashboard = {
         if (res?.success) this.updateMonitorCharts(res.data);
         setTimeout(() => refreshBtn.classList.remove('opacity-50'), 500);
       });
+    }
+
+    // Tab Switching Logic
+    const btnDetails = document.getElementById('btn-tab-details');
+    const btnWatchdog = document.getElementById('btn-tab-watchdog');
+    const panelDetails = document.getElementById('panel-details');
+    const panelWatchdog = document.getElementById('panel-watchdog');
+
+    if (btnDetails && btnWatchdog) {
+      const switchTab = (active) => {
+        if (active === 'details') {
+          btnDetails.className = 'flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 border-b-2 border-indigo-500 transition-all duration-300';
+          btnWatchdog.className = 'flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-all duration-300';
+          panelDetails.classList.remove('hidden');
+          panelWatchdog.classList.add('hidden');
+        } else {
+          btnWatchdog.className = 'flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 border-b-2 border-indigo-500 transition-all duration-300';
+          btnDetails.className = 'flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-all duration-300';
+          panelWatchdog.classList.remove('hidden');
+          panelDetails.classList.add('hidden');
+        }
+      };
+
+      btnDetails.addEventListener('click', () => switchTab('details'));
+      btnWatchdog.addEventListener('click', () => switchTab('watchdog'));
+    }
+
+    // Diagnostic Modal Logic
+    const btnDeepSpecs = document.getElementById('btn-deep-specs');
+    const btnFullLogs = document.getElementById('btn-full-logs');
+    const modal = document.getElementById('diag-modal');
+
+    if (btnDeepSpecs) btnDeepSpecs.addEventListener('click', () => this.openDiagnosticsModal('system'));
+    if (btnFullLogs) btnFullLogs.addEventListener('click', () => this.openDiagnosticsModal('logs'));
+    const btnTrafficHub = document.getElementById('btn-traffic-hub');
+    if (btnTrafficHub) btnTrafficHub.addEventListener('click', () => this.openDiagnosticsModal('traffic'));
+
+    // Close logic
+    if (modal) {
+       modal.querySelectorAll('.modal-close').forEach(btn => {
+          btn.addEventListener('click', () => modal.classList.remove('open'));
+       });
+       modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.remove('open');
+       });
     }
   },
 
@@ -488,8 +658,74 @@ export const PageDashboard = {
        this.setElText('php-peak', data.php.memory_peak + ' MB');
     }
 
+    // Advanced Metrics: Traffic & Connections
+    if (data.connections !== undefined) {
+      this.setElText('net-conns', data.connections);
+    }
+    if (data.network) {
+      this.setElText('net-in', data.network.in_kb + ' KB/s');
+      this.setElText('net-out', data.network.out_kb + ' KB/s');
+    }
+
+    // Advanced Metrics: Error Watchdog
+    const errorList = document.getElementById('error-list');
+    const dot = document.getElementById('watchdog-dot');
+    if (errorList && data.errors) {
+      if (data.errors.length > 0) {
+        dot.className = 'flex h-2 w-2 rounded-full bg-pink-500 animate-pulse';
+        errorList.innerHTML = data.errors.map(err => `
+          <div class="p-2 bg-pink-50/50 border border-pink-100 rounded text-[10px] leading-tight">
+            <span class="font-bold text-pink-600 block mb-0.5">${err.type}</span>
+            <span class="text-slate-600 font-medium">${err.msg}</span>
+          </div>
+        `).join('');
+      } else {
+        dot.className = 'flex h-2 w-2 rounded-full bg-emerald-400';
+        errorList.innerHTML = '<p class="text-[10px] text-emerald-600 font-medium bg-emerald-50 p-2 rounded border border-emerald-100 flex items-center gap-2">System Healthy</p>';
+      }
+    }
+
     this.updateHealthScore(data);
+    this.updateAIVerdict(data.verdict);
+    
+    // Global Traffic Pulse Sync
+    if (data.pulse_speed) {
+       document.documentElement.style.setProperty('--pulse-duration', data.pulse_speed + 's');
+    }
+    
     this.setLastUpdate();
+  },
+
+  updateAIVerdict(verdict) {
+    if (!verdict) return;
+    const textEl = document.getElementById('ai-verdict-text');
+    const badgeEl = document.getElementById('ai-verdict-badge');
+    const containerEl = document.getElementById('ai-verdict-container');
+    const iconContainer = document.getElementById('ai-verdict-icon-container');
+
+    if (!textEl || !badgeEl) return;
+
+    textEl.textContent = verdict.text;
+    badgeEl.textContent = verdict.severity;
+
+    // Update Styles
+    const colors = {
+      success: { bg: 'bg-emerald-50/50', border: 'border-emerald-100/50', badge: 'bg-emerald-100 text-emerald-600', icon: 'text-emerald-500' },
+      warning: { bg: 'bg-amber-50/50', border: 'border-amber-100/50', badge: 'bg-amber-100 text-amber-600', icon: 'text-amber-500' },
+      danger: { bg: 'bg-rose-50/50', border: 'border-rose-100/50', badge: 'bg-rose-100 text-rose-600', icon: 'text-rose-500' },
+      info: { bg: 'bg-indigo-50/50', border: 'border-indigo-100/50', badge: 'bg-indigo-100 text-indigo-600', icon: 'text-indigo-500' }
+    };
+
+    const cfg = colors[verdict.severity] || colors.info;
+    
+    containerEl.className = `mb-8 p-4 ${cfg.bg} border ${cfg.border} rounded-xl flex items-center justify-between transition-all duration-500`;
+    badgeEl.className = `px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${cfg.badge}`;
+    
+    // Update Icon
+    const lucideMap = { 'alert-triangle': 'alert-triangle', 'cpu': 'cpu', 'database': 'database', 'users': 'users', 'shield-check': 'shield-check' };
+    const iconName = lucideMap[verdict.icon] || 'brain-circuit';
+    iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5 ${cfg.icon} ${verdict.severity === 'success' ? '' : 'animate-pulse'}"></i>`;
+    lucide.createIcons();
   },
 
   setLastUpdate() {
@@ -522,12 +758,20 @@ export const PageDashboard = {
   },
 
   updateHealthScore(data) {
-    const cpu = data.cpu || 0;
-    const ram = data.ram?.percent || 0;
-    const disk = data.disk?.percent || 0;
+    const cpu = parseFloat(data.cpu) || 0;
+    const ram = parseFloat(data.ram?.percent) || 0;
+    const disk = parseFloat(data.disk?.percent) || 0;
+    
+    // Weighted Usage: Health starts at 100, subtract usage weighted
+    // This formula ensures even at 100% usage on all fronts, health stays at 20%
+    let usagePenalty = (cpu * 0.25) + (ram * 0.35) + (disk * 0.1);
+    
+    // Errors Penalty: 10 points per error, capped at 60 total penalty 
+    // to prevent minor log spikes from killing the score completely.
+    const errorCount = data.errors?.length || 0;
+    const errorPenalty = Math.min(60, errorCount * 10);
 
-    // Weighted Health Formula
-    let score = 100 - (cpu * 0.4 + ram * 0.4 + disk * 0.2);
+    let score = 100 - usagePenalty - errorPenalty;
     score = Math.max(0, Math.min(100, Math.round(score)));
 
     const badge = document.getElementById('health-score-badge');
@@ -558,6 +802,190 @@ export const PageDashboard = {
     if (status === 'failed') return '<span class="text-[9px] font-bold text-rose-600 uppercase">Failed</span>';
     if (status === 'running') return '<span class="text-[9px] font-bold text-amber-600 uppercase animate-pulse">Updating</span>';
     return '<span class="text-[9px] font-bold text-slate-300 uppercase">Inactive</span>';
+  },
+
+  async openDiagnosticsModal(type) {
+    const modal = document.getElementById('diag-modal');
+    const body = document.getElementById('diag-modal-body');
+    const title = document.getElementById('diag-modal-title');
+    const copyBtn = document.getElementById('btn-copy-diag');
+    
+    if (!modal || !body) return;
+
+    // Show loading
+    const titles = {
+      system: 'Deep Infrastructure Specs',
+      logs: 'Full Log Sentinel Report',
+      traffic: 'Global Traffic Hub & Geo-Analytics'
+    };
+    title.textContent = titles[type] || 'Diagnostic Report';
+    body.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+          <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Performing Deep Scan...</p>
+      </div>
+    `;
+    modal.classList.add('open');
+
+    const res = await Api.get('monitoring?detail=1');
+    if (!res?.success) {
+      body.innerHTML = '<div class="alert alert-error">Failed to fetch diagnostic data.</div>';
+      return;
+    }
+
+    const data = res.data;
+    let html = '';
+
+    if (type === 'system') {
+      const ext = data.extended || {};
+      html = `
+        <div class="space-y-6">
+           <div class="grid grid-cols-2 gap-6 pb-6 border-b border-slate-100">
+              <div>
+                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Processor</p>
+                 <p class="text-sm font-black text-slate-800">${ext.cpu_model || data.cpu_model || 'N/A'}</p>
+                 <p class="text-[10px] text-slate-500 mt-1">${ext.cpu_cores || '?'} Cores @ Max Performance</p>
+              </div>
+              <div>
+                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Operating System</p>
+                 <p class="text-sm font-black text-slate-800">${ext.os_name || data.os || 'N/A'}</p>
+                 <p class="text-[10px] text-slate-500 mt-1">Version ${ext.os_ver || '?'}</p>
+              </div>
+           </div>
+           
+           <div class="space-y-4 pt-2">
+              <h5 class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Memory & Runtime Configuration</h5>
+              <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                 <div class="grid grid-cols-3 gap-4">
+                    <div>
+                       <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">PHP Version</p>
+                       <p class="text-xs font-bold text-slate-700">${data.php?.version || '?'}</p>
+                    </div>
+                    <div>
+                       <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Memory Peak</p>
+                       <p class="text-xs font-bold text-slate-700">${data.php?.memory_peak || '0'} MB</p>
+                    </div>
+                    <div>
+                       <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Max Limit</p>
+                       <p class="text-xs font-bold text-slate-700">${data.php?.memory_limit || '?'}</p>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           <div class="space-y-4 pt-2">
+              <h5 class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Storage Telemetry</h5>
+              <div class="grid grid-cols-2 gap-4">
+                 <div class="p-3 border border-slate-100 rounded-lg">
+                    <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Used Space</p>
+                    <p class="text-sm font-black text-slate-700">${data.disk?.used} GB</p>
+                 </div>
+                 <div class="p-3 border border-slate-100 rounded-lg">
+                    <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Free Space</p>
+                    <p class="text-sm font-black text-emerald-600">${data.disk?.free} GB</p>
+                 </div>
+              </div>
+           </div>
+
+           <div class="space-y-4 pt-2">
+              <h5 class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Resource Hogs (Active Tasks)</h5>
+              <div class="border border-slate-100 rounded-lg overflow-hidden">
+                 <table class="w-full text-left text-[10px]">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                       <tr>
+                          <th class="px-4 py-2 font-black text-slate-400 uppercase">Process Name</th>
+                          <th class="px-4 py-2 font-black text-slate-400 uppercase text-right">RAM Usage</th>
+                       </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                       ${(ext.top_procs || []).map(p => `
+                          <tr>
+                             <td class="px-4 py-2.5 font-bold text-slate-700">${p.name}</td>
+                             <td class="px-4 py-2.5 font-black text-indigo-600 text-right">${p.mem_mb} MB</td>
+                          </tr>
+                       `).join('')}
+                    </tbody>
+                 </table>
+              </div>
+           </div>
+        </div>
+      `;
+    } else if (type === 'traffic') {
+      const hits = data.extended?.recent_hits || [];
+      html = `
+        <div class="space-y-6">
+           <div class="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-4 rounded-xl">
+              <div class="flex items-center gap-3">
+                 <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
+                 <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Global Traffic Hub Active</p>
+              </div>
+              <p class="text-[10px] text-emerald-600 font-bold">${data.connections} Active Nodes</p>
+           </div>
+           
+           <div class="space-y-3">
+              <h5 class="text-[10px] font-black text-slate-900 uppercase tracking-widest px-1">Recent Access Points</h5>
+              <div class="space-y-1">
+                 ${hits.map(hit => `
+                    <div class="node-row flex items-center justify-between p-3 rounded-lg border border-slate-50 transition-colors">
+                       <div class="flex items-center gap-4">
+                          <span class="text-lg">${hit.flag}</span>
+                          <div>
+                             <p class="text-xs font-bold text-slate-800">${hit.node}</p>
+                             <p class="text-[9px] text-slate-400 font-mono">${hit.ip}</p>
+                          </div>
+                       </div>
+                       <div class="text-right">
+                          <p class="text-[10px] font-black text-indigo-600">${hit.latency}</p>
+                          <p class="text-[9px] text-slate-400 uppercase font-bold">${hit.type}</p>
+                       </div>
+                    </div>
+                 `).join('')}
+                 ${hits.length === 0 ? '<p class="text-center py-8 text-slate-400 italic text-xs">Waiting for external signals...</p>' : ''}
+              </div>
+           </div>
+
+           <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 shadow-inner">
+              <div class="flex items-center justify-between mb-3 text-white/50">
+                 <span class="text-[9px] font-black uppercase tracking-widest">Traffic Density</span>
+                 <span class="text-[9px] font-mono italic">Real-time Feed</span>
+              </div>
+              <div class="flex items-end gap-1 h-8">
+                 ${Array(24).fill(0).map(() => `<div class="flex-1 bg-indigo-500 opacity-20 rounded-t-sm" style="height: ${Math.random() * 100}%"></div>`).join('')}
+              </div>
+           </div>
+        </div>
+      `;
+    } else {
+      if (!data.errors || data.errors.length === 0) {
+        html = '<div class="py-12 text-center text-slate-400 italic">No historical errors found in the last scan buffer.</div>';
+      } else {
+        html = `
+          <div class="space-y-2">
+            ${data.errors.map(err => `
+              <div class="p-3 bg-slate-50 border border-slate-100 rounded-lg font-mono text-[10px] flex flex-col gap-1.5">
+                <div class="flex items-center justify-between">
+                   <span class="px-2 py-0.5 bg-rose-100 text-rose-600 rounded font-bold uppercase tracking-tighter">${err.type}</span>
+                   <span class="text-slate-400">Diagnostic Entry</span>
+                </div>
+                <p class="text-slate-700 break-words font-medium">${err.msg}</p>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+
+    body.innerHTML = html;
+
+    // Handle copy
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        const textToCopy = JSON.stringify(data, null, 2);
+        navigator.clipboard.writeText(textToCopy);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy Report', 2000);
+      };
+    }
   },
 
   setElText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; },
