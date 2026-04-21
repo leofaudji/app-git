@@ -2,11 +2,24 @@
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 
-$url = "http://localhost/app-git/api/webhook";
-$secret = DB::getSetting('webhook_secret', 'change_me_secret_key');
+$repo = $_GET['repo'] ?? 'leofaudji/smkn5-toko';
+$project = DB::fetchOne("SELECT * FROM projects WHERE (repo_name = ? OR folder_name = ?) AND is_active = 1", [$repo, $repo]);
+
+$url = APP_URL;
+if (strpos($url, 'localhost') !== false && strpos($url, '/app-git') === false) {
+    $url .= '/app-git'; // Manual fix for CLI environment
+}
+$url .= "/api/webhook.php";
+$url = str_replace('localhostapi', 'localhost/app-git', $url); // Fix specifically for the 'localhostapi' bug
+
+$secret = ($project && $project['webhook_secret']) ? $project['webhook_secret'] : DB::getSetting('webhook_secret_default', '');
+
 $payload = json_encode([
-    'ref' => 'refs/heads/' . DB::getSetting('git_branch', 'main'),
-    'repository' => ['name' => 'test-repo'],
+    'ref' => 'refs/heads/' . ($project['branch'] ?? 'main'),
+    'repository' => [
+        'full_name' => $repo,
+        'name' => basename($repo)
+    ],
     'pusher' => ['name' => 'tester']
 ]);
 

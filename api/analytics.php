@@ -53,16 +53,19 @@ switch ($action) {
             'stability' => $stability,
             'frequency' => $frequency,
             'top_users' => $topUsers,
-            'period'    => '30_days'
+            'period' => '30_days'
         ]);
         break;
+
+
+
 
     case 'contributions':
         $year = $_GET['year'] ?? 'last_year';
         $where = "created_at >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)";
-        
+
         if ($year !== 'last_year' && is_numeric($year)) {
-            $where = "YEAR(created_at) = " . (int)$year;
+            $where = "YEAR(created_at) = " . (int) $year;
         }
 
         $contributions = DB::fetchAll("
@@ -74,10 +77,10 @@ switch ($action) {
             GROUP BY DATE(created_at)
             ORDER BY date ASC
         ");
-        
+
         $result = [];
         foreach ($contributions as $c) {
-            $result[$c['date']] = (int)$c['count'];
+            $result[$c['date']] = (int) $c['count'];
         }
 
         // Get available years for filtering
@@ -89,8 +92,8 @@ switch ($action) {
 
         jsonSuccess([
             'contributions' => $result,
-            'daily_total'   => array_sum($result),
-            'year'          => $year,
+            'daily_total' => array_sum($result),
+            'year' => $year,
             'available_years' => array_column($availableYears, 'year')
         ]);
         break;

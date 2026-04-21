@@ -118,9 +118,15 @@ if (!empty($secret)) {
 }
 
 if (!$validSignature) {
-    logWebhook('failed', 'Invalid signature', $project['id'], $data);
-    http_response_code(403);
-    echo json_encode(['error' => 'Invalid signature for project ' . $project['name']]);
+    if (empty($sigHeader)) {
+        logWebhook('failed', 'Missing signature header', $project['id'], $data);
+        http_response_code(401);
+        echo json_encode(['error' => 'Missing signature for project ' . $project['name']]);
+    } else {
+        logWebhook('failed', 'Invalid signature (mismatch)', $project['id'], $data);
+        http_response_code(403);
+        echo json_encode(['error' => 'Invalid signature for project ' . $project['name']]);
+    }
     exit;
 }
 
