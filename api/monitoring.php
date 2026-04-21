@@ -115,6 +115,41 @@ if ($isWin) {
     ];
 }
 
+// 4. Get Uptime (Windows/Linux)
+$uptimeSeconds = 0;
+if ($isWin) {
+    $lastBoot = (string)shell_exec('wmic os get lastbootuptime /value');
+    if (preg_match('/LastBootUpTime=(\d{14})/', $lastBoot, $m)) {
+        $bootTime = DateTime::createFromFormat('YmdHis', $m[1]);
+        if ($bootTime) $uptimeSeconds = time() - $bootTime->getTimestamp();
+    }
+} else {
+    $uptimeData = @file_get_contents('/proc/uptime');
+    if ($uptimeData) {
+        $uptimeSeconds = (int)explode(' ', $uptimeData)[0];
+    }
+}
+$stats['uptime'] = $uptimeSeconds;
+
+// 5. Get DB Connections & Uptime
+try {
+    $connStatus = DB::fetchOne("SHOW STATUS LIKE 'Threads_connected'");
+    $stats['db_connections'] = (int)($connStatus['Value'] ?? 0);
+    
+    $dbUptime = DB::fetchOne("SHOW STATUS LIKE 'Uptime'");
+    $stats['db_uptime'] = (int)($dbUptime['Value'] ?? 0);
+} catch (Exception $e) {
+    $stats['db_connections'] = 0;
+    $stats['db_uptime'] = 0;
+}
+
+// 6. Get PHP Runtime Health
+$stats['php'] = [
+    'memory_peak' => round(memory_get_peak_usage(true) / 1024 / 1024, 2), // MB
+    'memory_limit' => ini_get('memory_limit'),
+    'version' => PHP_VERSION
+];
+
 $output = json_encode(['success' => true, 'data' => $stats]);
 file_put_contents($cacheFile, $output);
 echo $output;

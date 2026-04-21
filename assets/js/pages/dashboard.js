@@ -90,66 +90,168 @@ export const PageDashboard = {
            </div>
         </div>
 
-        <!-- ─── 3. Main Monitoring Center ─── -->
-        <div class="cf-card mb-8">
-           <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 class="text-sm font-bold text-slate-800">Performance & Infrastructure Analytics</h3>
-              <div class="flex gap-4">
-                 <select class="text-xs border-0 bg-transparent font-bold text-slate-500 focus:ring-0 cursor-pointer">
-                    <option>Last 30 minutes</option>
-                    <option>Real-time (3s)</option>
-                 </select>
-              </div>
-           </div>
-           <div class="grid grid-cols-1 lg:grid-cols-4">
-              <!-- Sidebar Stats -->
-              <div class="p-6 border-r border-slate-100 flex flex-col gap-8">
-                 <div>
-                    <div class="cf-label text-[10px] mb-1">CPU Load</div>
-                    <div class="text-2xl font-bold text-slate-800" id="cpu-usage">0%</div>
-                    <div class="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                       <div id="cpu-bar" class="h-full cf-bg-blue transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                 </div>
-                 <div>
-                    <div class="cf-label text-[10px] mb-1">RAM Usage</div>
-                    <div class="text-2xl font-bold text-slate-800" id="ram-usage">0 GB</div>
-                    <div class="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                       <div id="ram-bar" class="h-full bg-pink-500 transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                 </div>
-                 <div>
-                    <div class="cf-label text-[10px] mb-1">Disk Usage</div>
-                    <div class="flex items-center justify-between mb-1">
-                       <span class="text-xs font-bold text-slate-700" id="disk-used">0 GB</span>
-                       <span class="text-[10px] font-bold text-slate-400 font-mono" id="disk-percent">0%</span>
-                    </div>
-                    <div class="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                       <div id="disk-bar" class="h-full bg-slate-400 transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                 </div>
-                 <div class="mt-auto p-4 bg-slate-50 rounded border border-slate-100 text-[10px] text-slate-500 leading-relaxed font-medium">
-                    <span class="text-emerald-500 font-bold flex items-center gap-1 mb-1">● System Healthy</span>
-                    All agents are responding normally. Latency is within optimal parameters.
-                 </div>
-              </div>
-              <!-- Large Chart Area -->
-              <div class="lg:col-span-3 p-6 bg-slate-50/30">
-                 <div class="flex items-center justify-between mb-4">
-                    <div class="flex gap-4">
-                       <div class="flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                          <span class="w-2.5 h-2.5 rounded-sm cf-bg-blue"></span> CPU LOAD
+        <!-- ─── 3. Main Monitoring Center (Super Tidy Redesign) ─── -->
+        <div class="cf-card mb-8 overflow-hidden bg-white border-slate-200">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+               <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-100/50">
+                     <i data-lucide="activity" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                     <h3 class="text-base font-bold text-slate-800 tracking-tight leading-none">Infrastructure Real-time Analytics</h3>
+                     <p class="text-[11px] text-slate-400 mt-1.5 font-medium flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Service connectivity is optimal • <span id="last-update">Syncing...</span>
+                     </p>
+                  </div>
+               </div>
+               <div id="health-score-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all duration-500">
+                  <span id="health-dot" class="w-2 h-2 rounded-full animate-pulse"></span>
+                  <span class="opacity-70">Health Score:</span>
+                  <span id="health-percent" class="font-black">100%</span>
+               </div>
+            </div>
+
+            <!-- Enhanced Metric Blocks -->
+            <div class="grid grid-cols-1 md:grid-cols-3 divide-x divide-slate-100 bg-slate-50/20 border-b border-slate-100">
+               <!-- CPU -->
+               <div class="p-6">
+                  <div class="flex items-center justify-between mb-3">
+                     <div class="flex items-center gap-2">
+                        <i data-lucide="cpu" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CPU LOAD</span>
+                     </div>
+                     <div class="text-2xl font-black text-slate-800 tracking-tighter" id="cpu-usage">0%</div>
+                  </div>
+                  <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                     <div id="cpu-bar" class="h-full cf-bg-blue transition-all duration-500" style="width: 0%"></div>
+                  </div>
+               </div>
+               <!-- RAM -->
+               <div class="p-6">
+                  <div class="flex items-center justify-between mb-3">
+                     <div class="flex items-center gap-2">
+                        <i data-lucide="database" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">RAM USAGE</span>
+                     </div>
+                     <div class="text-2xl font-black text-slate-800 tracking-tighter" id="ram-usage">0 GB</div>
+                  </div>
+                  <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                     <div id="ram-bar" class="h-full bg-pink-500 transition-all duration-500" style="width: 0%"></div>
+                  </div>
+               </div>
+               <!-- Disk -->
+               <div class="p-6">
+                  <div class="flex items-center justify-between mb-3">
+                     <div class="flex items-center gap-2">
+                        <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">STORAGE</span>
+                     </div>
+                     <div class="text-2xl font-black text-slate-800 tracking-tighter" id="disk-percent">0%</div>
+                  </div>
+                  <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                     <div id="disk-bar" class="h-full bg-slate-400 transition-all duration-500" style="width: 0%"></div>
+                  </div>
+               </div>
+            </div>
+                             <div class="grid grid-cols-1 lg:grid-cols-4 border-t border-slate-100">
+               <!-- Main Visualization -->
+               <div class="lg:col-span-3 p-8">
+                  <div class="flex items-center justify-between mb-8">
+                     <div class="flex items-center gap-8">
+                        <div class="flex items-center gap-2.5">
+                           <span class="w-2.5 h-2.5 rounded-full cf-bg-blue shadow-sm shadow-blue-200"></span>
+                           <span class="text-xs font-bold text-slate-600 uppercase tracking-tight">CPU Usage %</span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                           <span class="w-2.5 h-2.5 rounded-full bg-pink-500 shadow-sm shadow-pink-200"></span>
+                           <span class="text-xs font-bold text-slate-600 uppercase tracking-tight">RAM Usage %</span>
+                        </div>
+                     </div>
+                     <div class="flex items-center gap-2 px-3 py-1 bg-slate-50 rounded border border-slate-100">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Live Feed</span>
+                     </div>
+                  </div>
+                  <div class="cf-chart-container h-[360px] relative">
+                     <canvas id="infra-chart"></canvas>
+                  </div>
+               </div>
+
+               <!-- Right Details Panel -->
+               <div class="p-8 bg-slate-50/50 border-l border-slate-100 flex flex-col gap-8">
+                  <!-- Section: System -->
+                  <div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">System Identity</h4>
+                    <div class="space-y-4">
+                       <div class="flex items-start gap-3">
+                          <div class="mt-1"><i data-lucide="monitor" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                          <div>
+                             <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-os">-</p>
+                             <p class="text-[10px] text-slate-400 font-medium mt-0.5">OS Platform</p>
+                          </div>
                        </div>
-                       <div class="flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                          <span class="w-2.5 h-2.5 rounded-sm bg-pink-500"></span> MEMORY
+                       <div class="flex items-start gap-3">
+                          <div class="mt-1"><i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                          <div class="overflow-hidden">
+                             <p class="text-xs font-bold text-slate-700 leading-tight truncate w-32" id="sys-cpu" title="CPU">-</p>
+                             <p class="text-[10px] text-slate-400 font-medium mt-0.5">Architecture</p>
+                          </div>
                        </div>
                     </div>
-                 </div>
-                 <div class="cf-chart-container">
-                    <canvas id="infra-chart"></canvas>
-                 </div>
-              </div>
-           </div>
+                  </div>
+
+                  <!-- Section: Runtime -->
+                  <div class="pt-6 border-t border-slate-200/50">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Runtime Engine</h4>
+                    <div class="grid grid-cols-2 gap-4 mb-5">
+                       <div>
+                          <p class="text-xs font-bold text-slate-700" id="sys-php">-</p>
+                          <p class="text-[10px] text-slate-400 font-medium mt-0.5">PHP Ver.</p>
+                       </div>
+                       <div>
+                          <p class="text-xs font-bold text-slate-700 truncate" id="sys-mysql">-</p>
+                          <p class="text-[10px] text-slate-400 font-medium mt-0.5">MySQL</p>
+                       </div>
+                    </div>
+                    <div class="p-3 bg-white rounded-lg border border-slate-200/60 shadow-sm">
+                       <div class="flex items-center justify-between mb-1.5">
+                          <span class="text-[10px] font-bold text-slate-500">Memory Peak</span>
+                          <span class="text-[10px] font-black text-indigo-600" id="php-peak">-</span>
+                       </div>
+                       <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                          <div class="bg-indigo-500 h-full" style="width: 40%"></div>
+                       </div>
+                       <p class="text-[9px] text-slate-400 mt-1.5 font-medium">Limit: <span id="php-limit">-</span></p>
+                    </div>
+                  </div>
+
+                  <!-- Section: Lifecycle -->
+                  <div class="pt-6 border-t border-slate-200/50">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Life Cycle</h4>
+                    <div class="space-y-3.5">
+                       <div class="flex items-center justify-between">
+                          <span class="text-[11px] font-medium text-slate-500">Host Uptime</span>
+                          <span class="text-[11px] font-bold text-slate-700" id="sys-uptime">0s</span>
+                       </div>
+                       <div class="flex items-center justify-between">
+                          <span class="text-[11px] font-medium text-slate-500">DB Uptime</span>
+                          <span class="text-[11px] font-bold text-slate-700" id="db-uptime">0s</span>
+                       </div>
+                       <div class="flex items-center justify-between">
+                          <span class="text-[11px] font-medium text-slate-500">Connections</span>
+                          <span class="text-[11px] font-bold text-slate-800" id="db-conns">0</span>
+                       </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-auto pt-6 border-t border-slate-200/50">
+                     <button id="refresh-diagnostics" class="w-full py-2 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-500 border border-slate-200 rounded transition-colors uppercase tracking-wider active:scale-[0.98]">
+                        Refresh Diagnostics
+                     </button>
+                  </div>
+               </div>
+            </div>
         </div>
 
         <!-- ─── 4. Details Grid ─── -->
@@ -182,6 +284,18 @@ export const PageDashboard = {
     `;
 
     this.init();
+    
+    // Add Refresh Diagnostics Handler
+    const refreshBtn = document.getElementById('refresh-diagnostics');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        const icon = refreshBtn.querySelector('i');
+        refreshBtn.classList.add('opacity-50');
+        const res = await Api.get('monitoring');
+        if (res?.success) this.updateMonitorCharts(res.data);
+        setTimeout(() => refreshBtn.classList.remove('opacity-50'), 500);
+      });
+    }
   },
 
   async init() {
@@ -202,6 +316,17 @@ export const PageDashboard = {
     this.setElText('stat-total', stats.total);
     this.setElText('stat-24h', `+${stats.logs_24h} today`);
     this.setLastUpdate();
+
+    // 1c. System Info
+    if (dashRes.data.system) {
+      const sys = dashRes.data.system;
+      this.setElText('sys-os', sys.os);
+      this.setElText('sys-cpu', sys.cpu);
+      const cpuEl = document.getElementById('sys-cpu');
+      if (cpuEl) cpuEl.title = sys.cpu;
+      this.setElText('sys-php', sys.php);
+      this.setElText('sys-mysql', sys.mysql);
+    }
 
     // 1b. Heatmap
     if (contribRes?.success) {
@@ -263,6 +388,8 @@ export const PageDashboard = {
           </div>
        `).join('');
     }
+    // 6. Refresh Icons
+    if (window.lucide) lucide.createIcons();
   },
 
   initInfraChart() {
@@ -341,10 +468,27 @@ export const PageDashboard = {
 
     if (data.disk) {
       this.setElText('disk-percent', data.disk.percent + '%');
-      this.setElText('disk-used', data.disk.used + ' GB');
       this.setElStyle('disk-bar', 'width', data.disk.percent + '%');
     }
 
+    if (data.uptime !== undefined) {
+      this.setElText('sys-uptime', this.formatUptime(data.uptime));
+    }
+
+    if (data.db_connections !== undefined) {
+      this.setElText('db-conns', data.db_connections);
+    }
+
+    if (data.db_uptime !== undefined) {
+      this.setElText('db-uptime', this.formatUptime(data.db_uptime));
+    }
+
+    if (data.php) {
+       this.setElText('php-limit', data.php.memory_limit);
+       this.setElText('php-peak', data.php.memory_peak + ' MB');
+    }
+
+    this.updateHealthScore(data);
     this.setLastUpdate();
   },
 
@@ -359,6 +503,54 @@ export const PageDashboard = {
       hour12: false 
     };
     this.setElText('last-update', now.toLocaleString('id-ID', options) + ' WIB');
+  },
+
+  formatUptime(seconds) {
+    if (seconds === 0) return 'Just started';
+    const d = Math.floor(seconds / (3600 * 24));
+    const h = Math.floor((seconds % (3600 * 24)) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    let parts = [];
+    if (d > 0) parts.push(`${d}d`);
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
+    if (s > 0 && d === 0) parts.push(`${s}s`);
+    
+    return parts.join(' ') || '0s';
+  },
+
+  updateHealthScore(data) {
+    const cpu = data.cpu || 0;
+    const ram = data.ram?.percent || 0;
+    const disk = data.disk?.percent || 0;
+
+    // Weighted Health Formula
+    let score = 100 - (cpu * 0.4 + ram * 0.4 + disk * 0.2);
+    score = Math.max(0, Math.min(100, Math.round(score)));
+
+    const badge = document.getElementById('health-score-badge');
+    const text = document.getElementById('health-percent');
+    const dot = document.getElementById('health-dot');
+
+    if (!badge || !text || !dot) return;
+
+    text.textContent = score + '%';
+
+    // Color Logic
+    const baseClass = 'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all duration-500';
+    
+    if (score > 85) {
+      badge.className = `${baseClass} bg-emerald-50 text-emerald-600 border border-emerald-100`;
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+    } else if (score > 60) {
+      badge.className = `${baseClass} bg-amber-50 text-amber-600 border border-amber-100`;
+      dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
+    } else {
+      badge.className = `${baseClass} bg-rose-50 text-rose-600 border border-rose-100`;
+      dot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-pulse';
+    }
   },
 
   getStatusBadge(status) {

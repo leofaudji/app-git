@@ -57,6 +57,31 @@ foreach ($projects as $p) {
     }
 }
 
+// System Info Detection
+$isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+$systemInfo = [
+    'os'     => PHP_OS_FAMILY . ' (' . php_uname('r') . ')',
+    'php'    => PHP_VERSION,
+    'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+    'cpu'    => 'Unknown',
+    'mysql'  => 'Unknown'
+];
+
+// Detect CPU
+if ($isWin) {
+    $cpu = @shell_exec('wmic cpu get name /value');
+    if (preg_match('/Name=(.*)/', (string)$cpu, $m)) $systemInfo['cpu'] = trim($m[1]);
+} else {
+    $cpu = @shell_exec("grep 'model name' /proc/cpuinfo | head -1 | cut -d':' -f2");
+    if ($cpu) $systemInfo['cpu'] = trim($cpu);
+}
+
+// Detect MySQL Version
+try {
+    $ver = DB::fetchOne("SELECT VERSION() as v");
+    if ($ver) $systemInfo['mysql'] = $ver['v'];
+} catch (Exception $e) {}
+
 jsonSuccess([
     'stats' => [
         'total'         => $totalDeploy,
@@ -75,4 +100,6 @@ jsonSuccess([
     ],
     'recent'   => $recentLogs,
     'projects' => $projects,
+    'system'   => $systemInfo,
 ]);
+
