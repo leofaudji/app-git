@@ -390,8 +390,8 @@ export const PageDashboard = {
                   </div>
 
                   <!-- Fixed Bottom Action -->
-                  <div class="p-8 pt-0 mt-auto">
-                     <button id="refresh-diagnostics" class="w-full py-2 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-500 border border-slate-200 rounded transition-colors uppercase tracking-wider active:scale-[0.98]">
+                  <div class="p-8 pt-6 mt-auto border-t border-slate-100 bg-slate-50/50">
+                     <button id="refresh-diagnostics" class="w-full py-2.5 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-500 border border-slate-200 rounded-lg shadow-sm transition-all uppercase tracking-wider active:scale-[0.98]">
                         Refresh Diagnostics
                      </button>
                   </div>
