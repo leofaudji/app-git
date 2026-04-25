@@ -260,50 +260,73 @@ export const PageDashboard = {
                      <div id="panel-details" class="space-y-8">
                         <div>
                           <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">System Identity</h4>
-                          <div class="space-y-4">
-                             <div class="flex items-start gap-3">
-                                <div class="mt-1"><i data-lucide="monitor" class="w-3.5 h-3.5 text-slate-400"></i></div>
-                                <div>
-                                   <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-os">-</p>
-                                   <p class="text-[10px] text-slate-400 font-medium mt-0.5">OS Platform</p>
-                                </div>
-                             </div>
-                             <div class="flex items-start gap-3">
-                                <div class="mt-1"><i data-lucide="cpu" class="w-3.5 h-3.5 text-slate-400"></i></div>
-                                <div>
-                                   <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-cpu">-</p>
-                                   <p class="text-[10px] text-slate-400 font-medium mt-0.5">Processor Model</p>
-                                </div>
-                             </div>
-                             <div class="grid grid-cols-2 gap-4 pt-1">
+                          <div class="space-y-6">
+                             <!-- Basic Identity -->
+                             <div class="grid grid-cols-1 gap-4">
                                 <div class="flex items-start gap-3">
-                                   <div class="mt-1"><i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                                   <div class="mt-1"><i data-lucide="monitor" class="w-3.5 h-3.5 text-slate-400"></i></div>
                                    <div>
-                                      <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-cores">-</p>
+                                      <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-os">-</p>
+                                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">OS Platform & Hostname (<span id="sys-hostname">-</span>)</p>
+                                   </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                   <div class="mt-1"><i data-lucide="cpu" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                                   <div>
+                                      <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-cpu">-</p>
+                                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">Processor (<span id="sys-arch">-</span>)</p>
+                                   </div>
+                                </div>
+                             </div>
+
+                             <!-- Network Specs -->
+                             <div class="pt-4 border-t border-slate-200/50">
+                                <h5 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">Network & Access</h5>
+                                <div class="grid grid-cols-2 gap-4">
+                                   <div>
+                                      <p class="text-xs font-bold text-slate-700" id="sys-ip-local">-</p>
+                                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">Local IP</p>
+                                   </div>
+                                   <div>
+                                      <p class="text-xs font-bold text-slate-700" id="sys-ip-public">-</p>
+                                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">Public IP</p>
+                                   </div>
+                                </div>
+                             </div>
+
+                             <!-- Hardware Specs -->
+                             <div class="pt-4 border-t border-slate-200/50">
+                                <h5 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">Hardware Specs</h5>
+                                <div class="grid grid-cols-2 gap-y-4 gap-x-2">
+                                   <div>
+                                      <p class="text-xs font-bold text-slate-700" id="sys-cores">-</p>
                                       <p class="text-[10px] text-slate-400 font-medium mt-0.5">CPU Cores</p>
                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                   <div class="mt-1"><i data-lucide="database" class="w-3.5 h-3.5 text-slate-400"></i></div>
                                    <div>
-                                      <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-ram">-</p>
+                                      <p class="text-xs font-bold text-slate-700" id="sys-ram">-</p>
                                       <p class="text-[10px] text-slate-400 font-medium mt-0.5">Physical RAM</p>
                                    </div>
+                                   <div>
+                                      <p class="text-xs font-bold text-slate-700" id="sys-disk">-</p>
+                                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">Storage</p>
+                                   </div>
+                                   <div>
+                                      <p class="text-xs font-bold text-indigo-600" id="sys-virt">-</p>
+                                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">Environment</p>
+                                   </div>
                                 </div>
-                             </div>
-                             <div class="flex items-start gap-3">
-                                <div class="mt-1"><i data-lucide="hard-drive" class="w-3.5 h-3.5 text-slate-400"></i></div>
-                                <div>
-                                   <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-disk">-</p>
-                                   <p class="text-[10px] text-slate-400 font-medium mt-0.5">Disk Capacity</p>
+                                <div class="mt-4 p-2 bg-slate-100/50 rounded text-[10px]">
+                                   <span class="text-slate-400 font-bold uppercase mr-1">MFG:</span>
+                                   <span class="text-slate-600 font-bold" id="sys-mfg">-</span>
+                                   <span class="mx-1 text-slate-300">|</span>
+                                   <span class="text-slate-600" id="sys-model">-</span>
                                 </div>
                              </div>
                           </div>
-                        </div>
 
-                        <div class="pt-6 border-t border-slate-200/50">
-                          <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Runtime Engine</h4>
-                          <div class="grid grid-cols-2 gap-4 mb-5">
+                          <div class="pt-6 border-t border-slate-200/50">
+                            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Runtime Engine</h4>
+                            <div class="grid grid-cols-2 gap-4 mb-5">
                              <div>
                                 <p class="text-xs font-bold text-slate-700" id="sys-php">-</p>
                                 <p class="text-[10px] text-slate-400 font-medium mt-0.5">PHP Ver.</p>
@@ -514,10 +537,17 @@ export const PageDashboard = {
     if (dashRes.data.system) {
       const sys = dashRes.data.system;
       this.setElText('sys-os', sys.os);
+      this.setElText('sys-hostname', sys.hostname);
       this.setElText('sys-cpu', sys.cpu);
+      this.setElText('sys-arch', sys.arch);
       this.setElText('sys-cores', sys.cpu_cores);
       this.setElText('sys-ram', sys.ram_total);
       this.setElText('sys-disk', sys.disk_total);
+      this.setElText('sys-ip-local', sys.ip_local);
+      this.setElText('sys-ip-public', sys.ip_public);
+      this.setElText('sys-virt', sys.virt);
+      this.setElText('sys-mfg', sys.manufacturer);
+      this.setElText('sys-model', sys.model);
       this.setElText('sys-php', sys.php);
       this.setElText('sys-mysql', sys.mysql);
     }
