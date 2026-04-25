@@ -139,67 +139,96 @@ export const PageDashboard = {
             <!-- Enhanced Metric Blocks -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-x divide-slate-100 bg-slate-50/20 border-b border-slate-100">
                <!-- CPU -->
-               <div class="p-6">
-                  <div class="flex items-center justify-between mb-3">
-                     <div class="flex items-center gap-2">
-                        <i data-lucide="cpu" class="w-3.5 h-3.5 text-slate-400"></i>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CPU LOAD</span>
-                     </div>
-                     <div class="text-2xl font-black text-slate-800 tracking-tighter" id="cpu-usage">0%</div>
-                  </div>
-                  <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                     <div id="cpu-bar" class="h-full cf-bg-blue transition-all duration-500" style="width: 0%"></div>
-                  </div>
-               </div>
-               <!-- RAM -->
-               <div class="p-6">
-                  <div class="flex items-center justify-between mb-3">
-                     <div class="flex items-center gap-2">
-                        <i data-lucide="database" class="w-3.5 h-3.5 text-slate-400"></i>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">RAM USAGE</span>
-                     </div>
-                     <div class="text-2xl font-black text-slate-800 tracking-tighter" id="ram-usage">0 GB</div>
-                  </div>
-                  <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                     <div id="ram-bar" class="h-full bg-pink-500 transition-all duration-500" style="width: 0%"></div>
-                  </div>
-               </div>
-               <!-- Storage -->
-               <div class="p-6">
-                  <div class="flex items-center justify-between mb-3">
-                     <div class="flex items-center gap-2">
-                        <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-slate-400"></i>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">STORAGE</span>
-                     </div>
-                     <div class="text-2xl font-black text-slate-800 tracking-tighter" id="disk-percent">0%</div>
-                  </div>
-                  <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                     <div id="disk-bar" class="h-full bg-slate-400 transition-all duration-500" style="width: 0%"></div>
-                  </div>
-               </div>
-               <!-- Active Connections -->
-               <div class="p-6">
-                  <div class="flex items-center justify-between mb-3">
-                     <div class="flex items-center gap-2">
-                        <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-400"></i>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">LIVE TRAFFIC</span>
-                     </div>
-                     <div class="flex items-center gap-3">
-                        <button id="btn-traffic-hub" class="text-[9px] font-bold text-emerald-600 hover:underline uppercase tracking-tighter">View Hub ›</button>
-                        <div class="text-2xl font-black text-slate-800 tracking-tighter" id="net-conns">0</div>
-                     </div>
-                  </div>
-                  <div class="flex items-center gap-4 mt-2">
-                     <div class="flex items-center gap-1.5">
-                        <i data-lucide="arrow-down" class="w-2.5 h-2.5 text-blue-500"></i>
-                        <span class="text-[10px] font-bold text-slate-600" id="net-in">0 KB/s</span>
-                     </div>
-                     <div class="flex items-center gap-1.5">
-                        <i data-lucide="arrow-up" class="w-2.5 h-2.5 text-pink-500"></i>
-                        <span class="text-[10px] font-bold text-slate-600" id="net-out">0 KB/s</span>
-                     </div>
-                  </div>
-               </div>
+                <div class="p-6 group hover:bg-slate-50/50 transition-colors">
+                   <div class="flex items-center justify-between mb-4">
+                      <div class="flex items-center gap-2">
+                         <div class="p-1.5 bg-blue-50 rounded-lg">
+                            <i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-500"></i>
+                         </div>
+                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Processor</span>
+                      </div>
+                      <div class="text-2xl font-black text-slate-800 tracking-tighter" id="cpu-usage">0%</div>
+                   </div>
+                   <div class="space-y-3">
+                      <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                         <div id="cpu-bar" class="h-full cf-bg-blue transition-all duration-500" style="width: 0%"></div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                         <span class="text-[10px] text-slate-400 font-medium">Core Load Distribution</span>
+                         <span class="text-[10px] font-bold text-slate-600" id="sys-cores-val">? Cores</span>
+                      </div>
+                   </div>
+                </div>
+                <!-- RAM -->
+                <div class="p-6 group hover:bg-slate-50/50 transition-colors">
+                   <div class="flex items-center justify-between mb-4">
+                      <div class="flex items-center gap-2">
+                         <div class="p-1.5 bg-pink-50 rounded-lg">
+                            <i data-lucide="database" class="w-3.5 h-3.5 text-pink-500"></i>
+                         </div>
+                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memory</span>
+                      </div>
+                      <div class="text-2xl font-black text-slate-800 tracking-tighter" id="ram-usage">0 GB</div>
+                   </div>
+                   <div class="space-y-3">
+                      <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                         <div id="ram-bar" class="h-full bg-pink-500 transition-all duration-500" style="width: 0%"></div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                         <span class="text-[10px] text-slate-400 font-medium">Capacity: <span id="ram-total-val">0 GB</span></span>
+                         <span class="text-[10px] font-bold text-pink-600" id="ram-percent-val">0%</span>
+                      </div>
+                   </div>
+                </div>
+                <!-- Storage -->
+                <div class="p-6 group hover:bg-slate-50/50 transition-colors">
+                   <div class="flex items-center justify-between mb-4">
+                      <div class="flex items-center gap-2">
+                         <div class="p-1.5 bg-slate-100 rounded-lg">
+                            <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-slate-500"></i>
+                         </div>
+                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Storage</span>
+                      </div>
+                      <div class="text-2xl font-black text-slate-800 tracking-tighter" id="disk-percent">0%</div>
+                   </div>
+                   <div class="space-y-3">
+                      <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                         <div id="disk-bar" class="h-full bg-slate-400 transition-all duration-500" style="width: 0%"></div>
+                      </div>
+                      <div class="flex items-center justify-between text-[10px]">
+                         <span class="text-slate-400 font-medium">Usage: <span id="disk-used-val" class="text-slate-600 font-bold">0 GB</span></span>
+                         <span class="text-slate-400 font-medium">Free: <span id="disk-free-val" class="text-emerald-600 font-bold">0 GB</span></span>
+                      </div>
+                   </div>
+                </div>
+                <!-- Active Connections -->
+                <div class="p-6 group hover:bg-slate-50/50 transition-colors">
+                   <div class="flex items-center justify-between mb-4">
+                      <div class="flex items-center gap-2">
+                         <div class="p-1.5 bg-emerald-50 rounded-lg">
+                            <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-500"></i>
+                         </div>
+                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Networking</span>
+                      </div>
+                      <div class="text-2xl font-black text-slate-800 tracking-tighter" id="net-conns">0</div>
+                   </div>
+                   <div class="space-y-3">
+                      <div class="flex items-center gap-4">
+                         <div class="flex-1 flex items-center gap-2">
+                            <i data-lucide="arrow-down" class="w-2.5 h-2.5 text-blue-500"></i>
+                            <span class="text-[10px] font-bold text-slate-600 truncate" id="net-in">0 KB/s</span>
+                         </div>
+                         <div class="flex-1 flex items-center gap-2">
+                            <i data-lucide="arrow-up" class="w-2.5 h-2.5 text-pink-500"></i>
+                            <span class="text-[10px] font-bold text-slate-600 truncate" id="net-out">0 KB/s</span>
+                         </div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                         <span class="text-[9px] font-bold text-emerald-600 uppercase">Live Pulse Hub</span>
+                         <button id="btn-traffic-hub" class="text-[9px] font-bold text-indigo-600 hover:underline uppercase tracking-tighter">View Deep Analytics ›</button>
+                      </div>
+                   </div>
+                </div>
             </div>
                              <div class="grid grid-cols-1 lg:grid-cols-4 border-t border-slate-100">
                <!-- Main Visualization -->
@@ -237,8 +266,62 @@ export const PageDashboard = {
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Live Feed</span>
                      </div>
                   </div>
-                  <div class="cf-chart-container h-[360px] relative">
+                  <div class="cf-chart-container h-[420px] relative">
                      <canvas id="infra-chart"></canvas>
+                  </div>
+
+                  <!-- Service Sentinel Grid -->
+                  <div class="mt-12 grid grid-cols-3 gap-6">
+                     <div class="p-4 bg-slate-50/50 border border-slate-100 rounded-xl">
+                        <div class="flex items-center gap-3 mb-3">
+                           <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                              <i data-lucide="globe" class="w-4 h-4 text-indigo-500"></i>
+                           </div>
+                           <div>
+                              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Web Server</p>
+                              <p class="text-xs font-bold text-slate-700" id="sys-server-val">Detecting...</p>
+                           </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                           <span class="text-[10px] font-bold text-emerald-600">Active & Responding</span>
+                        </div>
+                     </div>
+
+                     <div class="p-4 bg-slate-50/50 border border-slate-100 rounded-xl">
+                        <div class="flex items-center gap-3 mb-3">
+                           <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                              <i data-lucide="database" class="w-4 h-4 text-amber-500"></i>
+                           </div>
+                           <div>
+                              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Database Engine</p>
+                              <p class="text-xs font-bold text-slate-700" id="sys-mysql-val">Detecting...</p>
+                           </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                           <div class="flex items-center gap-2">
+                              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                              <span class="text-[10px] font-bold text-emerald-600">Connected</span>
+                           </div>
+                           <span class="text-[10px] font-mono text-slate-400" id="db-conns-val">0 active</span>
+                        </div>
+                     </div>
+
+                     <div class="p-4 bg-slate-50/50 border border-slate-100 rounded-xl">
+                        <div class="flex items-center gap-3 mb-3">
+                           <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                              <i data-lucide="zap" class="w-4 h-4 text-emerald-500"></i>
+                           </div>
+                           <div>
+                              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">PHP Runtime</p>
+                              <p class="text-xs font-bold text-slate-700" id="sys-php-val">v${PageDashboard.phpVersion || '8.x'}</p>
+                           </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                           <span class="text-[10px] font-bold text-emerald-600" id="php-peak-val">0 MB Peak</span>
+                        </div>
+                     </div>
                   </div>
                </div>
 
@@ -324,29 +407,6 @@ export const PageDashboard = {
                              </div>
                           </div>
 
-                          <div class="pt-6 border-t border-slate-200/50">
-                            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Runtime Engine</h4>
-                            <div class="grid grid-cols-2 gap-4 mb-5">
-                             <div>
-                                <p class="text-xs font-bold text-slate-700" id="sys-php">-</p>
-                                <p class="text-[10px] text-slate-400 font-medium mt-0.5">PHP Ver.</p>
-                             </div>
-                             <div>
-                                <p class="text-xs font-bold text-slate-700 truncate" id="sys-mysql">-</p>
-                                <p class="text-[10px] text-slate-400 font-medium mt-0.5">MySQL</p>
-                             </div>
-                          </div>
-                          <div class="p-3 bg-white rounded-lg border border-slate-200/60 shadow-sm">
-                             <div class="flex items-center justify-between mb-1.5">
-                                <span class="text-[10px] font-bold text-slate-500">Memory Peak</span>
-                                <span class="text-[10px] font-black text-indigo-600" id="php-peak">-</span>
-                             </div>
-                             <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-                                <div class="bg-indigo-500 h-full" style="width: 40%"></div>
-                             </div>
-                             <p class="text-[9px] text-slate-400 mt-1.5 font-medium">Limit: <span id="php-limit">-</span></p>
-                          </div>
-                        </div>
 
                         <div class="pt-6 border-t border-slate-200/50">
                           <div class="flex items-center justify-between mb-4">
@@ -426,25 +486,27 @@ export const PageDashboard = {
         </div>
 
         <!-- ─── 4. Details Grid ─── -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
            <!-- Active Workspaces -->
            <div class="lg:col-span-2 flex flex-col gap-4">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between px-1">
                  <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">Active Workspaces</h3>
                  <a href="#projects" class="cf-blue text-xs font-bold hover:underline">Manage All Projects ›</a>
               </div>
-              <div id="projects-list" class="flex flex-col gap-0.5 border border-slate-100 rounded overflow-hidden">
-                 <!-- List Injection -->
+              <div class="cf-card p-0 overflow-hidden bg-white border-slate-200 shadow-sm">
+                 <div id="projects-list" class="flex flex-col">
+                    <!-- List Injection -->
+                 </div>
               </div>
            </div>
 
            <!-- Recent Activity -->
            <div class="flex flex-col gap-4">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between px-1">
                  <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">Recent Activity Log</h3>
                  <a href="#logs" class="cf-blue text-xs font-bold hover:underline">Full Log ›</a>
               </div>
-              <div class="cf-card p-0 overflow-hidden">
+              <div class="cf-card p-0 overflow-hidden bg-white border-slate-200 shadow-sm">
                  <div id="activity-list" class="flex flex-col divide-y divide-slate-100 max-h-[460px] overflow-y-auto">
                     <!-- Activity Injection -->
                  </div>
@@ -549,7 +611,10 @@ export const PageDashboard = {
       this.setElText('sys-mfg', sys.manufacturer);
       this.setElText('sys-model', sys.model);
       this.setElText('sys-php', sys.php);
+      this.setElText('sys-php-val', 'v' + sys.php);
       this.setElText('sys-mysql', sys.mysql);
+      this.setElText('sys-mysql-val', sys.mysql);
+      this.setElText('sys-server-val', sys.server);
     }
 
     // 1b. Heatmap
@@ -674,25 +739,30 @@ export const PageDashboard = {
   },
 
   updateMonitorCharts(data) {
-    if (!this.infraChart) return;
+    if (this.infraChart) {
+      const cpuArr = this.infraChart.data.datasets[0].data;
+      cpuArr.shift(); cpuArr.push(data.cpu);
 
-    const cpuArr = this.infraChart.data.datasets[0].data;
-    cpuArr.shift(); cpuArr.push(data.cpu);
+      const ramArr = this.infraChart.data.datasets[1].data;
+      ramArr.shift(); ramArr.push(data.ram.percent);
 
-    const ramArr = this.infraChart.data.datasets[1].data;
-    ramArr.shift(); ramArr.push(data.ram.percent);
-
-    this.infraChart.update();
+      this.infraChart.update();
+    }
 
     this.setElText('cpu-usage', data.cpu + '%');
     this.setElStyle('cpu-bar', 'width', data.cpu + '%');
+    this.setElText('sys-cores-val', (data.extended?.cpu_cores || data.cpu_cores || '?') + ' Cores');
 
     this.setElText('ram-usage', `${data.ram.used} GB`);
     this.setElStyle('ram-bar', 'width', data.ram.percent + '%');
+    this.setElText('ram-total-val', data.ram.total + ' GB');
+    this.setElText('ram-percent-val', data.ram.percent + '%');
 
     if (data.disk) {
       this.setElText('disk-percent', data.disk.percent + '%');
       this.setElStyle('disk-bar', 'width', data.disk.percent + '%');
+      this.setElText('disk-used-val', data.disk.used + ' GB');
+      this.setElText('disk-free-val', data.disk.free + ' GB');
     }
 
     if (data.uptime !== undefined) {
@@ -701,6 +771,7 @@ export const PageDashboard = {
 
     if (data.db_connections !== undefined) {
       this.setElText('db-conns', data.db_connections);
+      this.setElText('db-conns-val', data.db_connections + ' active');
     }
 
     if (data.db_uptime !== undefined) {
@@ -710,6 +781,7 @@ export const PageDashboard = {
     if (data.php) {
        this.setElText('php-limit', data.php.memory_limit);
        this.setElText('php-peak', data.php.memory_peak + ' MB');
+       this.setElText('php-peak-val', data.php.memory_peak + ' MB Peak');
     }
 
     // Advanced Metrics: Traffic & Connections

@@ -29,6 +29,7 @@ if (file_exists($cacheFile)) {
 
 $stats = [
     'cpu' => 0,
+    'cpu_cores' => 0,
     'ram' => ['total' => 0, 'free' => 0, 'used' => 0, 'percent' => 0],
     'disk' => ['total' => 0, 'free' => 0, 'used' => 0, 'percent' => 0],
     'network' => ['in_kb' => 0, 'out_kb' => 0],
@@ -40,6 +41,14 @@ $stats = [
 ];
 
 $isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+// Get CPU Cores once
+if ($isWin) {
+    $cores = @shell_exec('wmic cpu get NumberOfCores /value');
+    if (preg_match('/NumberOfCores=(\d+)/', (string)$cores, $m)) $stats['cpu_cores'] = (int)$m[1];
+} else {
+    $stats['cpu_cores'] = (int)shell_exec('nproc');
+}
 
 // 1. Get CPU Load (%)
 if ($isWin) {
@@ -213,14 +222,24 @@ $stats['php'] = [
 // 8. Error Sentinel (Watchdog) - Dynamic Path
 $logPath = ini_get('error_log');
 if (!$logPath || !file_exists($logPath)) {
-    // Common fallbacks
-    $fallbacks = [
+    // Laragon Detection
+    $laragonPath = null;
+    if (isset($_SERVER['DOCUMENT_ROOT'])) {
+        $root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+        if (preg_match('/^(.*\/laragon)\//i', $root, $m)) {
+            $laragonPath = $m[1] . '/tmp/php_errors.log';
+        }
+    }
+
+    $fallbacks = array_filter([
+        $laragonPath,
+        'C:/laragon/tmp/php_errors.log',
         'D:/laragon/tmp/php_errors.log',
         '/var/log/apache2/error.log',
         '/var/log/nginx/error.log',
-        '/var/log/php-fpm.log',
         __DIR__ . '/../logs/php_errors.log'
-    ];
+    ]);
+
     foreach ($fallbacks as $f) {
         if (file_exists($f)) {
             $logPath = $f;
