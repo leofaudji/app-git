@@ -269,10 +269,33 @@ export const PageDashboard = {
                                 </div>
                              </div>
                              <div class="flex items-start gap-3">
-                                <div class="mt-1"><i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i></div>
-                                <div class="overflow-hidden">
-                                   <p class="text-xs font-bold text-slate-700 leading-tight truncate w-32" id="sys-cpu" title="CPU">-</p>
-                                   <p class="text-[10px] text-slate-400 font-medium mt-0.5">Architecture</p>
+                                <div class="mt-1"><i data-lucide="cpu" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                                <div>
+                                   <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-cpu">-</p>
+                                   <p class="text-[10px] text-slate-400 font-medium mt-0.5">Processor Model</p>
+                                </div>
+                             </div>
+                             <div class="grid grid-cols-2 gap-4 pt-1">
+                                <div class="flex items-start gap-3">
+                                   <div class="mt-1"><i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                                   <div>
+                                      <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-cores">-</p>
+                                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">CPU Cores</p>
+                                   </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                   <div class="mt-1"><i data-lucide="database" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                                   <div>
+                                      <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-ram">-</p>
+                                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">Physical RAM</p>
+                                   </div>
+                                </div>
+                             </div>
+                             <div class="flex items-start gap-3">
+                                <div class="mt-1"><i data-lucide="hard-drive" class="w-3.5 h-3.5 text-slate-400"></i></div>
+                                <div>
+                                   <p class="text-xs font-bold text-slate-700 leading-tight" id="sys-disk">-</p>
+                                   <p class="text-[10px] text-slate-400 font-medium mt-0.5">Disk Capacity</p>
                                 </div>
                              </div>
                           </div>
@@ -492,8 +515,9 @@ export const PageDashboard = {
       const sys = dashRes.data.system;
       this.setElText('sys-os', sys.os);
       this.setElText('sys-cpu', sys.cpu);
-      const cpuEl = document.getElementById('sys-cpu');
-      if (cpuEl) cpuEl.title = sys.cpu;
+      this.setElText('sys-cores', sys.cpu_cores);
+      this.setElText('sys-ram', sys.ram_total);
+      this.setElText('sys-disk', sys.disk_total);
       this.setElText('sys-php', sys.php);
       this.setElText('sys-mysql', sys.mysql);
     }

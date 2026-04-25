@@ -64,16 +64,39 @@ $systemInfo = [
     'php'    => PHP_VERSION,
     'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
     'cpu'    => 'Unknown',
+    'cpu_cores' => 'Unknown',
+    'ram_total' => 'Unknown',
+    'disk_total' => 'Unknown',
     'mysql'  => 'Unknown'
 ];
 
-// Detect CPU
+// Detect CPU & Cores
 if ($isWin) {
-    $cpu = @shell_exec('wmic cpu get name /value');
+    $cpu = @shell_exec('wmic cpu get name,NumberOfCores /value');
     if (preg_match('/Name=(.*)/', (string)$cpu, $m)) $systemInfo['cpu'] = trim($m[1]);
+    if (preg_match('/NumberOfCores=(\d+)/', (string)$cpu, $m)) $systemInfo['cpu_cores'] = trim($m[1]);
+    
+    $ram = @shell_exec('wmic OS get TotalVisibleMemorySize /value');
+    if (preg_match('/TotalVisibleMemorySize=(\d+)/', (string)$ram, $m)) {
+        $systemInfo['ram_total'] = round((int)$m[1] / 1024 / 1024, 1) . ' GB';
+    }
 } else {
     $cpu = @shell_exec("grep 'model name' /proc/cpuinfo | head -1 | cut -d':' -f2");
     if ($cpu) $systemInfo['cpu'] = trim($cpu);
+    
+    $cores = @shell_exec("nproc");
+    if ($cores) $systemInfo['cpu_cores'] = trim($cores);
+
+    $mem = @file_get_contents('/proc/meminfo');
+    if ($mem && preg_match('/MemTotal:\s+(\d+)/', $mem, $m)) {
+        $systemInfo['ram_total'] = round((int)$m[1] / 1024 / 1024, 1) . ' GB';
+    }
+}
+
+// Detect Disk (Shared)
+$totalDisk = @disk_total_space(__DIR__);
+if ($totalDisk > 0) {
+    $systemInfo['disk_total'] = round($totalDisk / 1024 / 1024 / 1024, 1) . ' GB';
 }
 
 // Detect MySQL Version
