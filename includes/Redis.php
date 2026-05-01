@@ -114,13 +114,16 @@ class RedisManager {
         }
     }
 
-    public function getInfo($section = 'default') {
+    public function getInfo($section = '') {
         if ($this->isExtension) {
-            return $this->redis->info($section);
+            return $this->redis->info($section ?: null);
         }
 
         $raw = $this->executeRaw("INFO " . $section);
-        if (!$raw || is_array($raw)) return [];
+        if (!$raw || is_array($raw) || strpos($raw, 'Error:') === 0) {
+            if (strpos($raw, 'Error:') === 0) error_log("Redis INFO error: " . $raw);
+            return [];
+        }
 
         $info = [];
         $lines = explode("\r\n", $raw);

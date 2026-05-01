@@ -22,7 +22,6 @@ if (!$redis->isConnected()) {
 switch ($action) {
     case 'stats':
         $info = $redis->getInfo();
-        // Extract key metrics for easier consumption
         $stats = [
             'version' => $info['redis_version'] ?? 'Unknown',
             'uptime' => $info['uptime_in_seconds'] ?? 0,
@@ -31,11 +30,17 @@ switch ($action) {
             'clients' => $info['connected_clients'] ?? 0,
             'ops_per_sec' => $info['instantaneous_ops_per_sec'] ?? 0,
             'keys' => 0,
+            'debug' => [
+                'mode' => extension_loaded('redis') ? 'extension' : 'socket',
+                'connected' => $redis->isConnected(),
+                'info_received' => !empty($info)
+            ]
         ];
         
         // Count keys in current DB
-        if (isset($info["db" . REDIS_DB])) {
-            preg_match('/keys=(\d+)/', $info["db" . REDIS_DB], $matches);
+        $dbKey = "db" . REDIS_DB;
+        if (isset($info[$dbKey])) {
+            preg_match('/keys=(\d+)/', $info[$dbKey], $matches);
             $stats['keys'] = isset($matches[1]) ? (int)$matches[1] : 0;
         }
 
