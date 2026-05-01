@@ -86,27 +86,32 @@ switch ($action) {
         break;
 
     case 'delete':
-        $data = json_decode(file_get_contents('php://input'), true);
-        $key = $data['key'] ?? '';
-        if (!$key) jsonError('Key is required');
+        requireCsrf();
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $key = $input['key'] ?? '';
+        
+        if (!$key) jsonError('Parameter "key" tidak ditemukan dalam request', 400);
 
         if ($redis->del($key)) {
             jsonSuccess(null, "Key '$key' berhasil dihapus");
         } else {
-            jsonError("Gagal menghapus key '$key'");
+            jsonError("Gagal menghapus key '$key'. Kunci mungkin sudah tidak ada.", 404);
         }
         break;
 
     case 'execute':
-        $data = json_decode(file_get_contents('php://input'), true);
-        $command = $data['command'] ?? '';
-        if (!$command) jsonError('Command is required');
+        requireCsrf();
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $command = $input['command'] ?? '';
+        
+        if (!$command) jsonError('Parameter "command" tidak ditemukan dalam request', 400);
 
         $result = $redis->executeRaw($command);
         jsonSuccess($result);
         break;
 
     case 'flush':
+        requireCsrf();
         if ($redis->flushDB()) {
             jsonSuccess(null, "Database berhasil dikosongkan");
         } else {
