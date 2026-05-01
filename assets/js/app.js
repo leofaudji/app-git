@@ -16,6 +16,7 @@ import { PageChangelog } from "./pages/changelog.js";
 import { PageAuditLogs } from "./pages/audit_logs.js";
 import { PageBackup } from "./pages/backup.js";
 import { PageEnvManager } from "./pages/envmanager.js";
+import { PageRedis } from "./pages/redis.js";
 
 export const App = (() => {
   let currentUser = null;
@@ -35,6 +36,7 @@ export const App = (() => {
     changelog: 'sparkles',
     backup:    'database',
     env:       'shield-check',
+    redis:     'database',
   };
 
   // ─── Render sidebar menu from RBAC API ───
@@ -58,7 +60,7 @@ export const App = (() => {
     // Group items for a cleaner look
     const groups = [
       { label: 'Utama', items: res.data.filter(m => ['dashboard', 'projects'].includes(m.id)) },
-      { label: 'Monitoring', items: res.data.filter(m => m.id.includes('-logs') || m.id === 'logs') },
+      { label: 'Monitoring', items: res.data.filter(m => m.id.includes('-logs') || m.id === 'logs' || m.id === 'redis') },
       { label: 'Security & Config', items: res.data.filter(m => ['env-manager', 'backup'].includes(m.id)) },
       { label: 'Akses', items: res.data.filter(m => ['users', 'roles'].includes(m.id)) },
       { label: 'Sistem', items: res.data.filter(m => ['settings', 'changelog', 'profile'].includes(m.id)) }
@@ -183,6 +185,10 @@ export const App = (() => {
     Router.on('env-manager', async (hash, params) => {
       setPageTitle('Environment Manager');
       await PageEnvManager.render(params);
+    });
+    Router.on('redis', async (hash, params) => {
+      setPageTitle('Redis Dashboard');
+      await PageRedis.render(params);
     });
   }
 

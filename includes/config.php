@@ -63,6 +63,12 @@ define('DB_USER', env('DB_USER', 'root'));
 define('DB_PASS', env('DB_PASS', ''));
 define('DB_CHAR', 'utf8mb4');
 
+// ─── 4.1 Redis ───
+define('REDIS_HOST', env('REDIS_HOST', '127.0.0.1'));
+define('REDIS_PORT', env('REDIS_PORT', '6379'));
+define('REDIS_PASS', env('REDIS_PASS', null));
+define('REDIS_DB',   env('REDIS_DB', 0));
+
 // ─── 5. Security ───
 define('SESSION_NAME',      'gitdeploy_session');
 define('CSRF_TOKEN_LENGTH', 32);

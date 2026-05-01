@@ -46,6 +46,13 @@ $allMenus = [
         'route' => '#audit-logs',
         'perm' => ['module' => 'audit', 'action' => 'view'],
     ],
+    [
+        'id' => 'redis',
+        'label' => 'Redis Dashboard',
+        'icon' => 'redis',
+        'route' => '#redis',
+        'perm' => ['module' => 'settings', 'action' => 'view'],
+    ],
     // --- configuration & Security ---
     [
         'id' => 'env-manager',
