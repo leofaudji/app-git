@@ -57,7 +57,6 @@ class RedisManager {
 
     public function executeRaw($command) {
         if ($this->isExtension) {
-            // Simplified execution for extension
             $args = explode(' ', $command);
             $cmd = array_shift($args);
             try {
@@ -71,7 +70,48 @@ class RedisManager {
 
         fwrite($this->socket, $command . "\r\n");
         $response = fgets($this->socket);
-        return trim($response);
+        if (!$response) return null;
+
+        $type = $response[0];
+        $payload = substr($response, 1);
+
+        switch ($type) {
+            case '+': // Status reply
+            case ':': // Integer reply
+                return trim($payload);
+            case '-': // Error reply
+                return "Error: " . trim($payload);
+            case '$': // Bulk string
+                $len = (int)$payload;
+                if ($len === -1) return null;
+                $data = '';
+                $read = 0;
+                while ($read < $len) {
+                    $chunk = fread($this->socket, min($len - $read, 8192));
+                    if ($chunk === false) break;
+                    $data .= $chunk;
+                    $read += strlen($chunk);
+                }
+                fgets($this->socket); // Consume trailing \r\n
+                return $data;
+            case '*': // Multi-bulk
+                $count = (int)$payload;
+                if ($count === -1) return null;
+                $results = [];
+                for ($i = 0; $i < $count; $i++) {
+                    // This is recursive but simplified for single-level arrays like KEYS
+                    $line = fgets($this->socket);
+                    if ($line[0] === '$') {
+                        $l = (int)substr($line, 1);
+                        $d = fread($this->socket, $l);
+                        fgets($this->socket); // consume \r\n
+                        $results[] = $d;
+                    }
+                }
+                return $results;
+            default:
+                return trim($response);
+        }
     }
 
     public function getInfo($section = 'default') {
@@ -80,16 +120,26 @@ class RedisManager {
         }
 
         $raw = $this->executeRaw("INFO " . $section);
-        // Simple parsing for socket response (this is naive, usually INFO returns multi-bulk)
-        return $raw; 
+        if (!$raw || is_array($raw)) return [];
+
+        $info = [];
+        $lines = explode("\r\n", $raw);
+        foreach ($lines as $line) {
+            if (empty($line) || $line[0] === '#') continue;
+            $parts = explode(':', $line, 2);
+            if (count($parts) === 2) {
+                $info[$parts[0]] = $parts[1];
+            }
+        }
+        return $info;
     }
 
     public function getKeys($pattern = '*') {
         if ($this->isExtension) {
             return $this->redis->keys($pattern);
         }
-        // Minimal socket implementation for KEYS
-        return ["Socket fallback: limited functionality"];
+        $res = $this->executeRaw("KEYS " . $pattern);
+        return is_array($res) ? $res : [];
     }
 
     public function getType($key) {
