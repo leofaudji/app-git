@@ -179,17 +179,20 @@ class RedisManager {
             ];
             return $types[$this->redis->type($key)] ?? 'unknown';
         }
-        return 'unknown';
+        $type = $this->executeRaw("TYPE " . $key);
+        return $type ?: 'unknown';
     }
 
     public function getTTL($key) {
         if ($this->isExtension) return $this->redis->ttl($key);
-        return -1;
+        $ttl = $this->executeRaw("TTL " . $key);
+        return is_numeric($ttl) ? (int)$ttl : -1;
     }
 
     public function getValue($key) {
+        $type = $this->getType($key);
+        
         if ($this->isExtension) {
-            $type = $this->getType($key);
             switch ($type) {
                 case 'string': return $this->redis->get($key);
                 case 'hash':   return $this->redis->hGetAll($key);
@@ -199,7 +202,28 @@ class RedisManager {
                 default:       return null;
             }
         }
-        return null;
+
+        // Socket Implementation
+        switch ($type) {
+            case 'string':
+                return $this->executeRaw("GET " . $key);
+            case 'hash':
+                $raw = $this->executeRaw("HGETALL " . $key);
+                if (!is_array($raw)) return [];
+                $hash = [];
+                for ($i = 0; $i < count($raw); $i += 2) {
+                    if (isset($raw[$i+1])) $hash[$raw[$i]] = $raw[$i+1];
+                }
+                return $hash;
+            case 'list':
+                return $this->executeRaw("LRANGE $key 0 -1");
+            case 'set':
+                return $this->executeRaw("SMEMBERS " . $key);
+            case 'zset':
+                return $this->executeRaw("ZRANGE $key 0 -1 WITHSCORES");
+            default:
+                return null;
+        }
     }
 
     public function del($key) {
