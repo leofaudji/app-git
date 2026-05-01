@@ -24,12 +24,23 @@ class RedisManager {
         if (extension_loaded('redis')) {
             try {
                 $this->redis = new Redis();
-                $this->redis->connect(REDIS_HOST, REDIS_PORT);
-                if (REDIS_PASS) {
-                    $this->redis->auth(REDIS_PASS);
+                $connected = @$this->redis->connect(REDIS_HOST, REDIS_PORT, 2.0); // 2s timeout
+                
+                if ($connected) {
+                    if (REDIS_PASS) {
+                        if (!@$this->redis->auth(REDIS_PASS)) {
+                            error_log("Redis Auth failed");
+                            $connected = false;
+                        }
+                    }
                 }
-                $this->redis->select(REDIS_DB);
-                $this->isExtension = true;
+
+                if ($connected) {
+                    @$this->redis->select(REDIS_DB);
+                    $this->isExtension = true;
+                } else {
+                    $this->redis = null;
+                }
             } catch (Exception $e) {
                 $this->redis = null;
                 error_log("PHPRedis failed: " . $e->getMessage());
@@ -191,6 +202,13 @@ class RedisManager {
     }
 
     public function isConnected() {
-        return $this->isExtension ? ($this->redis !== null) : ($this->socket !== null);
+        if ($this->isExtension && $this->redis) {
+            try {
+                return $this->redis->ping() ? true : false;
+            } catch (Exception $e) {
+                return false;
+            }
+        }
+        return $this->socket !== null;
     }
 }
