@@ -55,15 +55,24 @@ class RedisManager {
     }
 
     private function connectSocket() {
-        $address = REDIS_HOST . ':' . REDIS_PORT;
-        $this->socket = @fsockopen(REDIS_HOST, REDIS_PORT, $errno, $errstr, 2);
+        $isUnix = REDIS_HOST[0] === '/';
+        $remote = $isUnix ? 'unix://' . REDIS_HOST : 'tcp://' . REDIS_HOST . ':' . REDIS_PORT;
+        
+        $this->socket = @stream_socket_client($remote, $errno, $errstr, 2);
+        
         if (!$this->socket) {
             error_log("Redis Socket connection failed: $errstr ($errno)");
             return;
         }
 
         if (REDIS_PASS) {
-            $this->executeRaw("AUTH " . REDIS_PASS);
+            $res = $this->executeRaw("AUTH " . REDIS_PASS);
+            if (strpos($res, 'Error:') === 0) {
+                error_log("Redis Socket Auth failed: " . $res);
+                fclose($this->socket);
+                $this->socket = null;
+                return;
+            }
         }
         $this->executeRaw("SELECT " . REDIS_DB);
     }
