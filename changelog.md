@@ -2,6 +2,28 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
+## [1.8.0] - 2026-05-01
+### Added
+- **Redis Pro Insight Dashboard**: Menambahkan halaman monitoring Redis yang modern dengan tampilan tab atas yang bersih, hero cards statistik real-time (Memory, Keys, Clients), grafik memory pulse, dan server throughput gauge.
+- **Key Browser**: Panel CRUD untuk memantau, mencari, dan menghapus kunci Redis berdasarkan pola (wildcard) secara langsung dari dashboard.
+- **Redis CLI Console**: Terminal interaktif di dalam browser untuk mengeksekusi perintah Redis mentah (PING, SET, GET, KEYS, dll.) secara langsung.
+- **API Caching dengan Redis**: Implementasi `RedisManager::remember()` pada `api/projects.php` — data project kini di-cache selama 5–10 menit untuk mempercepat respons API secara signifikan.
+- **Rate Limiting Global**: Pembatasan permintaan 60 req/menit per IP pada API project menggunakan Redis counter, mengembalikan HTTP 429 jika melampaui batas.
+- **Cache Invalidation Otomatis**: Cache API dihapus secara otomatis saat data project disimpan, diubah, atau dihapus agar data selalu akurat.
+- **Universal Redis Connection**: `RedisManager` mendukung ekstensi `php-redis` dengan fallback otomatis ke Unix Socket/TCP Socket — kompatibel di shared hosting (cPanel) maupun server sendiri.
+
+### Changed
+- **Desain Dashboard Redis**: Tampilan diubah dari dark mode menjadi light theme "Prism Light Pro" yang modern — menggunakan gradien vibrant, card interaktif, dan tipografi premium (font Outfit).
+- **Navigasi Dashboard**: Layout sidebar kiri diubah menjadi tab navigasi atas yang lebih bersih dan memberikan ruang konten lebih luas.
+- **Keamanan API Redis**: Endpoint POST (`delete`, `execute`, `flush`) kini dilindungi validasi CSRF (`requireCsrf()`) dan penanganan input yang lebih robust.
+
+### Fixed
+- **CSS Conflict**: Memperbaiki bentrok nama class `.nav-item` antara dashboard Redis dan sidebar utama aplikasi yang menyebabkan jarak menu menjadi renggang.
+- **Error 400 Delete Key**: Memperbaiki kegagalan penghapusan kunci Redis akibat pemanggilan fungsi CSRF yang salah (`verifyCSRF` → `requireCsrf`).
+- **Syntax Error JS**: Memperbaiki `Illegal return statement` pada `redis.js` akibat duplikasi blok `return { render }`.
+
+---
+
 ## [1.7.0] - 2026-04-16
 ### Added
 - **Backup Database Per Project**: Sekarang Anda bisa membackup database untuk setiap project secara terpisah. Aplikasi akan otomatis mendeteksi pengaturan database dari file project Anda.
