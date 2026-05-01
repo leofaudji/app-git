@@ -228,12 +228,51 @@ class RedisManager {
 
     public function del($key) {
         if ($this->isExtension) return $this->redis->del($key);
-        return false;
+        $res = $this->executeRaw("DEL " . $key);
+        return (int)$res > 0;
     }
 
     public function flushDB() {
         if ($this->isExtension) return $this->redis->flushDB();
-        return false;
+        $res = $this->executeRaw("FLUSHDB");
+        return $res === "OK" || strpos($res, "+OK") === 0;
+    }
+
+    public function set($key, $value, $ttl = null) {
+        $serialized = is_array($value) || is_object($value) ? json_encode($value) : $value;
+        if ($this->isExtension) {
+            return $ttl ? $this->redis->setex($key, $ttl, $serialized) : $this->redis->set($key, $serialized);
+        }
+        
+        $res = $this->executeRaw("SET " . $key . " \"" . addslashes($serialized) . "\"");
+        if ($ttl) $this->expire($key, $ttl);
+        return $res === "OK" || strpos($res, "+OK") === 0;
+    }
+
+    public function expire($key, $ttl) {
+        if ($this->isExtension) return $this->redis->expire($key, $ttl);
+        return $this->executeRaw("EXPIRE $key $ttl");
+    }
+
+    public function incr($key) {
+        if ($this->isExtension) return $this->redis->incr($key);
+        return (int)$this->executeRaw("INCR " . $key);
+    }
+
+    /**
+     * Cache Helper: Ambil data dari Redis, jika tidak ada jalankan callback dan simpan hasilnya.
+     */
+    public function remember($key, $ttl, $callback) {
+        $value = $this->getValue($key);
+        if ($value !== null) {
+            // Cek apakah data json
+            $decoded = json_decode($value, true);
+            return (json_last_error() == JSON_ERROR_NONE) ? $decoded : $value;
+        }
+
+        $freshData = $callback();
+        $this->set($key, $freshData, $ttl);
+        return $freshData;
     }
 
     public function isConnected() {

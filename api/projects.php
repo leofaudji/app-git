@@ -7,25 +7,51 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/AuditLog.php';
+require_once __DIR__ . '/../includes/Redis.php';
 
 header('Content-Type: application/json');
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'list';
 
+// ─── 1. Rate Limiting ───
+$redis = RedisManager::getInstance();
+if ($redis->isConnected()) {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateKey = "ratelimit:projects:$ip";
+    $count = $redis->incr($rateKey);
+    if ($count === 1) $redis->expire($rateKey, 60); // Window 60 detik
+    
+    if ($count > 60) { // Limit 60 req/min
+        jsonError('Terlalu banyak permintaan (Rate Limit). Silakan coba lagi nanti.', 429);
+    }
+}
+
 switch ($action) {
     case 'list':
         requirePermission('projects', 'view');
-        $projects = DB::fetchAll("SELECT p.*, 
-            (SELECT dl.status FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_status,
-            (SELECT dl.created_at FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_deploy
-            FROM projects p ORDER BY p.name ASC");
+        $projects = $redis->isConnected() 
+            ? $redis->remember('cache:projects:list', 300, function() {
+                return DB::fetchAll("SELECT p.*, 
+                    (SELECT dl.status FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_status,
+                    (SELECT dl.created_at FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_deploy
+                    FROM projects p ORDER BY p.name ASC");
+              })
+            : DB::fetchAll("SELECT p.*, 
+                (SELECT dl.status FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_status,
+                (SELECT dl.created_at FROM deploy_logs dl WHERE dl.project_id = p.id ORDER BY dl.created_at DESC LIMIT 1) as last_deploy
+                FROM projects p ORDER BY p.name ASC");
         jsonSuccess($projects);
         break;
 
     case 'detail':
         requirePermission('projects', 'view');
         $id = (int) ($_GET['id'] ?? 0);
-        $project = DB::fetchOne("SELECT * FROM projects WHERE id = ?", [$id]);
+        $project = $redis->isConnected()
+            ? $redis->remember("cache:projects:detail:$id", 600, function() use ($id) {
+                return DB::fetchOne("SELECT * FROM projects WHERE id = ?", [$id]);
+              })
+            : DB::fetchOne("SELECT * FROM projects WHERE id = ?", [$id]);
+
         if (!$project) jsonError('Project tidak ditemukan', 404);
         jsonSuccess($project);
         break;
@@ -54,6 +80,11 @@ switch ($action) {
                     "UPDATE projects SET name=?, repo_name=?, folder_name=?, branch=?, app_url=?, current_version=?, webhook_secret=?, description=?, is_active=? WHERE id=?",
                     [$name, $repo_name, $folder_name, $branch, $app_url, $current_version, $webhook_secret, $description, $is_active, $id]
                 );
+                // Clear Cache
+                if ($redis->isConnected()) {
+                    $redis->del('cache:projects:list');
+                    $redis->del("cache:projects:detail:$id");
+                }
                 AuditLog::record('projects', 'update', $id, "Updated project: $name");
                 jsonSuccess(['id' => $id], 'Project diperbarui');
             } else {
@@ -61,6 +92,7 @@ switch ($action) {
                     "INSERT INTO projects (name, repo_name, folder_name, branch, app_url, current_version, webhook_secret, description, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [$name, $repo_name, $folder_name, $branch, $app_url, $current_version, $webhook_secret, $description, $is_active]
                 );
+                if ($redis->isConnected()) $redis->del('cache:projects:list');
                 $newId = (int) DB::lastInsertId();
                 AuditLog::record('projects', 'create', $newId, "Created new project: $name");
                 jsonSuccess(['id' => $newId], 'Project ditambahkan');
@@ -80,6 +112,10 @@ switch ($action) {
         $project = DB::fetchOne("SELECT name FROM projects WHERE id = ?", [$id]);
         DB::execute("DELETE FROM projects WHERE id = ?", [$id]);
         if ($project) {
+            if ($redis->isConnected()) {
+                $redis->del('cache:projects:list');
+                $redis->del("cache:projects:detail:$id");
+            }
             AuditLog::record('projects', 'delete', $id, "Deleted project: " . $project['name']);
         }
         jsonSuccess(null, 'Project dihapus');
