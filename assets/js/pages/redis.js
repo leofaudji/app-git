@@ -32,46 +32,35 @@ export const PageRedis = (() => {
           </div>
         </header>
 
-        <div class="prism-content-layout">
-          <!-- Side Navigation -->
-          <aside class="prism-sidebar">
-            <nav class="prism-nav">
-              <button class="prism-nav-btn active" data-tab="overview">
-                <i data-lucide="pie-chart"></i>
-                <span>Overview</span>
-              </button>
-              <button class="prism-nav-btn" data-tab="browser">
-                <i data-lucide="layers"></i>
-                <span>Browser</span>
-              </button>
-              <button class="prism-nav-btn" data-tab="terminal">
-                <i data-lucide="terminal"></i>
-                <span>Console</span>
-              </button>
-              <div class="nav-spacer"></div>
-              <button class="prism-nav-btn text-danger" id="btn-flush-prism">
-                <i data-lucide="trash-2"></i>
-                <span>Flush DB</span>
-              </button>
-            </nav>
-
-            <div class="prism-info-card">
-               <div class="info-row">
-                  <span class="label">Redis v</span>
-                  <span class="value" id="stat-version">--</span>
-               </div>
-               <div class="info-row">
-                  <span class="label">Uptime</span>
-                  <span class="value" id="stat-uptime">--</span>
-               </div>
-            </div>
-          </aside>
-
-          <!-- Main Viewport -->
-          <main class="prism-viewport" id="prism-tab-content">
-            <!-- Content will be injected here -->
-          </main>
+        <!-- Top Tab Navigation -->
+        <div class="prism-top-nav">
+          <div class="prism-tabs">
+            <button class="prism-nav-btn active" data-tab="overview">
+              <i data-lucide="pie-chart"></i>
+              <span>Overview</span>
+            </button>
+            <button class="prism-nav-btn" data-tab="browser">
+              <i data-lucide="layers"></i>
+              <span>Browser</span>
+            </button>
+            <button class="prism-nav-btn" data-tab="terminal">
+              <i data-lucide="terminal"></i>
+              <span>Console</span>
+            </button>
+          </div>
+          <div class="prism-tab-meta">
+            <span class="meta-item">v <span id="stat-version" class="meta-val">--</span></span>
+            <span class="meta-item">Uptime: <span id="stat-uptime" class="meta-val">--</span></span>
+            <button class="prism-btn-danger-sm" id="btn-flush-prism">
+              <i data-lucide="trash-2"></i> Flush DB
+            </button>
+          </div>
         </div>
+
+        <!-- Main Viewport -->
+        <main class="prism-viewport" id="prism-tab-content">
+          <!-- Content will be injected here -->
+        </main>
       </div>
     `;
 
@@ -463,27 +452,32 @@ export const PageRedis = (() => {
       .status-pulse { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
       @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0); } }
 
-      .prism-content-layout { display: grid; grid-template-columns: 240px 1fr; gap: 2.5rem; height: 700px; }
-
-      .prism-sidebar { display: flex; flex-direction: column; gap: 2rem; }
-      .prism-nav { display: flex; flex-direction: column; gap: 0.5rem; }
+      .prism-top-nav {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem;
+      }
+      .prism-tabs { display: flex; gap: 0.5rem; }
       .prism-nav-btn {
-        padding: 12px 18px; border-radius: 14px; border: none; background: transparent;
-        display: flex; align-items: center; gap: 12px; color: #64748b; font-weight: 700;
-        cursor: pointer; transition: all 0.2s; font-size: 0.9rem;
+        padding: 10px 20px; border-radius: 12px; border: none; background: transparent;
+        display: flex; align-items: center; gap: 8px; color: #64748b; font-weight: 700;
+        cursor: pointer; transition: all 0.2s; font-size: 0.875rem;
       }
       .prism-nav-btn:hover { background: #f1f5f9; color: #1e293b; }
-      .prism-nav-btn.active { background: white; color: #6366f1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-      .prism-nav-btn.text-danger { color: #f43f5e; margin-top: auto; }
-      .nav-spacer { flex: 1; }
+      .prism-nav-btn.active { background: #ede9fe; color: #6366f1; }
+      .prism-nav-btn i { width: 16px; height: 16px; }
 
-      .prism-info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; padding: 1.25rem; }
-      .info-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
-      .info-row:last-child { margin-bottom: 0; }
-      .info-row .label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
-      .info-row .value { font-size: 11px; font-weight: 700; color: #475569; font-family: 'JetBrains Mono', monospace; }
+      .prism-tab-meta { display: flex; align-items: center; gap: 1rem; }
+      .meta-item { font-size: 11px; font-weight: 700; color: #94a3b8; }
+      .meta-val { font-family: 'JetBrains Mono', monospace; color: #475569; }
+      .prism-btn-danger-sm {
+        display: flex; align-items: center; gap: 6px;
+        padding: 8px 14px; border-radius: 10px; border: 1px solid #fecdd3;
+        background: #fff1f2; color: #e11d48; font-size: 12px; font-weight: 800; cursor: pointer;
+        transition: all 0.2s;
+      }
+      .prism-btn-danger-sm:hover { background: #e11d48; color: white; }
 
-      .prism-viewport { background: #fff; border: 1px solid #e2e8f0; border-radius: 28px; padding: 2rem; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.01); }
+      .prism-viewport { background: #fff; border: 1px solid #e2e8f0; border-radius: 28px; padding: 2rem; overflow: hidden; min-height: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.01); }
 
       .prism-hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
       .hero-card {
