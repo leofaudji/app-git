@@ -35,7 +35,8 @@ switch ($action) {
                 'host' => REDIS_HOST,
                 'connected' => $redis->isConnected(),
                 'info_received' => !empty($info),
-                'force_socket' => REDIS_FORCE_SOCKET
+                'force_socket' => REDIS_FORCE_SOCKET,
+                'raw_info_check' => $redis->executeRaw("INFO") // Test raw execution
             ]
         ];
         
