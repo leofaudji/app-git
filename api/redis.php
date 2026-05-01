@@ -31,9 +31,11 @@ switch ($action) {
             'ops_per_sec' => $info['instantaneous_ops_per_sec'] ?? 0,
             'keys' => 0,
             'debug' => [
-                'mode' => extension_loaded('redis') ? 'extension' : 'socket',
+                'mode' => extension_loaded('redis') && !REDIS_FORCE_SOCKET ? 'extension' : 'socket',
+                'host' => REDIS_HOST,
                 'connected' => $redis->isConnected(),
-                'info_received' => !empty($info)
+                'info_received' => !empty($info),
+                'force_socket' => REDIS_FORCE_SOCKET
             ]
         ];
         

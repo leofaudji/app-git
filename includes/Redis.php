@@ -21,7 +21,9 @@ class RedisManager {
     }
 
     private function connect() {
-        if (extension_loaded('redis')) {
+        $forceSocket = defined('REDIS_FORCE_SOCKET') && REDIS_FORCE_SOCKET;
+        
+        if (!$forceSocket && extension_loaded('redis')) {
             try {
                 $this->redis = new Redis();
                 $connected = @$this->redis->connect(REDIS_HOST, REDIS_PORT, 2.0); // 2s timeout
