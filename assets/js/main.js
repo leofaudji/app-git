@@ -16,6 +16,7 @@ import { PageChangelog } from "./pages/changelog.js";
 import { PageAuditLogs } from "./pages/audit_logs.js";
 import { PageBackup } from "./pages/backup.js";
 import { PageEnvManager } from "./pages/envmanager.js";
+import { PageCloud } from "./pages/cloud.js";
 
 // Expose some objects globally for convenience in inline handlers (like onclick)
 // or for debugging. Mobile sidebar helper needs Router.
@@ -38,6 +39,7 @@ window.PageChangelog = PageChangelog;
 window.PageAuditLogs = PageAuditLogs;
 window.PageBackup = PageBackup;
 window.PageEnvManager = PageEnvManager;
+window.PageCloud = PageCloud;
 
 // Helper global function for inline onclicks
 window.closeMobileSidebar = () => {
@@ -46,6 +48,15 @@ window.closeMobileSidebar = () => {
         document.getElementById('sidebar-overlay').style.display = 'none';
     }
 };
+
+window.copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+        Toast.success('Copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+};
+
 
 document.addEventListener('DOMContentLoaded', () => {
     App.init();

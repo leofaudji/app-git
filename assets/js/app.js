@@ -17,6 +17,7 @@ import { PageAuditLogs } from "./pages/audit_logs.js";
 import { PageBackup } from "./pages/backup.js";
 import { PageEnvManager } from "./pages/envmanager.js";
 import { PageRedis } from "./pages/redis.js";
+import { PageCloud } from "./pages/cloud.js";
 
 export const App = (() => {
   let currentUser = null;
@@ -24,19 +25,20 @@ export const App = (() => {
   // ─── Icons for menu ───
   const ICONS = {
     dashboard: 'layout-dashboard',
-    projects:  'folder',
+    projects:  'folder-git-2',
     git:       'git-branch',
-    logs:      'file-text',
-    webhook:   'rss',
-    audit:     'clipboard-list',
-    users:     'users',
-    roles:     'key',
-    settings:  'settings',
-    profile:   'user',
-    changelog: 'sparkles',
+    logs:      'terminal',
+    webhook:   'webhook',
+    audit:     'shield-alert',
+    users:     'users-2',
+    roles:     'fingerprint',
+    settings:  'sliders-horizontal',
+    profile:   'user-circle-2',
+    changelog: 'rocket',
     backup:    'database',
-    env:       'shield-check',
-    redis:     'database',
+    env:       'key-round',
+    redis:     'zap',
+    cloud:     'cloud-cog',
   };
 
   // ─── Render sidebar menu from RBAC API ───
@@ -57,13 +59,13 @@ export const App = (() => {
     }
     nav.innerHTML = '';
 
-    // Group items for a cleaner look
+    // Group items for a cleaner DevOps-style look
     const groups = [
-      { label: 'Utama', items: res.data.filter(m => ['dashboard', 'projects'].includes(m.id)) },
-      { label: 'Monitoring', items: res.data.filter(m => m.id.includes('-logs') || m.id === 'logs' || m.id === 'redis') },
-      { label: 'Security & Config', items: res.data.filter(m => ['env-manager', 'backup'].includes(m.id)) },
-      { label: 'Akses', items: res.data.filter(m => ['users', 'roles'].includes(m.id)) },
-      { label: 'Sistem', items: res.data.filter(m => ['settings', 'changelog', 'profile'].includes(m.id)) }
+      { label: 'Overview', items: res.data.filter(m => ['dashboard', 'projects'].includes(m.id)) },
+      { label: 'Infrastructure', items: res.data.filter(m => ['redis', 'backup', 'cloud-storage'].includes(m.id)) },
+      { label: 'Observability', items: res.data.filter(m => ['logs', 'webhook-logs', 'audit-logs'].includes(m.id)) },
+      { label: 'Identity & Security', items: res.data.filter(m => ['users', 'roles', 'env-manager'].includes(m.id)) },
+      { label: 'Settings', items: res.data.filter(m => ['settings', 'changelog', 'profile'].includes(m.id)) }
     ];
 
     const buildItem = (item) => {
@@ -189,6 +191,10 @@ export const App = (() => {
     Router.on('redis', async (hash, params) => {
       setPageTitle('Redis Dashboard');
       await PageRedis.render(params);
+    });
+    Router.on('cloud-storage', async (hash, params) => {
+      setPageTitle('Cloud Storage Explorer');
+      await PageCloud.render(params);
     });
   }
 

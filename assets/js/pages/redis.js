@@ -100,9 +100,14 @@ export const PageRedis = (() => {
     const res = await Api.get('redis?action=stats');
     if (res?.success) {
       const s = res.data;
-      document.getElementById('stat-version').textContent = s.version;
-      document.getElementById('stat-uptime').textContent = formatSeconds(s.uptime);
-      document.getElementById('stat-host').textContent = s.debug.host;
+      const elVersion = document.getElementById('stat-version');
+      if (elVersion) elVersion.textContent = s.version;
+
+      const elUptime = document.getElementById('stat-uptime');
+      if (elUptime) elUptime.textContent = formatSeconds(s.uptime);
+
+      const elHost = document.getElementById('stat-host');
+      if (elHost) elHost.textContent = s.debug.host;
       
       // Update UI elements if they exist
       const memVal = document.getElementById('hero-mem-val');
@@ -114,7 +119,7 @@ export const PageRedis = (() => {
       const opsVal = document.getElementById('hero-ops-val');
       if (opsVal) opsVal.textContent = s.ops_per_sec;
 
-      if (activeTab === 'overview' && statsChart) {
+      if (activeTab === 'overview' && statsChart && document.getElementById('prism-memory-chart')) {
         updateChart(parseFloat(s.memory_used));
       }
     }

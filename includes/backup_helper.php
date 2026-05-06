@@ -118,6 +118,50 @@ if (!function_exists('performProjectBackup')) {
     }
 }
 
+// ─── Helper: Perform R2 Retention (Auto-Cleanup) ──────────
+if (!function_exists('performR2Retention')) {
+    function performR2Retention($r2): int {
+        $retentionDays = (int)DB::getSetting('r2_retention_days', 30);
+        if ($retentionDays <= 0) return 0;
+
+        $files = $r2->listObjects();
+        $now = time();
+        $expirySeconds = $retentionDays * 86400;
+        $deletedCount = 0;
+
+        foreach ($files as $file) {
+            $lastMod = strtotime($file['last_modified']);
+            if (($now - $lastMod) > $expirySeconds) {
+                if ($r2->deleteObject($file['key'])) {
+                    $deletedCount++;
+                }
+            }
+        }
+        return $deletedCount;
+    }
+}
+
+// ─── Helper: Log Storage Stats ───────────────────────────
+if (!function_exists('logStorageStats')) {
+    function logStorageStats($r2): void {
+        $files = $r2->listObjects();
+        $totalBytes = 0;
+        foreach ($files as $file) {
+            $totalBytes += $file['size'];
+        }
+        
+        // Log to DB
+        DB::execute("INSERT INTO system_stats (stat_key, stat_value) VALUES ('r2_storage_bytes', ?)", [$totalBytes]);
+        
+        // Keep only last 30 snapshots in DB to avoid bloat
+        DB::execute("DELETE FROM system_stats WHERE stat_key = 'r2_storage_bytes' AND id NOT IN (
+            SELECT id FROM (
+                SELECT id FROM system_stats WHERE stat_key = 'r2_storage_bytes' ORDER BY created_at DESC LIMIT 30
+            ) as x
+        )");
+    }
+}
+
 // ─── Helper: Perform the entire Backup Chain (Projects + System + Email) ──
 if (!function_exists('performFullBackupChain')) {
     function performFullBackupChain(): array {
@@ -159,7 +203,32 @@ if (!function_exists('performFullBackupChain')) {
         // 3. Update Last Run
         DB::execute("UPDATE settings SET `value` = ? WHERE `key` = 'backup_last_run'", [$currentDate]);
 
-        // 4. Send Email Notification
+        // 4. Cloudflare R2 Upload & Retention
+        $retentionDeleted = 0;
+        if (DB::getSetting('r2_enable') === '1') {
+            require_once __DIR__ . '/R2Client.php';
+            $r2 = new R2Client(
+                DB::getSetting('r2_account_id'),
+                DB::getSetting('r2_access_key'),
+                DB::getSetting('r2_secret_key'),
+                DB::getSetting('r2_bucket_name')
+            );
+            
+            foreach ($results as $res) {
+                if (isset($res['filepath']) && file_exists($res['filepath'])) {
+                    $objectKey = 'backups/' . date('Y/m/') . $res['filename'];
+                    $r2->upload($res['filepath'], $objectKey);
+                }
+            }
+
+            // Perform Auto-Retention
+            $retentionDeleted = performR2Retention($r2);
+
+            // Log Stats for Chart
+            logStorageStats($r2);
+        }
+
+        // 5. Send Email Notification
         $notified = false;
         if (DB::getSetting('backup_notify_enable') === '1') {
             require_once __DIR__ . '/mailer.php';
@@ -201,40 +270,34 @@ if (!function_exists('performFullBackupChain')) {
                 $statusIcon = ($errorCount === 0) ? '✅' : '⚠️';
                 $subject = "$statusIcon Backup Report: " . date('Y-m-d H:i');
                 
-                // CID Embedding for maximum compatibility
                 $faviconPath = __DIR__ . '/../assets/favicon.png';
                 $mailer->addInlineImage($faviconPath, 'logo');
                 
-                // Modern HTML Email Template
                 $body = "
                 <div style='font-family: \"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; padding: 40px 20px; color: #1f2937;'>
                     <div style='max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-top: 6px solid " . ($errorCount === 0 ? '#f6821f' : '#dc2626') . ";'>
                         
-                        <!-- Header -->
                         <div style='padding: 30px; text-align: center; background: #f9fafb; border-bottom: 1px solid #e5e7eb;'>
                             <div style='display: block; margin-bottom: 15px;'>
                                 <img src='cid:logo' alt='Logo' style='width: 40px; height: 40px; vertical-align: middle;'>
-                                <span style='font-size: 22px; font-weight: 700; color: #111827; margin-left: 10px; vertical-align: middle;'>CRUDWorks GitDeploy</span>
+                                <span style='font-size: 22px; font-weight: 700; color: #111827; margin-left: 10px; vertical-align: middle;'>GitDeploy</span>
                             </div>
                             <div style='font-size: 14px; color: #6b7280; font-weight: 500;'>Database Backup Report</div>
                         </div>
 
-                        <!-- Status Bar -->
                         <div style='padding: 20px 30px; background: " . ($errorCount === 0 ? '#f0fdf4' : '#fef2f2') . "; border-bottom: 1px solid #e5e7eb; text-align: center;'>
                             <span style='display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; background: $statusColor; color: white;'>$statusLabel</span>
                             <div style='margin-top: 10px; font-size: 18px; font-weight: 700; color: #111827;'>
-                                " . ($errorCount === 0 ? "Semua Project Berhasil Dicadangkan" : "Backup Selesai dengan $errorCount Kendala") . "
+                                " . ($errorCount === 0 ? "Backup Berhasil Dicadangkan" : "Backup Selesai dengan $errorCount Kendala") . "
                             </div>
-                            " . ($isAttached ? "<div style='font-size: 11px; color: #16a34a; margin-top: 5px; font-weight: 600;'>📎 File backup telah dilampirkan dalam email ini.</div>" : "") . "
+                            " . ($retentionDeleted > 0 ? "<div style='font-size: 11px; color: #f59e0b; margin-top: 5px; font-weight: 600;'>🧹 Auto-Retention: $retentionDeleted file lama telah dibersihkan dari cloud.</div>" : "") . "
                         </div>
 
-                        <!-- Content -->
                         <div style='padding: 30px;'>
-                            <p style='font-size: 14px; color: #4b5563; margin-bottom: 25px;'>Halo Admin, proses pencadangan database rutin telah selesai dijalankan pada <strong>" . date('d F Y, H:i') . "</strong>. Berikut adalah rinciannya:</p>
+                            <p style='font-size: 14px; color: #4b5563; margin-bottom: 25px;'>Halo Admin, proses pencadangan database rutin telah selesai dijalankan pada <strong>" . date('d F Y, H:i') . "</strong>.</p>
                             
-                            <!-- Success List -->
                             <div style='margin-bottom: 30px;'>
-                                <h3 style='font-size: 12px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px; border-bottom: 1px solid #f3f4f6; padding-bottom: 5px;'>✅ Berhasil Dicadangkan ($successCount)</h3>
+                                <h3 style='font-size: 12px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px; border-bottom: 1px solid #f3f4f6; padding-bottom: 5px;'>✅ Detail Aset ($successCount)</h3>
                                 <table style='width: 100%; border-collapse: collapse;'>
                 ";
 
@@ -259,9 +322,8 @@ if (!function_exists('performFullBackupChain')) {
 
                 if ($errorCount > 0) {
                     $body .= "
-                            <!-- Error List -->
                             <div style='margin-bottom: 30px;'>
-                                <h3 style='font-size: 12px; font-weight: 800; color: #f87171; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px; border-bottom: 1px solid #fee2e2; padding-bottom: 5px;'>⚠️ Kendala Terdeteksi ($errorCount)</h3>
+                                <h3 style='font-size: 12px; font-weight: 800; color: #f87171; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px; border-bottom: 1px solid #fee2e2; padding-bottom: 5px;'>⚠️ Kendala ($errorCount)</h3>
                                 <div style='background: #fff1f2; border-radius: 8px; padding: 15px; border: 1px solid #fecaca;'>
                                     <ul style='margin: 0; padding-left: 20px; font-size: 13px; color: #991b1b; line-height: 1.6;'>
                     ";
@@ -277,32 +339,28 @@ if (!function_exists('performFullBackupChain')) {
 
                 $body .= "
                             <div style='text-align: center; margin-top: 40px;'>
-                                <a href='" . APP_URL . "/' style='display: inline-block; background: #f6821f; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700; font-size: 14px; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(246, 130, 31, 0.4);'>Lihat Manager Backup</a>
+                                <a href='" . APP_URL . "/' style='display: inline-block; background: #f6821f; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700; font-size: 14px; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(246, 130, 31, 0.4);'>Buka GitDeploy Manager</a>
                             </div>
                         </div>
 
-                        <!-- Footer -->
-                        <div style='padding: 25px 30px; background: #f9fafb; border-top: 1px solid #e5e7eb; text-align: center;'>
-                            <p style='font-size: 11px; color: #9ca3af; margin: 0;'>Pesan ini dikirim secara otomatis oleh sistem <strong>" . APP_NAME . "</strong>.</p>
-                            <p style='font-size: 10px; color: #d1d5db; margin-top: 5px;'>&copy; " . date('Y') . " CRUDWorks Platform • Host: " . $_SERVER['HTTP_HOST'] . "</p>
+                        <div style='padding: 20px; background: #f9fafb; text-align: center; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb;'>
+                            Ini adalah email otomatis dari GitDeploy. Harap tidak membalas email ini.
                         </div>
-                    </div>
-                    <div style='text-align: center; margin-top: 20px; font-size: 10px; color: #9ca3af;'>
-                        Gunakan App Password untuk keamanan SMTP maksimal.
                     </div>
                 </div>
                 ";
-                
-                $notified = $mailer->send($notifyEmail, $subject, $body);
+
+                $mailer->send($notifyEmail, $subject, $body);
+                $notified = true;
             }
         }
 
         return [
-            'success'   => true,
-            'results'   => $results,
-            'errors'    => $errors,
-            'notified'  => $notified,
-            'timestamp' => date('Y-m-d H:i:s')
+            'success' => count($errors) === 0,
+            'results' => $results,
+            'errors'  => $errors,
+            'notified' => $notified,
+            'retention_deleted' => $retentionDeleted
         ];
     }
 }

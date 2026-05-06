@@ -87,7 +87,7 @@ export const PageChangelog = {
                   ${cat.category}
                 </h4>
                 <ul class="changelog-list">
-                  ${cat.items.map(item => `<li>${this.parseMarkdown(item)}</li>`).join('')}
+                  ${Array.isArray(cat.items) ? cat.items.map(item => `<li>${this.parseMarkdown(item)}</li>`).join('') : ''}
                 </ul>
               </div>
             `).join('')}

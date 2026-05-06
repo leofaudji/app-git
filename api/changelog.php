@@ -65,7 +65,7 @@ elseif ($action === 'system') {
                 if ($items) {
                     $changes[] = [
                         'category' => $category,
-                        'items' => array_map(function($li) { return ltrim($li, '-* '); }, $items)
+                        'items' => array_values(array_map(function($li) { return ltrim($li, '-* '); }, $items))
                     ];
                 }
             }
@@ -77,7 +77,7 @@ elseif ($action === 'system') {
             if ($items) {
                 $changes[] = [
                     'category' => 'Changes',
-                    'items' => array_map(function($li) { return ltrim($li, '-* '); }, $items)
+                    'items' => array_values(array_map(function($li) { return ltrim($li, '-* '); }, $items))
                 ];
             }
         }

@@ -141,7 +141,7 @@ switch ($action) {
         // Format: Hash | Author | Subject | RelativeDate | UnixTimestamp
         $result = runGit("log --pretty=format:\"%h|%an|%s|%ar|%ct\" -n $limit", $path);
         $lines = array_filter(explode("\n", $result['output']));
-        $history = array_map(function($line) {
+        $history = array_values(array_map(function($line) {
             $p = explode('|', $line);
             return [
                 'hash' => $p[0] ?? '',
@@ -150,7 +150,7 @@ switch ($action) {
                 'date' => $p[3] ?? '',
                 'timestamp' => $p[4] ?? ''
             ];
-        }, $lines);
+        }, $lines));
 
         // Optional: Trigger sync on history view to ensure DB is up to date
         require_once __DIR__ . '/../includes/changelog_helper.php';

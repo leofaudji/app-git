@@ -2,6 +2,25 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
+## [1.9.0] - 2026-05-03
+### Added
+- **Integrasi Cloudflare R2 Storage**: Implementasi backup database otomatis ke Cloudflare R2 (S3-compatible) menggunakan `R2Client` custom yang ringan tanpa dependensi eksternal.
+- **Cloud Storage Explorer**: Menu mandiri baru untuk menelusuri, memantau ukuran, dan mengelola (hapus) file backup yang tersimpan di cloud secara langsung dari dashboard.
+- **Statistics Dashboard (Cloud)**: Panel ringkasan di halaman Cloud Storage yang menampilkan total file backup, kapasitas penyimpanan yang terpakai, dan waktu sinkronisasi terakhir.
+- **Enterprise Tabbed Settings**: Desain ulang modul Settings dengan antarmuka tab "Underline" yang minimalis, navigasi sticky berkaca (glassmorphism), dan hierarki input yang lebih profesional.
+- **Sticky Save Bar**: Implementasi bar penyimpanan statis di bagian bawah halaman Settings untuk akses simpan cepat yang selalu tersedia saat scroll.
+
+### Changed
+- **Modern DevOps Sidebar**: Reorganisasi total menu sidebar ke dalam kelompok fungsional (Overview, Infrastructure, Observability, Identity, Settings) dengan ikon Lucide yang lebih modern.
+- **UX Backup Flow**: Penambahan indikator loading (spinner) dan dialog konfirmasi pada proses "Full Redundancy Backup" untuk memberikan feedback real-time kepada pengguna.
+
+### Fixed
+- **Fatal Error R2Client**: Memperbaiki `Call to undefined method request()` dengan melakukan refactoring pada core R2Client menggunakan central request handler.
+- **Settings Metadata Persistence**: Memperbaiki masalah data yang tidak tersimpan (seperti jadwal cron dan secret key) akibat metadata yang belum terdaftar di backend API.
+- **Alignment UI**: Memperbaiki perataan (alignment) navigasi tab atas agar sejajar sempurna dengan konten utama dan konsisten di berbagai ukuran layar.
+
+---
+
 ## [1.8.0] - 2026-05-01
 ### Added
 - **Redis Pro Insight Dashboard**: Menambahkan halaman monitoring Redis yang modern dengan tampilan tab atas yang bersih, hero cards statistik real-time (Memory, Keys, Clients), grafik memory pulse, dan server throughput gauge.

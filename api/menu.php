@@ -68,6 +68,13 @@ $allMenus = [
         'route' => '#backup',
         'perm' => ['module' => 'settings', 'action' => 'edit'],
     ],
+    [
+        'id' => 'cloud-storage',
+        'label' => 'Cloud Backups',
+        'icon' => 'cloud',
+        'route' => '#cloud-storage',
+        'perm' => ['module' => 'settings', 'action' => 'view'],
+    ],
     // --- Access Control ---
     [
         'id' => 'users',
