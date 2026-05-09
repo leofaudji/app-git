@@ -2,6 +2,22 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
+## [2.0.0] - 2026-05-10
+### Added
+- **Hierarchical Collapsible Sidebar**: Implementasi sidebar yang dapat diciutkan (*collapsible*) dengan dukungan sub-menu (*accordion*). Otomatis terbuka secara default dan mendukung state persistensi.
+- **Live Deployment Terminal**: Widget terminal real-time pada dashboard yang menampilkan *stream* log deployment dengan *syntax highlighting* dinamis dan *auto-scroll*.
+- **Quick Project Switcher**: Dropdown pencarian proyek di topbar untuk berpindah antar *workspace* secara instan tanpa kembali ke dashboard.
+- **System Health Status Sentinel**: Widget pemantauan status real-time untuk Database, Redis, Cloud R2, dan Git Provider pada dashboard.
+
+### Changed
+- **Optimized Workspace Density**: Penyesuaian margin dan padding pada navigasi sidebar untuk tampilan yang lebih padat, profesional, dan efisien secara vertikal.
+- **Submenu Visual Hierarchy**: Penambahan garis panduan vertikal dan indikator horizontal dinamis pada sub-menu untuk memperjelas struktur navigasi.
+
+### Fixed
+- **Sidebar Mobile UX**: Penyesuaian perilaku sidebar pada layar sentuh untuk memastikan kompatibilitas penuh dengan fitur *collapsible* baru.
+
+---
+
 ## [1.9.0] - 2026-05-03
 ### Added
 - **Integrasi Cloudflare R2 Storage**: Implementasi backup database otomatis ke Cloudflare R2 (S3-compatible) menggunakan `R2Client` custom yang ringan tanpa dependensi eksternal.
