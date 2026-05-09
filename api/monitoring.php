@@ -201,16 +201,62 @@ if ($isWin) {
 $stats['uptime'] = $uptimeSeconds;
 
 // 6. Get DB Connections & Uptime
+$stats['services'] = [
+    'database' => ['status' => 'down', 'label' => 'MySQL'],
+    'redis'    => ['status' => 'down', 'label' => 'Redis'],
+    'cloud'    => ['status' => 'down', 'label' => 'Cloudflare R2'],
+    'git'      => ['status' => 'down', 'label' => 'Git Provider']
+];
+
 try {
     $connStatus = DB::fetchOne("SHOW STATUS LIKE 'Threads_connected'");
     $stats['db_connections'] = (int)($connStatus['Value'] ?? 0);
     
     $dbUptime = DB::fetchOne("SHOW STATUS LIKE 'Uptime'");
     $stats['db_uptime'] = (int)($dbUptime['Value'] ?? 0);
+    
+    $stats['services']['database']['status'] = 'up';
 } catch (Exception $e) {
     $stats['db_connections'] = 0;
     $stats['db_uptime'] = 0;
 }
+
+// 6.1 Redis Health
+try {
+    require_once __DIR__ . '/../includes/Redis.php';
+    if (RedisManager::getInstance()->isConnected()) {
+        $stats['services']['redis']['status'] = 'up';
+    }
+} catch (Exception $e) {}
+
+// 6.2 Cloudflare R2 Health
+try {
+    require_once __DIR__ . '/../includes/R2Client.php';
+    $r2_id  = DB::getSetting('r2_account_id');
+    $r2_key = DB::getSetting('r2_access_key');
+    $r2_sec = DB::getSetting('r2_secret_key');
+    $r2_buc = DB::getSetting('r2_bucket');
+
+    if ($r2_id && $r2_key && $r2_sec && $r2_buc) {
+        $r2 = new R2Client($r2_id, $r2_key, $r2_sec, $r2_buc);
+        if ($r2->testConnection()) {
+            $stats['services']['cloud']['status'] = 'up';
+        }
+    }
+} catch (Exception $e) {}
+
+// 6.3 Git API Health (GitHub/GitLab Ping)
+try {
+    $ch = curl_init('https://api.github.com');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'GitDeploy HealthBot/1.0');
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+    curl_exec($ch);
+    if (curl_getinfo($ch, CURLINFO_HTTP_CODE) > 0) {
+        $stats['services']['git']['status'] = 'up';
+    }
+    curl_close($ch);
+} catch (Exception $e) {}
 
 // 7. Get PHP Runtime Health
 $stats['php'] = [

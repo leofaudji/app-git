@@ -26,91 +26,123 @@ $allMenus = [
     ],
     // --- Monitoring Group ---
     [
-        'id' => 'logs',
-        'label' => 'Deploy Logs',
-        'icon' => null,
-        'route' => '#logs',
+        'id' => 'monitoring',
+        'label' => 'Observability',
+        'icon' => 'audit',
         'perm' => ['module' => 'logs', 'action' => 'view'],
+        'children' => [
+            [
+                'id' => 'logs',
+                'label' => 'Deploy Logs',
+                'icon' => 'logs',
+                'route' => '#logs',
+                'perm' => ['module' => 'logs', 'action' => 'view'],
+            ],
+            [
+                'id' => 'webhook-logs',
+                'label' => 'Webhook Logs',
+                'icon' => 'webhook',
+                'route' => '#webhook-logs',
+                'perm' => ['module' => 'webhook_logs', 'action' => 'view'],
+            ],
+            [
+                'id' => 'audit-logs',
+                'label' => 'Audit Logs',
+                'icon' => 'audit',
+                'route' => '#audit-logs',
+                'perm' => ['module' => 'audit', 'action' => 'view'],
+            ],
+        ]
     ],
+    // --- Infrastructure Group ---
     [
-        'id' => 'webhook-logs',
-        'label' => 'Webhook Logs',
-        'icon' => null,
-        'route' => '#webhook-logs',
-        'perm' => ['module' => 'webhook_logs', 'action' => 'view'],
-    ],
-    [
-        'id' => 'audit-logs',
-        'label' => 'Audit Logs',
-        'icon' => null,
-        'route' => '#audit-logs',
-        'perm' => ['module' => 'audit', 'action' => 'view'],
-    ],
-    [
-        'id' => 'redis',
-        'label' => 'Redis Dashboard',
+        'id' => 'infrastructure',
+        'label' => 'Infrastructure',
         'icon' => 'redis',
-        'route' => '#redis',
         'perm' => ['module' => 'settings', 'action' => 'view'],
-    ],
-    // --- configuration & Security ---
-    [
-        'id' => 'env-manager',
-        'label' => 'Env Manager',
-        'icon' => 'env',
-        'route' => '#env-manager',
-        'perm' => ['module' => 'settings', 'action' => 'edit'],
-    ],
-    [
-        'id' => 'backup',
-        'label' => 'Database Backup',
-        'icon' => 'backup',
-        'route' => '#backup',
-        'perm' => ['module' => 'settings', 'action' => 'edit'],
-    ],
-    [
-        'id' => 'cloud-storage',
-        'label' => 'Cloud Backups',
-        'icon' => 'cloud',
-        'route' => '#cloud-storage',
-        'perm' => ['module' => 'settings', 'action' => 'view'],
+        'children' => [
+            [
+                'id' => 'redis',
+                'label' => 'Redis Dashboard',
+                'icon' => 'redis',
+                'route' => '#redis',
+                'perm' => ['module' => 'settings', 'action' => 'view'],
+            ],
+            [
+                'id' => 'env-manager',
+                'label' => 'Env Manager',
+                'icon' => 'env',
+                'route' => '#env-manager',
+                'perm' => ['module' => 'settings', 'action' => 'edit'],
+            ],
+            [
+                'id' => 'backup',
+                'label' => 'Database Backup',
+                'icon' => 'backup',
+                'route' => '#backup',
+                'perm' => ['module' => 'settings', 'action' => 'edit'],
+            ],
+            [
+                'id' => 'cloud-storage',
+                'label' => 'Cloud Backups',
+                'icon' => 'cloud',
+                'route' => '#cloud-storage',
+                'perm' => ['module' => 'settings', 'action' => 'view'],
+            ],
+        ]
     ],
     // --- Access Control ---
     [
-        'id' => 'users',
-        'label' => 'Users',
-        'icon' => null,
-        'route' => '#users',
+        'id' => 'identity',
+        'label' => 'Identity & Access',
+        'icon' => 'users',
         'perm' => ['module' => 'users', 'action' => 'view'],
-    ],
-    [
-        'id' => 'roles',
-        'label' => 'Roles & Permissions',
-        'icon' => null,
-        'route' => '#roles',
-        'perm' => ['module' => 'roles', 'action' => 'view'],
+        'children' => [
+            [
+                'id' => 'users',
+                'label' => 'Users',
+                'icon' => 'users',
+                'route' => '#users',
+                'perm' => ['module' => 'users', 'action' => 'view'],
+            ],
+            [
+                'id' => 'roles',
+                'label' => 'Roles & Permissions',
+                'icon' => 'roles',
+                'route' => '#roles',
+                'perm' => ['module' => 'roles', 'action' => 'view'],
+            ],
+        ]
     ],
     // --- Bottom/Settings ---
     [
-        'id' => 'settings',
-        'label' => 'Settings',
+        'id' => 'settings_group',
+        'label' => 'System Settings',
         'icon' => 'settings',
-        'route' => '#settings',
-        'perm' => ['module' => 'settings', 'action' => 'view'],
-    ],
-    [
-        'id' => 'changelog',
-        'label' => 'System Updates',
-        'icon' => null,
-        'route' => '#changelog',
         'perm' => null,
-    ],
-    [
-        'id' => 'profile',
-        'label' => 'My Profile',
-        'icon' => 'profile',
-        'route' => '#profile',
-        'perm' => null,
+        'children' => [
+            [
+                'id' => 'settings',
+                'label' => 'Global Settings',
+                'icon' => 'settings',
+                'route' => '#settings',
+                'perm' => ['module' => 'settings', 'action' => 'view'],
+            ],
+            [
+                'id' => 'changelog',
+                'label' => 'System Updates',
+                'icon' => 'changelog',
+                'route' => '#changelog',
+                'perm' => null,
+            ],
+            [
+                'id' => 'profile',
+                'label' => 'My Profile',
+                'icon' => 'profile',
+                'route' => '#profile',
+                'perm' => null,
+            ],
+        ]
     ],
 ];
 

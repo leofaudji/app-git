@@ -168,10 +168,13 @@ try {
   <aside id="sidebar">
     <div id="sidebar-logo">
       <div class="logo-icon"><i data-lucide="rocket" style="width:16px;height:16px;color:white;"></i></div>
-      <div>
+      <div class="logo-details">
         <div class="logo-text" id="sidebar-app-name"><?= htmlspecialchars($appName) ?></div>
         <div class="logo-version" id="sidebar-version">v<?= APP_VERSION ?></div>
       </div>
+      <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" title="Collapse Sidebar">
+        <i data-lucide="chevron-left"></i>
+      </button>
     </div>
 
     <nav id="sidebar-nav">
@@ -196,6 +199,25 @@ try {
     <header id="topbar">
       <button id="sidebar-toggle"><i data-lucide="menu"></i></button>
       <div class="page-title" id="page-title">Dashboard</div>
+      
+      <!-- Quick Project Switcher (NEW) -->
+      <div id="topbar-project-switcher" class="project-switcher">
+        <button id="switcher-btn" class="switcher-btn">
+          <i data-lucide="layers" style="width:14px;height:14px;"></i>
+          <span id="switcher-current">Select Project</span>
+          <i data-lucide="chevron-down" style="width:12px;height:12px;opacity:0.5;"></i>
+        </button>
+        <div id="switcher-dropdown" class="switcher-dropdown">
+          <div class="switcher-search">
+            <i data-lucide="search"></i>
+            <input type="text" id="switcher-input" placeholder="Search projects...">
+          </div>
+          <div id="switcher-list" class="switcher-list">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
       <span class="badge-online">● Online</span>
       <div style="font-size:13px;color:var(--text-muted);" id="topbar-user">—</div>
     </header>

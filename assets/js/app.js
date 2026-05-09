@@ -59,54 +59,66 @@ export const App = (() => {
     }
     nav.innerHTML = '';
 
-    // Group items for a cleaner DevOps-style look
-    const groups = [
-      { label: 'Overview', items: res.data.filter(m => ['dashboard', 'projects'].includes(m.id)) },
-      { label: 'Infrastructure', items: res.data.filter(m => ['redis', 'backup', 'cloud-storage'].includes(m.id)) },
-      { label: 'Observability', items: res.data.filter(m => ['logs', 'webhook-logs', 'audit-logs'].includes(m.id)) },
-      { label: 'Identity & Security', items: res.data.filter(m => ['users', 'roles', 'env-manager'].includes(m.id)) },
-      { label: 'Settings', items: res.data.filter(m => ['settings', 'changelog', 'profile'].includes(m.id)) }
-    ];
-
-    const buildItem = (item) => {
+    const buildItem = (item, isSub = false) => {
       const el = document.createElement('div');
-      el.className = 'nav-item';
+      const hasChildren = item.children && item.children.length > 0;
+      el.className = isSub ? 'nav-sub-item' : 'nav-item';
+      if (hasChildren) el.classList.add('has-children');
       
       // Highlight active route
-      if (window.location.hash === item.route || (window.location.hash === '' && item.id === 'dashboard')) {
+      if (item.route && (window.location.hash === item.route || (window.location.hash === '' && item.id === 'dashboard'))) {
         el.classList.add('active');
       }
 
-      el.dataset.route = item.route;
+      el.dataset.id = item.id;
+      if (item.route) el.dataset.route = item.route;
+
+      const iconHtml = item.icon ? `<span class="nav-icon"><i data-lucide="${ICONS[item.icon] ?? 'circle'}"></i></span>` : '<span class="nav-icon-spacer"></span>';
+      const chevronHtml = hasChildren ? '<i data-lucide="chevron-right" class="nav-chevron"></i>' : '';
+
       el.innerHTML = `
         <div class="nav-item-inner">
-          ${item.icon ? `<span class="nav-icon"><i data-lucide="${ICONS[item.icon] ?? 'circle'}"></i></span>` : '<span class="nav-icon-spacer"></span>'}
+          ${isSub ? '' : iconHtml}
           <span>${item.label}</span>
+          ${chevronHtml}
         </div>`;
-      el.addEventListener('click', () => {
-        Router.navigate(item.route.replace('#', ''));
-        // Close sidebar on mobile
-        if (window.innerWidth < 1024) document.getElementById('sidebar').classList.remove('open');
-      });
-      return el;
+
+      if (hasChildren) {
+        const submenu = document.createElement('div');
+        submenu.className = 'nav-submenu';
+        item.children.forEach(child => {
+          submenu.appendChild(buildItem(child, true));
+        });
+        
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          el.classList.toggle('expanded');
+          submenu.classList.toggle('open');
+        });
+        
+        // Always expand by default as requested
+        el.classList.add('expanded');
+        submenu.classList.add('open');
+
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(el);
+        fragment.appendChild(submenu);
+        return fragment;
+      } else {
+        el.addEventListener('click', (e) => {
+          if (item.route) {
+            e.stopPropagation();
+            Router.navigate(item.route.replace('#', ''));
+            // Close sidebar on mobile
+            if (window.innerWidth < 1024) document.getElementById('sidebar').classList.remove('open');
+          }
+        });
+        return el;
+      }
     };
 
-    groups.forEach(group => {
-      if (group.items.length === 0) return;
-      
-      const groupWrapper = document.createElement('div');
-      groupWrapper.className = 'nav-group';
-      
-      const label = document.createElement('div');
-      label.className = 'nav-section-label';
-      label.textContent = group.label;
-      groupWrapper.appendChild(label);
-      
-      group.items.forEach(item => {
-        groupWrapper.appendChild(buildItem(item));
-      });
-      
-      nav.appendChild(groupWrapper);
+    res.data.forEach(item => {
+      nav.appendChild(buildItem(item));
     });
 
     // Initialize icons
@@ -363,6 +375,24 @@ export const App = (() => {
       overlay.style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
     });
 
+    // Sidebar Desktop Collapse
+    const collapseBtn = document.getElementById('sidebar-collapse-btn');
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', () => {
+        document.body.classList.toggle('sidebar-collapsed');
+        const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+        localStorage.setItem('sidebar-collapsed', isCollapsed ? '1' : '0');
+      });
+    }
+
+    // Load sidebar state
+    if (localStorage.getItem('sidebar-collapsed') === '1') {
+      document.body.classList.add('sidebar-collapsed');
+    }
+
+    // Quick Project Switcher
+    this.initProjectSwitcher();
+
     // PWA install
     initPWA();
 
@@ -380,7 +410,92 @@ export const App = (() => {
     // (login page is already visible by default)
   }
 
-  return { init, logout, setPageTitle, updateAppVersion };
+  async function initProjectSwitcher() {
+    const btn = document.getElementById('switcher-btn');
+    const dropdown = document.getElementById('switcher-dropdown');
+    const input = document.getElementById('switcher-input');
+    const list = document.getElementById('switcher-list');
+    const currentText = document.getElementById('switcher-current');
+
+    if (!btn || !dropdown) return;
+
+    let allProjects = [];
+
+    const fetchAndRender = async () => {
+      try {
+        const res = await Api.get('dashboard');
+        if (res.success) {
+          allProjects = res.data.projects;
+          renderList(allProjects);
+        }
+      } catch (e) {
+        console.error('Failed to fetch projects for switcher', e);
+      }
+    };
+
+    const renderList = (projects) => {
+      list.innerHTML = projects.map(p => `
+        <div class="switcher-item" data-id="${p.id}" data-route="#git?project_id=${p.id}">
+          <div class="item-icon">${p.name.charAt(0).toUpperCase()}</div>
+          <div class="item-info">
+            <div class="item-name">${p.name}</div>
+            <div class="item-meta">${p.branch || 'main'} • ${p.last_status || 'inactive'}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Add click events
+      list.querySelectorAll('.switcher-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const route = item.dataset.route;
+          currentText.textContent = item.querySelector('.item-name').textContent;
+          dropdown.classList.remove('open');
+          
+          // Use Router if available or window.location.hash
+          if (window.Router) Router.navigate(route.replace('#', ''));
+          else window.location.hash = route;
+        });
+      });
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+      if (dropdown.classList.contains('open')) {
+        fetchAndRender();
+        setTimeout(() => input.focus(), 100);
+      }
+    });
+
+    input.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = allProjects.filter(p => p.name.toLowerCase().includes(q));
+      renderList(filtered);
+    });
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target) && e.target !== btn) {
+        dropdown.classList.remove('open');
+      }
+    });
+
+    // Update current project name on route change
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash;
+      if (hash.includes('project_id=')) {
+        const id = hash.split('project_id=')[1];
+        if (allProjects.length > 0) {
+           const p = allProjects.find(x => x.id == id);
+           if (p) currentText.textContent = p.name;
+        }
+      } else {
+        currentText.textContent = 'Select Project';
+      }
+    });
+  }
+
+  return { init, logout, setPageTitle, updateAppVersion, initProjectSwitcher };
 })();
 
 // ─── Mobile sidebar close helper ───

@@ -78,6 +78,15 @@ switch ($action) {
         if (!$log) jsonError('Log tidak ditemukan', 404);
         jsonSuccess($log);
 
+    case 'latest_output':
+        $log = DB::fetchOne(
+            "SELECT dl.id, dl.output, dl.status, p.name as project_name, dl.created_at
+             FROM deploy_logs dl
+             LEFT JOIN projects p ON p.id = dl.project_id
+             ORDER BY dl.created_at DESC LIMIT 1"
+        );
+        jsonSuccess($log);
+
     case 'delete':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
         requirePermission('logs', 'delete');

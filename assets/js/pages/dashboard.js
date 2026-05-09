@@ -114,6 +114,62 @@ export const PageDashboard = {
            </div>
         </div>
 
+        <!-- ─── 2.5 System Health Sentinel (NEW) ─── -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+           <!-- Database -->
+           <div class="cf-card p-4 flex items-center gap-4 group hover:border-indigo-200 transition-all cursor-default" id="health-card-database">
+              <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all shadow-sm border border-slate-100 service-status-icon">
+                 <i data-lucide="database" class="w-5 h-5"></i>
+              </div>
+              <div>
+                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Database</p>
+                 <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-slate-300 service-dot" id="dot-database"></span>
+                    <span class="text-xs font-bold text-slate-600 service-label" id="label-database">Checking...</span>
+                 </div>
+              </div>
+           </div>
+           <!-- Redis -->
+           <div class="cf-card p-4 flex items-center gap-4 group hover:border-rose-200 transition-all cursor-default" id="health-card-redis">
+              <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-600 transition-all shadow-sm border border-slate-100 service-status-icon">
+                 <i data-lucide="zap" class="w-5 h-5"></i>
+              </div>
+              <div>
+                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Redis Cache</p>
+                 <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-slate-300 service-dot" id="dot-redis"></span>
+                    <span class="text-xs font-bold text-slate-600 service-label" id="label-redis">Checking...</span>
+                 </div>
+              </div>
+           </div>
+           <!-- Cloud Storage -->
+           <div class="cf-card p-4 flex items-center gap-4 group hover:border-orange-200 transition-all cursor-default" id="health-card-cloud">
+              <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-600 transition-all shadow-sm border border-slate-100 service-status-icon">
+                 <i data-lucide="cloud" class="w-5 h-5"></i>
+              </div>
+              <div>
+                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Cloud R2</p>
+                 <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-slate-300 service-dot" id="dot-cloud"></span>
+                    <span class="text-xs font-bold text-slate-600 service-label" id="label-cloud">Checking...</span>
+                 </div>
+              </div>
+           </div>
+           <!-- Git Provider -->
+           <div class="cf-card p-4 flex items-center gap-4 group hover:border-emerald-200 transition-all cursor-default" id="health-card-git">
+              <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all shadow-sm border border-slate-100 service-status-icon">
+                 <i data-lucide="github" class="w-5 h-5"></i>
+              </div>
+              <div>
+                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Git Provider</p>
+                 <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-slate-300 service-dot" id="dot-git"></span>
+                    <span class="text-xs font-bold text-slate-600 service-label" id="label-git">Checking...</span>
+                 </div>
+              </div>
+           </div>
+        </div>
+
         <!-- ─── 3. Main Monitoring Center (Super Tidy Redesign) ─── -->
         <div class="cf-card mb-8 overflow-hidden bg-white border-slate-200">
             <div class="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -268,6 +324,31 @@ export const PageDashboard = {
                   </div>
                   <div class="cf-chart-container h-[420px] relative">
                      <canvas id="infra-chart"></canvas>
+                  </div>
+
+                  <!-- ─── Live Deployment Terminal (NEW) ─── -->
+                  <div class="mt-8 cf-card overflow-hidden bg-[#0f172a] border-slate-800 shadow-2xl">
+                      <div class="px-5 py-3 border-b border-slate-800 flex items-center justify-between bg-[#1e293b]">
+                          <div class="flex items-center gap-3">
+                              <div class="flex gap-1.5">
+                                  <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
+                                  <div class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+                                  <div class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
+                              </div>
+                              <div class="h-4 w-px bg-slate-700 mx-1"></div>
+                              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                  <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                  </span>
+                                  Live Deployment Terminal
+                              </span>
+                          </div>
+                          <div id="terminal-project-tag" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-700 text-slate-300">No active deployment</div>
+                      </div>
+                      <div id="live-terminal-body" class="p-6 font-mono text-[12px] leading-relaxed text-slate-300 h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+                          <div class="text-slate-500 italic">Waiting for deployment stream...</div>
+                      </div>
                   </div>
 
                   <!-- Service Sentinel Grid -->
@@ -793,6 +874,13 @@ export const PageDashboard = {
       this.setElText('net-out', data.network.out_kb + ' KB/s');
     }
 
+    // Advanced Metrics: Service Health Sentinel
+    if (data.services) {
+       Object.keys(data.services).forEach(key => {
+          this.updateServiceStatus(key, data.services[key].status);
+       });
+    }
+
     // Advanced Metrics: Error Watchdog
     const errorList = document.getElementById('error-list');
     const dot = document.getElementById('watchdog-dot');
@@ -818,8 +906,57 @@ export const PageDashboard = {
     if (data.pulse_speed) {
        document.documentElement.style.setProperty('--pulse-duration', data.pulse_speed + 's');
     }
+
+    // Update Terminal Feed (NEW)
+    this.updateTerminalFeed();
     
     this.setLastUpdate();
+  },
+
+  lastLogId: null,
+  async updateTerminalFeed() {
+    try {
+        const res = await Api.get('logs?action=latest_output');
+        if (!res.data) return;
+
+        const log = res.data;
+        const terminalBody = document.getElementById('live-terminal-body');
+        const projectTag = document.getElementById('terminal-project-tag');
+
+        if (!terminalBody || !projectTag) return;
+
+        if (this.lastLogId === log.id && terminalBody.innerHTML !== '<div class="text-slate-500 italic">Waiting for deployment stream...</div>') {
+            return; // Nothing changed
+        }
+
+        this.lastLogId = log.id;
+        projectTag.textContent = log.project_name;
+        
+        let statusClass = 'bg-amber-900/40 text-amber-400';
+        if (log.status === 'success') statusClass = 'bg-emerald-900/40 text-emerald-400';
+        if (log.status === 'failed') statusClass = 'bg-rose-900/40 text-rose-400';
+        projectTag.className = `text-[10px] font-bold px-2 py-0.5 rounded ${statusClass}`;
+
+        // Process output to add terminal highlights
+        let output = log.output || 'No output captured.';
+        
+        // Colorize keywords
+        output = output.replace(/success/gi, '<span class="text-emerald-400 font-bold">SUCCESS</span>');
+        output = output.replace(/failed|error|exception/gi, '<span class="text-rose-400 font-bold">ERROR</span>');
+        output = output.replace(/warning/gi, '<span class="text-amber-400 font-bold">WARNING</span>');
+        output = output.replace(/git pull/gi, '<span class="text-blue-400">git pull</span>');
+        output = output.replace(/composer install/gi, '<span class="text-indigo-400">composer install</span>');
+        output = output.replace(/npm run/gi, '<span class="text-violet-400">npm run</span>');
+        
+        const lines = output.split('\n');
+        terminalBody.innerHTML = lines.map(line => `<div><span class="text-slate-600 mr-3 select-none">$</span>${line}</div>`).join('');
+        
+        // Auto scroll to bottom
+        terminalBody.scrollTop = terminalBody.scrollHeight;
+
+    } catch (e) {
+        console.error('Terminal feed update failed', e);
+    }
   },
 
   updateAIVerdict(verdict) {
@@ -1255,6 +1392,63 @@ export const PageDashboard = {
     if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
     if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
     return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
+  },
+
+  updateServiceStatus(key, status) {
+    const dot = document.getElementById(`dot-${key}`);
+    const label = document.getElementById(`label-${key}`);
+    const card = document.getElementById(`health-card-${key}`);
+    
+    if (!dot || !label) return;
+
+    if (status === 'up') {
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200 animate-pulse';
+      label.textContent = 'Operational';
+      label.className = 'text-xs font-bold text-emerald-600 service-label';
+      if (card) card.classList.remove('opacity-50');
+    } else {
+      dot.className = 'w-2 h-2 rounded-full bg-rose-500 shadow-sm shadow-rose-200 animate-pulse';
+      label.textContent = 'Degraded';
+      label.className = 'text-xs font-bold text-rose-600 service-label';
+      if (card) card.classList.add('opacity-50');
+    }
+  },
+
+  setElText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  },
+
+  setElStyle(id, prop, val) {
+    const el = document.getElementById(id);
+    if (el) el.style[prop] = val;
+  },
+
+  setLastUpdate() {
+    const el = document.getElementById('last-update');
+    if (el) el.textContent = new Date().toLocaleTimeString();
+    const els = document.querySelectorAll('#last-update');
+    els.forEach(e => e.textContent = new Date().toLocaleTimeString());
+  },
+
+  formatUptime(seconds) {
+    if (!seconds) return '0s';
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  },
+
+  getStatusBadge(status) {
+    const s = (status || '').toLowerCase();
+    if (s === 'success' || s === 'up') return '<span class="badge badge-success">Success</span>';
+    if (s === 'failed'  || s === 'down') return '<span class="badge badge-danger">Failed</span>';
+    if (s === 'pending' || s === 'deploying') return '<span class="badge badge-warning">Deploying</span>';
+    return '<span class="badge badge-info">Unknown</span>';
   },
 
   async quickBackup(id, name) {
