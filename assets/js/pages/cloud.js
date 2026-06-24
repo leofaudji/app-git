@@ -133,7 +133,7 @@ export const PageCloud = (() => {
 
         <!-- Asset Explorer Table -->
         <div class="card-premium overflow-hidden border-none shadow-xl shadow-slate-200/50">
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto max-h-[560px] overflow-y-auto">
             <table class="min-w-full">
               <thead>
                 <tr class="bg-slate-50/80 backdrop-blur-md">

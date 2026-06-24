@@ -235,7 +235,7 @@ try {
     $r2_id  = DB::getSetting('r2_account_id');
     $r2_key = DB::getSetting('r2_access_key');
     $r2_sec = DB::getSetting('r2_secret_key');
-    $r2_buc = DB::getSetting('r2_bucket');
+    $r2_buc = DB::getSetting('r2_bucket_name');
 
     if ($r2_id && $r2_key && $r2_sec && $r2_buc) {
         $r2 = new R2Client($r2_id, $r2_key, $r2_sec, $r2_buc);

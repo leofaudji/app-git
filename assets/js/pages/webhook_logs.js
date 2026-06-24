@@ -20,7 +20,7 @@ export const PageWebhookLogs = {
         </div>
 
         <div class="card overflow-hidden">
-          <div class="table-wrap">
+          <div class="table-wrap overflow-x-auto overflow-y-auto max-h-[560px]">
             <table id="webhook-logs-table">
               <thead>
                 <tr>

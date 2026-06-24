@@ -2,6 +2,16 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
+## [2.0.1] - 2026-06-24
+### Added
+- **Vertical Scroll in Cloud Backups**: Menambahkan scroll vertikal pada tabel file backup di halaman Cloud Explorer untuk pengalaman navigasi file yang lebih nyaman.
+- **Vertical Scroll in Webhook Logs**: Menambahkan scroll vertikal pada tabel log webhook sehingga daftar panjang dapat digulir dengan mudah.
+
+### Fixed
+- **Tabel UI Overflow**: Memperbaiki tampilan tabel yang panjang pada halaman Cloud Backups dan Webhook Logs dengan batas tinggi dan scroll bar vertikal.
+
+---
+
 ## [2.0.0] - 2026-05-10
 ### Added
 - **Hierarchical Collapsible Sidebar**: Implementasi sidebar yang dapat diciutkan (*collapsible*) dengan dukungan sub-menu (*accordion*). Otomatis terbuka secara default dan mendukung state persistensi.
