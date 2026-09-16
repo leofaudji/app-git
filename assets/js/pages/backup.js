@@ -24,6 +24,9 @@ export const PageBackup = (() => {
                 <button onclick="PageBackup.switchView('history')" id="view-btn-history" class="btn btn-xs px-4 rounded-md transition-all">📜 History</button>
                 <button onclick="PageBackup.switchView('calendar')" id="view-btn-calendar" class="btn btn-xs px-4 rounded-md transition-all">📅 Calendar</button>
              </div>
+             <button onclick="PageBackup.runLocalRetention()" class="btn btn-ghost border border-gray-200 bg-white text-slate-600 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm" title="Bersihkan file backup lokal yang melewati batas retensi">
+               🧹 Auto-Cleanup
+             </button>
              <button onclick="PageBackup.saveBackup()" class="btn btn-primary flex items-center gap-2">
                💾 Backup Sekarang
              </button>
@@ -57,22 +60,34 @@ export const PageBackup = (() => {
           <!-- Backup History Table / Calendar View (col-span-2) -->
           <div class="col-span-2">
             <div id="view-history">
-              <div class="flex items-center gap-2 mb-4">
-                <span class="w-2 h-6 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]"></span>
-                <h3 class="text-base font-bold text-primary">Riwayat Backup</h3>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-6 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]"></span>
+                  <h3 class="text-base font-bold text-primary">Riwayat Backup</h3>
+                </div>
+                <div id="backup-bulk-actions" class="hidden items-center gap-2">
+                  <span class="text-xs text-muted font-medium"><span id="backup-selected-count">0</span> file dipilih</span>
+                  <button type="button" onclick="PageBackup.clearSelection()" class="btn btn-xs btn-ghost text-xs">Batal</button>
+                  <button type="button" onclick="PageBackup.deleteSelected()" class="btn btn-xs btn-danger flex items-center gap-1.5 shadow-sm">
+                    🗑 Hapus Terpilih
+                  </button>
+                </div>
               </div>
               <div class="card border-0 shadow-md card-accent-indigo overflow-hidden">
                 <div class="overflow-x-auto scroll-y-auto">
                   <table class="table w-full">
                     <thead class="sticky top-0 bg-white z-10 shadow-sm">
                       <tr>
+                        <th style="width: 38px;" class="text-center">
+                          <input type="checkbox" id="backup-check-all" class="form-checkbox rounded text-indigo-600 cursor-pointer w-4 h-4" title="Pilih Semua" onchange="PageBackup.toggleSelectAll(this.checked)">
+                        </th>
                         <th>Identitas Backup</th>
                         <th>Waktu & Ukuran</th>
                         <th class="text-right">Aksi</th>
                       </tr>
                     </thead>
                     <tbody id="backup-list">
-                      <tr><td colspan="5" class="text-center text-muted py-8">
+                      <tr><td colspan="4" class="text-center text-muted py-8">
                         <div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>
                         Memuat riwayat backup...
                       </td></tr>
@@ -176,15 +191,20 @@ export const PageBackup = (() => {
 
     if (backups.length === 0) {
       tbody.innerHTML = `
-        <tr><td colspan="3" class="text-center text-muted py-10">
+        <tr><td colspan="4" class="text-center text-muted py-10">
           <div style="font-size:2.5rem;opacity:.3">💾</div>
           <div class="text-sm mt-2">Belum ada backup tersimpan. Klik <strong>Backup Sekarang</strong> untuk membuat yang pertama.</div>
         </td></tr>`;
+      updateSelectionState();
       return;
     }
 
     const html = backups.map((b, i) => `
       <tr class="${!filterDate && i === 0 ? 'bg-green-50' : ''}">
+        <td class="py-3 text-center">
+          <input type="checkbox" class="backup-item-check form-checkbox rounded text-indigo-600 cursor-pointer w-4 h-4"
+                 data-filename="${b.filename}" data-type="${b.type}" onchange="PageBackup.updateSelectionState()">
+        </td>
         <td class="py-3">
           <div class="flex flex-col gap-0.5">
             <div class="flex items-center gap-2">
@@ -225,7 +245,7 @@ export const PageBackup = (() => {
                </div>
                <div class="table-wrap scroll-y-auto" style="max-height: 250px;">
                   <table class="table w-full">
-                     <tbody>${html || '<tr><td class="text-center py-4 text-muted">No backups found for this date.</td></tr>'}</tbody>
+                     <tbody>${html || '<tr><td colspan="4" class="text-center py-4 text-muted">No backups found for this date.</td></tr>'}</tbody>
                   </table>
                </div>
             </div>
@@ -235,6 +255,7 @@ export const PageBackup = (() => {
        tbody.innerHTML = html;
     }
     
+    updateSelectionState();
     if (!filterDate) renderCalendarUI();
   }
 
@@ -386,9 +407,102 @@ export const PageBackup = (() => {
     }
   }
 
+  function toggleSelectAll(checked) {
+    const checkboxes = document.querySelectorAll('.backup-item-check');
+    checkboxes.forEach(cb => { cb.checked = checked; });
+    updateSelectionState();
+  }
+
+  function updateSelectionState() {
+    const checkedBoxes = document.querySelectorAll('.backup-item-check:checked');
+    const totalBoxes = document.querySelectorAll('.backup-item-check');
+    const checkAll = document.getElementById('backup-check-all');
+    
+    if (checkAll) {
+      checkAll.checked = totalBoxes.length > 0 && checkedBoxes.length === totalBoxes.length;
+      checkAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < totalBoxes.length;
+    }
+
+    const bulkBar = document.getElementById('backup-bulk-actions');
+    const countEl = document.getElementById('backup-selected-count');
+    if (countEl) countEl.textContent = checkedBoxes.length;
+
+    if (bulkBar) {
+      if (checkedBoxes.length > 0) {
+        bulkBar.classList.remove('hidden');
+        bulkBar.classList.add('flex');
+      } else {
+        bulkBar.classList.add('hidden');
+        bulkBar.classList.remove('flex');
+      }
+    }
+  }
+
+  function clearSelection() {
+    const checkboxes = document.querySelectorAll('.backup-item-check');
+    checkboxes.forEach(cb => { cb.checked = false; });
+    updateSelectionState();
+  }
+
+  async function deleteSelected() {
+    const checkedBoxes = Array.from(document.querySelectorAll('.backup-item-check:checked'));
+    if (checkedBoxes.length === 0) return;
+
+    const items = checkedBoxes.map(cb => ({
+      filename: cb.dataset.filename,
+      type: cb.dataset.type
+    }));
+
+    const result = await Swal.fire({
+      title: 'Hapus Backup Terpilih?',
+      text: `${items.length} file backup akan dihapus permanen dari server.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Ya, Hapus (${items.length}) File!`,
+      cancelButtonText: 'Batal'
+    });
+    if (!result.isConfirmed) return;
+
+    Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const res = await Api.post('backup?action=delete_batch', { items: JSON.stringify(items) });
+    if (res?.success) {
+      Toast.success(res.message);
+      await loadList(selectedDate);
+      clearSelection();
+      Swal.close();
+    } else {
+      Swal.fire('Gagal', res?.message || 'Gagal menghapus file yang dipilih', 'error');
+    }
+  }
+
+  async function runLocalRetention() {
+    const res = await Swal.fire({
+      title: 'Jalankan Auto-Retention?',
+      text: 'Sistem akan memeriksa dan menghapus file backup lokal di server yang telah melewati batas masa retensi.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4f46e5',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Bersihkan!',
+      cancelButtonText: 'Batal'
+    });
+    if (!res.isConfirmed) return;
+
+    Swal.fire({ title: 'Memeriksa & membersihkan file...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const apiRes = await Api.post('backup?action=clean_retention', {});
+    if (apiRes?.success) {
+      Swal.fire('Selesai', apiRes.message || 'Pembersihan berhasil.', 'success');
+      await loadList();
+    } else {
+      Swal.fire('Gagal', apiRes?.message || 'Gagal menjalankan pembersihan', 'error');
+    }
+  }
+
   function quickExport() {
     window.location.href = `${window.APP_PATH}/api/backup?action=export`;
   }
 
-  return { render, saveBackup, deleteBackup, restoreBackup, quickExport, switchView, navMonth, selectDate };
+  return { render, saveBackup, deleteBackup, deleteSelected, runLocalRetention, toggleSelectAll, updateSelectionState, clearSelection, restoreBackup, quickExport, switchView, navMonth, selectDate };
 })();

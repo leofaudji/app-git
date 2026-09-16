@@ -42,6 +42,7 @@ switch ($action) {
             'backup_auto_enable'   => ['label' => 'Auto Backup Enable', 'type' => 'boolean', 'default' => '0'],
             'backup_schedule_time' => ['label' => 'Backup Schedule Time', 'type' => 'text', 'default' => '02:00'],
             'backup_schedule_days' => ['label' => 'Backup Schedule Days', 'type' => 'text', 'default' => 'Mon,Tue,Wed,Thu,Fri,Sat,Sun'],
+            'backup_retention_days'=> ['label' => 'Local Backup Retention Days', 'type' => 'number', 'default' => '30'],
             'r2_enable'            => ['label' => 'R2 Storage Enable', 'type' => 'boolean', 'default' => '0'],
             'r2_account_id'        => ['label' => 'R2 Account ID', 'type' => 'text', 'default' => ''],
             'r2_access_key'        => ['label' => 'R2 Access Key', 'type' => 'text', 'default' => ''],
@@ -52,7 +53,7 @@ switch ($action) {
 
         $allowed = [
             'app_name', 'git_base_dir', 'webhook_secret_default', 'notify_email', 'auto_deploy',
-            'backup_base_dir', 'backup_auto_enable', 'backup_schedule_time', 'backup_schedule_days', 'backup_cron_secret',
+            'backup_base_dir', 'backup_auto_enable', 'backup_schedule_time', 'backup_schedule_days', 'backup_cron_secret', 'backup_retention_days',
             'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_encryption', 'backup_notify_enable',
             'r2_enable', 'r2_account_id', 'r2_access_key', 'r2_secret_key', 'r2_bucket_name', 'r2_retention_days'
         ];
@@ -169,6 +170,49 @@ switch ($action) {
         $r2 = new R2Client($accountId, $accessKey, $secretKey, $bucketName);
         if ($r2->deleteObject($key)) {
             jsonSuccess(null, 'File berhasil dihapus dari Cloud Storage.');
+        } else {
+            jsonError('Gagal menghapus file dari Cloud Storage.');
+        }
+
+    case 'delete_batch_r2_backups':
+        requirePermission('settings', 'edit');
+        require_once __DIR__ . '/../includes/R2Client.php';
+
+        $rawKeys = $_POST['keys'] ?? [];
+        if (is_string($rawKeys)) {
+            $keys = json_decode($rawKeys, true) ?: [];
+        } else {
+            $keys = (array)$rawKeys;
+        }
+
+        if (empty($keys)) {
+            jsonError('Tidak ada file yang dipilih untuk dihapus.');
+        }
+
+        $accountId  = DB::getSetting('r2_account_id');
+        $accessKey  = DB::getSetting('r2_access_key');
+        $secretKey  = DB::getSetting('r2_secret_key');
+        $bucketName = DB::getSetting('r2_bucket_name');
+
+        $r2 = new R2Client($accountId, $accessKey, $secretKey, $bucketName);
+        $deleted = 0;
+        $failed = 0;
+
+        foreach ($keys as $k) {
+            $k = trim($k);
+            if (!empty($k)) {
+                if ($r2->deleteObject($k)) {
+                    $deleted++;
+                } else {
+                    $failed++;
+                }
+            }
+        }
+
+        if ($deleted > 0) {
+            $msg = "$deleted file berhasil dihapus dari Cloud Storage.";
+            if ($failed > 0) $msg .= " ($failed file gagal dihapus)";
+            jsonSuccess(['deleted' => $deleted, 'failed' => $failed], $msg);
         } else {
             jsonError('Gagal menghapus file dari Cloud Storage.');
         }

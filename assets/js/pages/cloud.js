@@ -113,6 +113,25 @@ export const PageCloud = (() => {
           </div>
         </div>
 
+        <!-- Bulk Action Bar -->
+        <div id="cloud-bulk-bar" class="hidden items-center justify-between bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl mb-6 shadow-sm transition-all">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center text-red-600">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="text-sm font-bold"><span id="cloud-selected-count">0</span> snapshot dipilih dari Cloudflare R2</span>
+              <p class="text-[10px] text-red-500 font-medium">File akan dihapus permanen dari Cloudflare R2 bucket.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button type="button" onclick="PageCloud.clearSelection()" class="btn btn-xs bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs font-bold transition-all">Batal</button>
+            <button type="button" onclick="PageCloud.deleteSelected()" class="btn btn-xs bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-red-200 transition-all">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Terpilih
+            </button>
+          </div>
+        </div>
+
         <!-- Asset Explorer Toolbar -->
         <div class="flex flex-col md:flex-row justify-between items-end gap-4 mb-6">
           <div class="w-full md:w-96">
@@ -137,15 +156,18 @@ export const PageCloud = (() => {
             <table class="min-w-full">
               <thead>
                 <tr class="bg-slate-50/80 backdrop-blur-md">
-                  <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Asset Identity</th>
-                  <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Size</th>
-                  <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Creation Date</th>
-                  <th class="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Actions</th>
+                  <th class="px-6 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100" style="width: 44px;">
+                    <input type="checkbox" id="cloud-check-all" onchange="PageCloud.toggleSelectAll(this.checked)" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" title="Pilih Semua">
+                  </th>
+                  <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Asset Identity</th>
+                  <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Size</th>
+                  <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Creation Date</th>
+                  <th class="px-6 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Actions</th>
                 </tr>
               </thead>
               <tbody id="cloud-files-body" class="divide-y divide-slate-50">
                 <tr>
-                  <td colspan="4" class="px-8 py-32 text-center">
+                  <td colspan="5" class="px-8 py-32 text-center">
                     <div class="flex flex-col items-center gap-4">
                       <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center animate-bounce">
                         <i data-lucide="refresh-cw" class="w-8 h-8 text-slate-300"></i>
@@ -286,7 +308,7 @@ export const PageCloud = (() => {
     if (filtered.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="4" class="px-8 py-32 text-center">
+          <td colspan="5" class="px-8 py-32 text-center">
             <div class="flex flex-col items-center gap-3">
               <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200">
                 <i data-lucide="search-x" class="w-8 h-8"></i>
@@ -295,12 +317,16 @@ export const PageCloud = (() => {
             </div>
           </td>
         </tr>`;
+      updateSelectionState();
       lucide.createIcons();
       return;
     }
 
     tbody.innerHTML = filtered.map(file => `
       <tr class="group hover:bg-slate-50/50 transition-all duration-300">
+        <td class="px-6 py-6 text-center">
+          <input type="checkbox" class="cloud-item-check rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" data-key="${file.key}" onchange="PageCloud.updateSelectionState()">
+        </td>
         <td class="px-8 py-6">
           <div class="flex items-center gap-5">
             <div class="w-12 h-12 bg-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm group-hover:shadow-indigo-200 group-hover:shadow-lg group-hover:-rotate-6">
@@ -344,6 +370,7 @@ export const PageCloud = (() => {
         </td>
       </tr>
     `).join('');
+    updateSelectionState();
     lucide.createIcons();
   }
 
@@ -398,5 +425,74 @@ export const PageCloud = (() => {
     else Swal.fire('Error', apiRes?.message || 'Purge failed.', 'error');
   }
 
-  return { render, loadFiles, deleteFile, search, downloadFile };
+  function toggleSelectAll(checked) {
+    const checkboxes = document.querySelectorAll('.cloud-item-check');
+    checkboxes.forEach(cb => { cb.checked = checked; });
+    updateSelectionState();
+  }
+
+  function updateSelectionState() {
+    const checkedBoxes = document.querySelectorAll('.cloud-item-check:checked');
+    const totalBoxes = document.querySelectorAll('.cloud-item-check');
+    const checkAll = document.getElementById('cloud-check-all');
+
+    if (checkAll) {
+      checkAll.checked = totalBoxes.length > 0 && checkedBoxes.length === totalBoxes.length;
+      checkAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < totalBoxes.length;
+    }
+
+    const bulkBar = document.getElementById('cloud-bulk-bar');
+    const countEl = document.getElementById('cloud-selected-count');
+    if (countEl) countEl.textContent = checkedBoxes.length;
+
+    if (bulkBar) {
+      if (checkedBoxes.length > 0) {
+        bulkBar.classList.remove('hidden');
+        bulkBar.classList.add('flex');
+        lucide.createIcons();
+      } else {
+        bulkBar.classList.add('hidden');
+        bulkBar.classList.remove('flex');
+      }
+    }
+  }
+
+  function clearSelection() {
+    const checkboxes = document.querySelectorAll('.cloud-item-check');
+    checkboxes.forEach(cb => { cb.checked = false; });
+    updateSelectionState();
+  }
+
+  async function deleteSelected() {
+    const checkedBoxes = Array.from(document.querySelectorAll('.cloud-item-check:checked'));
+    if (checkedBoxes.length === 0) return;
+
+    const keys = checkedBoxes.map(cb => cb.dataset.key);
+
+    const res = await Swal.fire({
+      title: 'Hapus Snapshot Cloud Terpilih?',
+      text: `${keys.length} snapshot akan dihapus permanen dari Cloudflare R2.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Ya, Hapus (${keys.length}) Snapshot!`,
+      cancelButtonText: 'Batal'
+    });
+    if (!res.isConfirmed) return;
+
+    Swal.fire({ title: 'Menghapus dari Cloudflare R2...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const apiRes = await Api.post('settings?action=delete_batch_r2_backups', { keys: JSON.stringify(keys) });
+    if (apiRes?.success) {
+      Toast.success(apiRes.message || 'Snapshot berhasil dihapus.');
+      await loadFiles();
+      loadChart();
+      clearSelection();
+      Swal.close();
+    } else {
+      Swal.fire('Error', apiRes?.message || 'Gagal menghapus file.', 'error');
+    }
+  }
+
+  return { render, loadFiles, deleteFile, deleteSelected, toggleSelectAll, updateSelectionState, clearSelection, search, downloadFile };
 })();

@@ -179,7 +179,12 @@ export const PageSettings = (() => {
               <input type="time" id="set-backup_schedule_time" class="input-prof font-black text-lg" value="${settings.backup_schedule_time?.value || '02:00'}" ${canEdit ? '' : 'disabled'}>
               <p class="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">Server local time</p>
             </div>
-            <div class="form-group md:col-span-2">
+            <div class="form-group md:col-span-1">
+              <label class="form-label-prof">Auto-Retention Disk (Days)</label>
+              <input type="number" id="set-backup_retention_days" class="input-prof font-black text-lg" value="${settings.backup_retention_days?.value || '30'}" placeholder="30" ${canEdit ? '' : 'disabled'}>
+              <p class="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">Hapus backup lokal > X hari</p>
+            </div>
+            <div class="form-group md:col-span-1">
               <label class="form-label-prof">Repeat Every</label>
               <div class="flex flex-wrap gap-2">
                 ${allDays.map(day => `
@@ -333,6 +338,7 @@ export const PageSettings = (() => {
 
         backup_schedule_time: document.getElementById('set-backup_schedule_time')?.value || settings.backup_schedule_time?.value,
         backup_schedule_days: selectedDays.join(','), // Collect from interactive state
+        backup_retention_days: document.getElementById('set-backup_retention_days')?.value || settings.backup_retention_days?.value || '30',
         
         r2_enable: document.getElementById('set-r2_enable')?.checked ? '1' : '0',
         r2_account_id: document.getElementById('set-r2_account_id')?.value || settings.r2_account_id?.value,

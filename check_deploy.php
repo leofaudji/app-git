@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/config.php';
 header('Content-Type: text/plain');
 echo "=== GitDeploy Deployment Diagnostic ===\n";
 echo "App Name: " . APP_NAME . "\n";
-echo "App Version: " . APP_VERSION . " (Expected: 1.4.3)\n";
+echo "App Version: " . APP_VERSION . "\n";
 echo "App Path: " . APP_PATH . "\n";
 echo "Protocol: " . ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http') . "\n";
 echo "Host: " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\n";

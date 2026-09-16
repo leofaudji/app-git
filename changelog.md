@@ -2,6 +2,23 @@
 
 Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
+## [2.1.0] - 2026-09-16
+### Added
+- **Auto-Retention Disk Lokal Server**: Fitur retensi otomatis berkala untuk membersihkan file cadangan database (`.sql`/`.gz`) lama di server lokal berdasarkan konfigurasi batas hari (`backup_retention_days`, default: 30 hari).
+- **Tombol Auto-Cleanup Manual**: Tombol "🧹 Auto-Cleanup" pada Database Backup Manager untuk memicu pembersihan file backup kedaluwarsa secara langsung dengan dialog konfirmasi.
+- **Konfigurasi Retensi Disk di Settings**: Input pengaturan batas hari retensi lokal pada tab Settings > Backups.
+- **Multi-Select & Batch Delete Database Backups**: Penambahan checkbox seleksi ganda dan toolbar "Hapus Terpilih" untuk menghapus banyak file backup lokal sekaligus.
+- **Multi-Select & Batch Delete Cloud Backups**: Penambahan checkbox seleksi ganda dan aksi hapus massal untuk backup di Cloudflare R2 via Cloud Explorer.
+
+### Changed
+- **Optimalisasi Notifikasi Email Backup**: Penghapusan lampiran file fisik `.sql` dari email notifikasi karena backup telah tersimpan aman di Cloudflare R2, menghemat kuota dan memangkas ukuran pengiriman email.
+- **Laporan Retensi di Email**: Penambahan informasi ringkasan jumlah file lama yang berhasil dibersihkan oleh pembersih retensi disk dan cloud pada email notifikasi backup.
+
+### Fixed
+- **RFC-Compliant MIME Mailer**: Refactoring pembentukan struktur MIME multipart email pada `includes/mailer.php` agar mematuhi standar RFC 2046 dan RFC 5321 (dot-stuffing), meniadakan kendala header MIME mentah (`Content-Type: multipart/related...`) yang sempat muncul di isi pesan email.
+
+---
+
 ## [2.0.1] - 2026-06-24
 ### Added
 - **Vertical Scroll in Cloud Backups**: Menambahkan scroll vertikal pada tabel file backup di halaman Cloud Explorer untuk pengalaman navigasi file yang lebih nyaman.

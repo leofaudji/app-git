@@ -141,6 +141,54 @@ if (!function_exists('performR2Retention')) {
     }
 }
 
+// ─── Helper: Perform Local Disk Retention (Auto-Cleanup) ───
+if (!function_exists('performLocalRetention')) {
+    function performLocalRetention(): int {
+        $retentionDays = (int)DB::getSetting('backup_retention_days', 30);
+        if ($retentionDays <= 0) return 0;
+
+        $now = time();
+        $expirySeconds = $retentionDays * 86400;
+        $deletedCount = 0;
+
+        // 1. Clean system backups in BASE_PATH . '/backups'
+        $backupDir = BASE_PATH . '/backups';
+        if (is_dir($backupDir)) {
+            $files = glob($backupDir . '/*.sql*');
+            if ($files) {
+                foreach ($files as $f) {
+                    if (is_file($f) && basename($f) !== '.htaccess' && ($now - filemtime($f)) > $expirySeconds) {
+                        if (@unlink($f)) {
+                            $deletedCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Clean project backups in $projectBackupBase
+        $projectBackupBase = DB::getSetting('backup_base_dir', BASE_PATH . '/../backups_projects');
+        if (is_dir($projectBackupBase)) {
+            try {
+                $it = new RecursiveDirectoryIterator($projectBackupBase, RecursiveDirectoryIterator::SKIP_DOTS);
+                foreach (new RecursiveIteratorIterator($it) as $file) {
+                    if ($file->isFile() && in_array(strtolower($file->getExtension()), ['sql', 'gz'])) {
+                        if (($now - $file->getMTime()) > $expirySeconds) {
+                            if (@unlink($file->getPathname())) {
+                                $deletedCount++;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("performLocalRetention Error: " . $e->getMessage());
+            }
+        }
+
+        return $deletedCount;
+    }
+}
+
 // ─── Helper: Log Storage Stats ───────────────────────────
 if (!function_exists('logStorageStats')) {
     function logStorageStats($r2): void {
@@ -228,6 +276,9 @@ if (!function_exists('performFullBackupChain')) {
             logStorageStats($r2);
         }
 
+        // 4b. Local Disk Auto-Retention (Auto-Cleanup)
+        $localRetentionDeleted = performLocalRetention();
+
         // 5. Send Email Notification
         $notified = false;
         if (DB::getSetting('backup_notify_enable') === '1') {
@@ -271,7 +322,8 @@ if (!function_exists('performFullBackupChain')) {
                             <div style='margin-top: 10px; font-size: 18px; font-weight: 700; color: #111827;'>
                                 " . ($errorCount === 0 ? "Backup Berhasil Dicadangkan" : "Backup Selesai dengan $errorCount Kendala") . "
                             </div>
-                            " . ($retentionDeleted > 0 ? "<div style='font-size: 11px; color: #f59e0b; margin-top: 5px; font-weight: 600;'>🧹 Auto-Retention: $retentionDeleted file lama telah dibersihkan dari cloud.</div>" : "") . "
+                            " . ($retentionDeleted > 0 ? "<div style='font-size: 11px; color: #f59e0b; margin-top: 5px; font-weight: 600;'>🧹 Cloud Retention: $retentionDeleted file lama telah dibersihkan dari R2.</div>" : "") . "
+                            " . ($localRetentionDeleted > 0 ? "<div style='font-size: 11px; color: #f59e0b; margin-top: 5px; font-weight: 600;'>🧹 Disk Retention: $localRetentionDeleted file backup lama telah dibersihkan dari server lokal.</div>" : "") . "
                         </div>
 
                         <div style='padding: 30px;'>
@@ -341,7 +393,8 @@ if (!function_exists('performFullBackupChain')) {
             'results' => $results,
             'errors'  => $errors,
             'notified' => $notified,
-            'retention_deleted' => $retentionDeleted
+            'retention_deleted' => $retentionDeleted,
+            'local_retention_deleted' => $localRetentionDeleted
         ];
     }
 }

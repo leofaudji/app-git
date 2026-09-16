@@ -92,7 +92,10 @@ if ($action === 'project_save') {
     try {
         $id = (int)($_POST['id'] ?? 0);
         $result = performProjectBackup($id, $projectBackupBase);
-        jsonSuccess($result, 'Backup database project ' . $result['project_name'] . ' berhasil.');
+        $localCleaned = performLocalRetention();
+        $msg = 'Backup database project ' . $result['project_name'] . ' berhasil.';
+        if ($localCleaned > 0) $msg .= " (Auto-retention: $localCleaned file lama dibersihkan)";
+        jsonSuccess($result, $msg);
     } catch (Exception $e) {
         jsonError($e->getMessage());
     }
@@ -123,8 +126,28 @@ if ($action === 'save') {
     $sql       = generateSqlDump();
 
     if (file_put_contents($filepath, $sql) === false) jsonError('Gagal menyimpan file backup.');
+    
+    $localCleaned = performLocalRetention();
+    $msg = 'Backup sistem berhasil disimpan.';
+    if ($localCleaned > 0) $msg .= " (Auto-retention: $localCleaned file lama dibersihkan)";
 
-    jsonSuccess(['filename' => $filename], 'Backup sistem berhasil disimpan.');
+    jsonSuccess(['filename' => $filename], $msg);
+}
+
+// ─────────────────────────────────────────────────────────
+// ACTION: clean_retention — Purge expired local backups manually
+// ─────────────────────────────────────────────────────────
+if ($action === 'clean_retention') {
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
+    requireCsrf();
+
+    $days = (int)DB::getSetting('backup_retention_days', 30);
+    $deleted = performLocalRetention();
+    jsonSuccess(
+        ['deleted' => $deleted, 'days' => $days],
+        "Auto-Retention selesai. $deleted file backup lokal (> $days hari) telah dibersihkan."
+    );
 }
 
 // ─────────────────────────────────────────────────────────
@@ -178,6 +201,67 @@ if ($action === 'delete') {
     if (!unlink($filepath)) jsonError('Gagal menghapus file');
 
     jsonSuccess(null, 'Backup berhasil dihapus.');
+}
+
+// ─────────────────────────────────────────────────────────
+// ACTION: delete_batch
+// ─────────────────────────────────────────────────────────
+if ($action === 'delete_batch') {
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
+    requireCsrf();
+
+    $rawItems = $_POST['items'] ?? [];
+    if (is_string($rawItems)) {
+        $items = json_decode($rawItems, true) ?: [];
+    } else {
+        $items = (array)$rawItems;
+    }
+
+    if (empty($items)) {
+        jsonError('Tidak ada file yang dipilih untuk dihapus.');
+    }
+
+    $deleted = 0;
+    $errors = [];
+
+    foreach ($items as $item) {
+        if (is_array($item)) {
+            $file = $item['filename'] ?? '';
+            $type = $item['type'] ?? 'system';
+        } elseif (strpos($item, '|') !== false) {
+            [$type, $file] = explode('|', $item, 2);
+        } else {
+            $type = 'system';
+            $file = $item;
+        }
+
+        $file = str_replace('..', '', $file);
+
+        if ($type === 'project') {
+            $filepath = $projectBackupBase . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file);
+        } else {
+            $filepath = $backupDir . DIRECTORY_SEPARATOR . basename($file);
+        }
+
+        if (file_exists($filepath)) {
+            if (@unlink($filepath)) {
+                $deleted++;
+            } else {
+                $errors[] = basename($file);
+            }
+        }
+    }
+
+    if ($deleted > 0) {
+        $msg = "$deleted file backup berhasil dihapus.";
+        if (!empty($errors)) {
+            $msg .= " (" . count($errors) . " file gagal dihapus)";
+        }
+        jsonSuccess(['deleted' => $deleted, 'errors' => $errors], $msg);
+    } else {
+        jsonError('Gagal menghapus file yang dipilih.');
+    }
 }
 
 header('Content-Type: application/json');
