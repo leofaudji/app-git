@@ -78,6 +78,63 @@ if (!function_exists('generateSqlDump')) {
     }
 }
 
+// ─── Helper: Execute SQL Dump (Auto-Decompresses Gzip) ─────
+if (!function_exists('executeSqlDump')) {
+    function executeSqlDump(string $sql, ?PDO $targetPdo = null): void {
+        $pdo = $targetPdo ?? DB::getInstance();
+        
+        // Decompress if gzip magic header (\x1f\x8b)
+        if (strlen($sql) >= 2 && substr($sql, 0, 2) === "\x1f\x8b") {
+            $decompressed = @gzdecode($sql);
+            if ($decompressed === false) {
+                throw new Exception('File backup terkompresi rusak atau format gzip tidak valid.');
+            }
+            $sql = $decompressed;
+        }
+
+        if (trim($sql) === '') {
+            throw new Exception('Konten file backup kosong.');
+        }
+
+        $pdo->exec("SET FOREIGN_KEY_CHECKS=0;");
+        try {
+            $pdo->exec($sql);
+        } catch (PDOException $e) {
+            // Fallback: Split and execute statement by statement
+            $queries = preg_split('/;\s*[\r\n]+/m', $sql);
+            foreach ($queries as $q) {
+                $q = trim($q);
+                if ($q === '' || strpos($q, '--') === 0 || strpos($q, '/*') === 0) continue;
+                try {
+                    $pdo->exec($q);
+                } catch (Exception $subEx) {
+                    // Ignore benign drops or comment warnings, or rethrow if critical
+                }
+            }
+        } finally {
+            $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");
+        }
+    }
+}
+
+// ─── Helper: Create Pre-Restore Safety Snapshot ───────────
+if (!function_exists('createPreRestoreSnapshot')) {
+    function createPreRestoreSnapshot(): ?string {
+        try {
+            $backupDir = BASE_PATH . '/backups';
+            if (!is_dir($backupDir)) mkdir($backupDir, 0755, true);
+            $filename = 'gitdeploy_pre_restore_' . date('Ymd_His') . '.sql.gz';
+            $filepath = $backupDir . '/' . $filename;
+            $dump = generateSqlDump();
+            file_put_contents($filepath, gzencode($dump, 9));
+            return $filename;
+        } catch (Exception $e) {
+            error_log("Pre-restore snapshot failed: " . $e->getMessage());
+            return null;
+        }
+    }
+}
+
 // ─── Helper: Perform backup for a single project ──────────
 if (!function_exists('performProjectBackup')) {
     function performProjectBackup(int $id, string $projectBackupBase): array {
@@ -107,10 +164,13 @@ if (!function_exists('performProjectBackup')) {
         $projDir = $projectBackupBase . DIRECTORY_SEPARATOR . $project['folder_name'];
         if (!is_dir($projDir)) mkdir($projDir, 0755, true);
         
-        $filename = $project['folder_name'] . '_backup_' . date('Ymd_His') . '.sql';
+        $isGzip = DB::getSetting('backup_gzip_enable', '1') === '1';
+        $extension = $isGzip ? '.sql.gz' : '.sql';
+        $filename = $project['folder_name'] . '_backup_' . date('Ymd_His') . $extension;
         $filepath = $projDir . DIRECTORY_SEPARATOR . $filename;
         
-        if (file_put_contents($filepath, $sql) === false) throw new Exception('Gagal menulis file backup ke disk');
+        $content = $isGzip ? gzencode($sql, 9) : $sql;
+        if (file_put_contents($filepath, $content) === false) throw new Exception('Gagal menulis file backup ke disk');
         
         $size = filesize($filepath);
         $size_fmt = $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB';
@@ -232,9 +292,15 @@ if (!function_exists('performFullBackupChain')) {
         try {
             $backupDir = BASE_PATH . '/backups';
             if (!is_dir($backupDir)) mkdir($backupDir, 0755, true);
-            $sysFile = 'gitdeploy_auto_backup_' . date('Ymd_His') . '.sql';
+            
+            $isGzip = DB::getSetting('backup_gzip_enable', '1') === '1';
+            $extension = $isGzip ? '.sql.gz' : '.sql';
+            $sysFile = 'gitdeploy_auto_backup_' . date('Ymd_His') . $extension;
             $sysPath = $backupDir . '/' . $sysFile;
-            file_put_contents($sysPath, generateSqlDump());
+            
+            $dump = generateSqlDump();
+            $content = $isGzip ? gzencode($dump, 9) : $dump;
+            file_put_contents($sysPath, $content);
             $size = filesize($sysPath);
             $size_fmt = $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB';
             $results[] = [

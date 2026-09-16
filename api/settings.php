@@ -43,6 +43,7 @@ switch ($action) {
             'backup_schedule_time' => ['label' => 'Backup Schedule Time', 'type' => 'text', 'default' => '02:00'],
             'backup_schedule_days' => ['label' => 'Backup Schedule Days', 'type' => 'text', 'default' => 'Mon,Tue,Wed,Thu,Fri,Sat,Sun'],
             'backup_retention_days'=> ['label' => 'Local Backup Retention Days', 'type' => 'number', 'default' => '30'],
+            'backup_gzip_enable'   => ['label' => 'Gzip Compression', 'type' => 'boolean', 'default' => '1'],
             'r2_enable'            => ['label' => 'R2 Storage Enable', 'type' => 'boolean', 'default' => '0'],
             'r2_account_id'        => ['label' => 'R2 Account ID', 'type' => 'text', 'default' => ''],
             'r2_access_key'        => ['label' => 'R2 Access Key', 'type' => 'text', 'default' => ''],
@@ -53,7 +54,7 @@ switch ($action) {
 
         $allowed = [
             'app_name', 'git_base_dir', 'webhook_secret_default', 'notify_email', 'auto_deploy',
-            'backup_base_dir', 'backup_auto_enable', 'backup_schedule_time', 'backup_schedule_days', 'backup_cron_secret', 'backup_retention_days',
+            'backup_base_dir', 'backup_auto_enable', 'backup_schedule_time', 'backup_schedule_days', 'backup_cron_secret', 'backup_retention_days', 'backup_gzip_enable',
             'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_encryption', 'backup_notify_enable',
             'r2_enable', 'r2_account_id', 'r2_access_key', 'r2_secret_key', 'r2_bucket_name', 'r2_retention_days'
         ];

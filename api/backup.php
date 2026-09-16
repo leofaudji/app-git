@@ -38,38 +38,46 @@ if (!is_dir($projectBackupBase)) {
 if ($action === 'list') {
     header('Content-Type: application/json');
 
-    $systemFiles = glob($backupDir . '/*.sql');
+    $systemFiles = array_merge(
+        glob($backupDir . '/*.sql') ?: [],
+        glob($backupDir . '/*.sql.gz') ?: []
+    );
     $backups = [];
 
     // System Backups
     if ($systemFiles) {
         foreach ($systemFiles as $f) {
             $size = filesize($f);
+            $filename = basename($f);
             $backups[] = [
-                'filename' => basename($f),
-                'type'     => 'system',
-                'project'  => 'System',
-                'size'     => $size,
-                'size_fmt' => $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB',
-                'created'  => date('Y-m-d H:i:s', filemtime($f)),
+                'filename'   => $filename,
+                'type'       => 'system',
+                'project'    => 'System',
+                'size'       => $size,
+                'size_fmt'   => $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB',
+                'created'    => date('Y-m-d H:i:s', filemtime($f)),
+                'compressed' => str_ends_with($filename, '.gz')
             ];
         }
     }
 
     // Project Backups (Recursively scan $projectBackupBase)
     if (is_dir($projectBackupBase)) {
-        $it = new RecursiveDirectoryIterator($projectBackupBase);
+        $it = new RecursiveDirectoryIterator($projectBackupBase, RecursiveDirectoryIterator::SKIP_DOTS);
         foreach (new RecursiveIteratorIterator($it) as $file) {
-            if ($file->getExtension() === 'sql') {
+            $ext = strtolower($file->getExtension());
+            if ($file->isFile() && ($ext === 'sql' || $ext === 'gz')) {
                 $size = $file->getSize();
                 $relPath = str_replace([$projectBackupBase, DIRECTORY_SEPARATOR], ['', '/'], $file->getPathname());
+                $relFilename = ltrim($relPath, '/');
                 $backups[] = [
-                    'filename' => ltrim($relPath, '/'),
-                    'type'     => 'project',
-                    'project'  => basename(dirname($file->getPathname())),
-                    'size'     => $size,
-                    'size_fmt' => $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB',
-                    'created'  => date('Y-m-d H:i:s', $file->getMTime()),
+                    'filename'   => $relFilename,
+                    'type'       => 'project',
+                    'project'    => basename(dirname($file->getPathname())),
+                    'size'       => $size,
+                    'size_fmt'   => $size > 1048576 ? round($size/1048576, 2).' MB' : round($size/1024, 1).' KB',
+                    'created'    => date('Y-m-d H:i:s', $file->getMTime()),
+                    'compressed' => str_ends_with($relFilename, '.gz')
                 ];
             }
         }
@@ -121,17 +129,20 @@ if ($action === 'save') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
     requireCsrf();
 
-    $filename  = 'gitdeploy_backup_' . date('Ymd_His') . '.sql';
+    $isGzip = DB::getSetting('backup_gzip_enable', '1') === '1';
+    $extension = $isGzip ? '.sql.gz' : '.sql';
+    $filename  = 'gitdeploy_backup_' . date('Ymd_His') . $extension;
     $filepath  = $backupDir . '/' . $filename;
     $sql       = generateSqlDump();
+    $content   = $isGzip ? gzencode($sql, 9) : $sql;
 
-    if (file_put_contents($filepath, $sql) === false) jsonError('Gagal menyimpan file backup.');
+    if (file_put_contents($filepath, $content) === false) jsonError('Gagal menyimpan file backup.');
     
     $localCleaned = performLocalRetention();
-    $msg = 'Backup sistem berhasil disimpan.';
+    $msg = 'Backup sistem berhasil disimpan' . ($isGzip ? ' (terkompresi Gzip).' : '.');
     if ($localCleaned > 0) $msg .= " (Auto-retention: $localCleaned file lama dibersihkan)";
 
-    jsonSuccess(['filename' => $filename], $msg);
+    jsonSuccess(['filename' => $filename, 'compressed' => $isGzip], $msg);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -171,11 +182,94 @@ if ($action === 'download') {
         jsonError('File tidak ditemukan', 404);
     }
 
-    header('Content-Type: application/octet-stream');
+    $isGz = str_ends_with(strtolower($filepath), '.gz');
+    header('Content-Type: ' . ($isGz ? 'application/x-gzip' : 'application/octet-stream'));
     header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
     header('Content-Length: ' . filesize($filepath));
     readfile($filepath);
     exit;
+}
+
+// ─────────────────────────────────────────────────────────
+// ACTION: export — Stream backup dump directly to browser
+// ─────────────────────────────────────────────────────────
+if ($action === 'export') {
+    $isGzip = DB::getSetting('backup_gzip_enable', '1') === '1';
+    $format = $_GET['format'] ?? ($isGzip ? 'gz' : 'sql');
+    $sql = generateSqlDump();
+    
+    if ($format === 'gz' || $format === 'gzip') {
+        $filename = 'gitdeploy_export_' . date('Ymd_His') . '.sql.gz';
+        $content = gzencode($sql, 9);
+        header('Content-Type: application/x-gzip');
+    } else {
+        $filename = 'gitdeploy_export_' . date('Ymd_His') . '.sql';
+        $content = $sql;
+        header('Content-Type: application/sql');
+    }
+    
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Length: ' . strlen($content));
+    echo $content;
+    exit;
+}
+
+// ─────────────────────────────────────────────────────────
+// ACTION: restore / import — Restore database from SQL or SQL.GZ
+// ─────────────────────────────────────────────────────────
+if ($action === 'restore' || $action === 'import') {
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Method not allowed', 405);
+    requireCsrf();
+
+    $content = '';
+    $uploadedFile = $_FILES['backup_file'] ?? $_FILES['sql_file'] ?? null;
+    
+    if ($uploadedFile && !empty($uploadedFile['tmp_name'])) {
+        if ($uploadedFile['error'] !== UPLOAD_ERR_OK) {
+            jsonError('Gagal mengunggah file backup (Error code: ' . $uploadedFile['error'] . ')');
+        }
+        $content = file_get_contents($uploadedFile['tmp_name']);
+    } else {
+        $file = $_POST['filename'] ?? $_POST['file'] ?? '';
+        $type = $_POST['type'] ?? 'system';
+        $file = str_replace('..', '', $file);
+        
+        if (empty($file)) {
+            jsonError('File backup tidak ditemukan atau tidak diunggah.');
+        }
+
+        if ($type === 'project') {
+            $filepath = $projectBackupBase . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file);
+        } else {
+            $filepath = $backupDir . DIRECTORY_SEPARATOR . basename($file);
+        }
+
+        if (!file_exists($filepath)) {
+            jsonError('File backup tidak ditemukan di server.');
+        }
+
+        $content = file_get_contents($filepath);
+    }
+
+    if (empty($content)) {
+        jsonError('Konten file backup kosong.');
+    }
+
+    // 1. Create Pre-Restore Safety Snapshot
+    $snapshotFile = createPreRestoreSnapshot();
+
+    // 2. Execute SQL dump
+    try {
+        executeSqlDump($content);
+        $msg = 'Database berhasil direstore.';
+        if ($snapshotFile) {
+            $msg .= " (Safety snapshot otomatis dibuat: $snapshotFile)";
+        }
+        jsonSuccess(['snapshot' => $snapshotFile], $msg);
+    } catch (Exception $e) {
+        jsonError('Restore gagal: ' . $e->getMessage());
+    }
 }
 
 // ─────────────────────────────────────────────────────────

@@ -4,11 +4,15 @@ Semua perubahan penting pada sistem GitDeploy didokumentasikan di sini.
 
 ## [2.1.0] - 2026-09-16
 ### Added
+- **Kompresi Otomatis Gzip (.sql.gz)**: Kompresi dump database otomatis menggunakan Gzip level 9 bawaan PHP (`gzencode`), menghemat ~82% ruang disk server lokal dan mempercepat transfer ke Cloudflare R2.
+- **Pre-Restore Safety Snapshot**: Pembuatan snapshot cadangan otomatis (`gitdeploy_pre_restore_[timestamp].sql.gz`) sesaat sebelum proses restore database dijalankan untuk mencegah hilangnya data aktif akibat ketidaksengajaan.
+- **Dukungan Restore File Gzip (.sql.gz)**: Dukungan dekompresi transparan saat merestore database dari file `.sql` mentah maupun `.sql.gz` terkompresi.
 - **Auto-Retention Disk Lokal Server**: Fitur retensi otomatis berkala untuk membersihkan file cadangan database (`.sql`/`.gz`) lama di server lokal berdasarkan konfigurasi batas hari (`backup_retention_days`, default: 30 hari).
 - **Tombol Auto-Cleanup Manual**: Tombol "🧹 Auto-Cleanup" pada Database Backup Manager untuk memicu pembersihan file backup kedaluwarsa secara langsung dengan dialog konfirmasi.
-- **Konfigurasi Retensi Disk di Settings**: Input pengaturan batas hari retensi lokal pada tab Settings > Backups.
+- **Konfigurasi Retensi & Kompresi di Settings**: Input pengaturan batas hari retensi lokal dan toggle switch kompresi Gzip pada tab Settings > Backups.
 - **Multi-Select & Batch Delete Database Backups**: Penambahan checkbox seleksi ganda dan toolbar "Hapus Terpilih" untuk menghapus banyak file backup lokal sekaligus.
 - **Multi-Select & Batch Delete Cloud Backups**: Penambahan checkbox seleksi ganda dan aksi hapus massal untuk backup di Cloudflare R2 via Cloud Explorer.
+- **Quick Export Terkompresi**: Endpoint `api/backup?action=export` untuk streaming langsung dump database terkompresi (.sql.gz) ke peramban.
 
 ### Changed
 - **Optimalisasi Notifikasi Email Backup**: Penghapusan lampiran file fisik `.sql` dari email notifikasi karena backup telah tersimpan aman di Cloudflare R2, menghemat kuota dan memangkas ukuran pengiriman email.

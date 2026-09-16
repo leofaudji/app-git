@@ -164,6 +164,15 @@ export const PageSettings = (() => {
                 <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
               </label>
 
+              <div class="flex flex-col items-end mr-4">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gzip Compression</span>
+                <span class="text-[9px] font-bold ${settings.backup_gzip_enable?.value !== '0' ? 'text-indigo-600' : 'text-slate-300'} uppercase">${settings.backup_gzip_enable?.value !== '0' ? 'Active (.sql.gz)' : 'Off (.sql)'}</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer mr-6" title="Kompresi otomatis backup menggunakan Gzip (.sql.gz)">
+                <input type="checkbox" id="set-backup_gzip_enable" class="sr-only peer" ${settings.backup_gzip_enable?.value !== '0' ? 'checked' : ''} ${canEdit ? '' : 'disabled'}>
+                <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2">${settings.backup_auto_enable?.value === '1' ? 'Enabled' : 'Disabled'}</span>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="set-backup_auto_enable" class="sr-only peer" ${settings.backup_auto_enable?.value === '1' ? 'checked' : ''} ${canEdit ? '' : 'disabled'}>
@@ -290,7 +299,7 @@ export const PageSettings = (() => {
               </div>
             </div>
           </div>
-          <input type="file" id="restore-file-input" class="hidden" accept=".sql" onchange="PageSettings.handleRestoreFile(this)">
+          <input type="file" id="restore-file-input" class="hidden" accept=".sql,.gz,.sql.gz" onchange="PageSettings.handleRestoreFile(this)">
         </div>`;
       
       default: return '';
@@ -334,6 +343,7 @@ export const PageSettings = (() => {
         auto_deploy: document.getElementById('set-auto_deploy')?.checked ? '1' : '0',
         backup_auto_enable: document.getElementById('set-backup_auto_enable')?.checked ? '1' : '0',
         backup_notify_enable: document.getElementById('set-backup_notify_enable')?.checked ? '1' : '0',
+        backup_gzip_enable: document.getElementById('set-backup_gzip_enable')?.checked ? '1' : '0',
 
 
         backup_schedule_time: document.getElementById('set-backup_schedule_time')?.value || settings.backup_schedule_time?.value,

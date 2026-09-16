@@ -119,12 +119,12 @@ export const PageBackup = (() => {
                 <h3 class="text-base font-bold text-primary">Restore Database</h3>
               </div>
               <div class="card border-0 shadow-md card-accent-danger p-6">
-                <p class="text-xs text-muted mb-4">Upload file <code>.sql</code> hasil backup untuk mengembalikan database ke kondisi sebelumnya.</p>
+                <p class="text-xs text-muted mb-4">Upload file <code>.sql</code> atau <code>.sql.gz</code> hasil backup untuk mengembalikan database ke kondisi sebelumnya.</p>
                 <div class="bg-red-50 border border-red-100 rounded-lg p-3 mb-4">
                   <p class="text-xs text-danger font-bold">⚠ Perhatian!</p>
-                  <p class="text-xs text-muted mt-1">Restore akan <strong>menimpa seluruh data saat ini</strong>. Pastikan Anda sudah backup data terbaru.</p>
+                  <p class="text-xs text-muted mt-1">Restore akan <strong>menimpa data saat ini</strong>. Sistem akan otomatis membuat snapshot pengaman sebelum restore dieksekusi.</p>
                 </div>
-                <input type="file" id="restore-file" class="form-input text-xs mb-3" accept=".sql">
+                <input type="file" id="restore-file" class="form-input text-xs mb-3" accept=".sql,.gz,.sql.gz">
                 <button onclick="PageBackup.restoreBackup()" class="btn btn-danger w-full justify-center">
                   📤 Restore Database
                 </button>
@@ -138,9 +138,9 @@ export const PageBackup = (() => {
                 <h3 class="text-base font-bold text-primary">Quick Export</h3>
               </div>
               <div class="card border-0 shadow-md p-6">
-                <p class="text-xs text-muted mb-4">Download backup langsung ke browser Anda tanpa menyimpan ke disk server.</p>
+                <p class="text-xs text-muted mb-4">Download dump database langsung ke browser Anda secara terkompresi (.sql.gz).</p>
                 <button onclick="PageBackup.quickExport()" class="btn btn-ghost w-full justify-center">
-                  📥 Download Langsung (.sql)
+                  📥 Download Langsung (.sql.gz)
                 </button>
               </div>
             </div>
@@ -210,6 +210,7 @@ export const PageBackup = (() => {
             <div class="flex items-center gap-2">
               <span class="font-bold text-sm ${b.type === 'system' ? 'text-indigo-600' : 'text-emerald-700'}">${b.project}</span>
               <span class="badge ${b.type === 'system' ? 'badge-indigo' : 'badge-emerald'} text-[9px] uppercase px-1.5 py-0.5">${b.type}</span>
+              ${b.compressed || b.filename.endsWith('.gz') ? '<span class="badge badge-purple text-[8px] font-black uppercase px-1.5 py-0.5 tracking-wider" title="Gzip Compressed">GZ</span>' : ''}
               ${!filterDate && i === 0 ? '<span class="badge badge-success text-[9px]">TERBARU</span>' : ''}
             </div>
             <span class="font-mono text-[10px] text-muted truncate max-w-[300px]" title="${b.filename}">
@@ -379,13 +380,13 @@ export const PageBackup = (() => {
   async function restoreBackup() {
     const fileInp = document.getElementById('restore-file');
     if (!fileInp?.files?.length) {
-      Toast.error('Pilih file backup (.sql) terlebih dahulu');
+      Toast.error('Pilih file backup (.sql / .sql.gz) terlebih dahulu');
       return;
     }
 
     const result = await Swal.fire({
       title: 'Konfirmasi Restore?',
-      text: 'PERHATIAN: Seluruh data saat ini akan DIHAPUS dan digantikan dengan data dari file backup!',
+      text: 'PERHATIAN: Seluruh data saat ini akan digantikan dengan data dari file backup! Sistem akan secara otomatis membuat Snapshot Pengaman (.sql.gz) sebelum proses restore dilakukan.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
