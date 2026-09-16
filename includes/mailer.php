@@ -69,8 +69,11 @@ class Mailer {
             $this->sendCommand("RCPT TO: <{$to}>");
             $this->sendCommand("DATA");
 
-            $mixedBoundary   = "Mixed_" . md5(time() . "1");
-            $relatedBoundary = "Related_" . md5(time() . "2");
+            $hasAttachments = !empty($this->attachments);
+            $hasInline      = !empty($this->inlineImages);
+
+            $mixedBoundary   = "Mixed_" . md5(uniqid("mixed", true));
+            $relatedBoundary = "Related_" . md5(uniqid("related", true));
 
             $headers  = "MIME-Version: 1.0\r\n";
             $headers .= "To: <$to>\r\n";
@@ -79,64 +82,89 @@ class Mailer {
             $headers .= "Date: " . date('r') . "\r\n";
             $headers .= "X-Mailer: GitDeploy-PHP\r\n";
 
+            // Prepare Content Part (HTML / Text)
+            $contentPart  = "Content-Type: " . ($isHtml ? "text/html" : "text/plain") . "; charset=UTF-8\r\n";
+            $contentPart .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+            $contentPart .= $body . "\r\n";
+
+            // Prepare Related Part (HTML + Inline Images)
+            $relatedParts = "";
+            if ($hasInline) {
+                $relatedParts .= "--$relatedBoundary\r\n";
+                $relatedParts .= $contentPart;
+
+                foreach ($this->inlineImages as $cid => $path) {
+                    $mimeType = (file_exists($path) ? mime_content_type($path) : '') ?: 'image/png';
+                    $imgData  = file_exists($path) ? chunk_split(base64_encode(file_get_contents($path))) : '';
+                    $filename = basename($path);
+
+                    $relatedParts .= "--$relatedBoundary\r\n";
+                    $relatedParts .= "Content-Type: $mimeType; name=\"$filename\"\r\n";
+                    $relatedParts .= "Content-Transfer-Encoding: base64\r\n";
+                    $relatedParts .= "Content-ID: <$cid>\r\n";
+                    $relatedParts .= "Content-Disposition: inline; filename=\"$filename\"\r\n\r\n";
+                    $relatedParts .= $imgData . "\r\n";
+                }
+                $relatedParts .= "--$relatedBoundary--\r\n";
+            }
+
             $fullBody = "";
 
-            if (empty($this->attachments) && empty($this->inlineImages)) {
+            if (!$hasAttachments && !$hasInline) {
+                // 1. Simple HTML or Plain text message
                 $headers .= "Content-Type: " . ($isHtml ? "text/html" : "text/plain") . "; charset=UTF-8\r\n";
+                $headers .= "Content-Transfer-Encoding: 8bit\r\n";
                 $fullBody = $body;
-            } 
-            else {
-                // Determine root boundary
-                if (!empty($this->attachments)) {
-                    $headers .= "Content-Type: multipart/mixed; boundary=\"$mixedBoundary\"\r\n";
-                    $fullBody .= "--$mixedBoundary\r\n";
-                }
+            } elseif (!$hasAttachments && $hasInline) {
+                // 2. HTML with Inline Images (Root is multipart/related)
+                $headers .= "Content-Type: multipart/related; boundary=\"$relatedBoundary\"\r\n";
+                $fullBody = $relatedParts;
+            } elseif ($hasAttachments && !$hasInline) {
+                // 3. HTML with Attachments (Root is multipart/mixed)
+                $headers .= "Content-Type: multipart/mixed; boundary=\"$mixedBoundary\"\r\n";
+                $fullBody .= "--$mixedBoundary\r\n";
+                $fullBody .= $contentPart;
 
-                // Related part for HTML + Inline Images
-                if (!empty($this->inlineImages)) {
-                    $fullBody .= "Content-Type: multipart/related; boundary=\"$relatedBoundary\"\r\n\r\n";
-                    $fullBody .= "--$relatedBoundary\r\n";
-                }
-
-                // The Content
-                $fullBody .= "Content-Type: " . ($isHtml ? "text/html" : "text/plain") . "; charset=UTF-8\r\n";
-                $fullBody .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-                $fullBody .= $body . "\r\n\r\n";
-
-                // Add Inline Images
-                foreach ($this->inlineImages as $cid => $path) {
-                    $mimeType = mime_content_type($path) ?: 'image/png';
-                    $imgData  = chunk_split(base64_encode(file_get_contents($path)));
-                    $fullBody .= "--$relatedBoundary\r\n";
-                    $fullBody .= "Content-Type: $mimeType; name=\"" . basename($path) . "\"\r\n";
-                    $fullBody .= "Content-Transfer-Encoding: base64\r\n";
-                    $fullBody .= "Content-ID: <$cid>\r\n";
-                    $fullBody .= "Content-Disposition: inline; filename=\"" . basename($path) . "\"\r\n\r\n";
-                    $fullBody .= $imgData . "\r\n";
-                }
-
-                if (!empty($this->inlineImages)) {
-                    $fullBody .= "--$relatedBoundary--\r\n";
-                }
-
-                // Add File Attachments
                 foreach ($this->attachments as $att) {
                     $path     = $att['path'];
                     $name     = $att['name'];
-                    $mimeType = mime_content_type($path) ?: 'application/octet-stream';
-                    $data     = chunk_split(base64_encode(file_get_contents($path)));
-                    
+                    $mimeType = (file_exists($path) ? mime_content_type($path) : '') ?: 'application/octet-stream';
+                    $data     = file_exists($path) ? chunk_split(base64_encode(file_get_contents($path))) : '';
+
                     $fullBody .= "--$mixedBoundary\r\n";
                     $fullBody .= "Content-Type: $mimeType; name=\"$name\"\r\n";
                     $fullBody .= "Content-Transfer-Encoding: base64\r\n";
                     $fullBody .= "Content-Disposition: attachment; filename=\"$name\"\r\n\r\n";
                     $fullBody .= $data . "\r\n";
                 }
+                $fullBody .= "--$mixedBoundary--";
+            } else {
+                // 4. HTML with Inline Images AND Attachments (Root is multipart/mixed)
+                $headers .= "Content-Type: multipart/mixed; boundary=\"$mixedBoundary\"\r\n";
 
-                if (!empty($this->attachments)) {
-                    $fullBody .= "--$mixedBoundary--";
+                // Subpart: multipart/related container
+                $fullBody .= "--$mixedBoundary\r\n";
+                $fullBody .= "Content-Type: multipart/related; boundary=\"$relatedBoundary\"\r\n\r\n";
+                $fullBody .= $relatedParts . "\r\n";
+
+                // Subparts: File attachments
+                foreach ($this->attachments as $att) {
+                    $path     = $att['path'];
+                    $name     = $att['name'];
+                    $mimeType = (file_exists($path) ? mime_content_type($path) : '') ?: 'application/octet-stream';
+                    $data     = file_exists($path) ? chunk_split(base64_encode(file_get_contents($path))) : '';
+
+                    $fullBody .= "--$mixedBoundary\r\n";
+                    $fullBody .= "Content-Type: $mimeType; name=\"$name\"\r\n";
+                    $fullBody .= "Content-Transfer-Encoding: base64\r\n";
+                    $fullBody .= "Content-Disposition: attachment; filename=\"$name\"\r\n\r\n";
+                    $fullBody .= $data . "\r\n";
                 }
+                $fullBody .= "--$mixedBoundary--";
             }
+
+            // Dot-stuffing for SMTP DATA command (RFC 5321)
+            $fullBody = preg_replace('/^\./m', '..', $fullBody);
 
             $this->sendRaw($headers . "\r\n" . $fullBody . "\r\n.");
             $this->getResponse(); 

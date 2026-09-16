@@ -246,25 +246,6 @@ if (!function_exists('performFullBackupChain')) {
                 $successCount = count($results);
                 $errorCount = count($errors);
 
-                // Attachments logic (Limit 20MB)
-                $totalBytes = 0;
-                $limit = 20 * 1024 * 1024;
-                $isAttached = false;
-                foreach ($results as $res) {
-                    if (isset($res['filepath']) && file_exists($res['filepath'])) {
-                        $totalBytes += ($res['size_bytes'] ?? 0);
-                    }
-                }
-
-                if ($totalBytes > 0 && $totalBytes <= $limit) {
-                    foreach ($results as $res) {
-                        if (isset($res['filepath']) && file_exists($res['filepath'])) {
-                            $mailer->addAttachment($res['filepath']);
-                        }
-                    }
-                    $isAttached = true;
-                }
-
                 $statusColor = ($errorCount === 0) ? '#16a34a' : '#dc2626';
                 $statusLabel = ($errorCount === 0) ? 'SUCCESS' : 'WARNING';
                 $statusIcon = ($errorCount === 0) ? '✅' : '⚠️';
